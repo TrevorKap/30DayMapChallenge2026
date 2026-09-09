@@ -1,0 +1,769 @@
+<meta charset="utf-8">
+<title>The Crossing Hours</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js"></script>
+<style>
+  :root{
+    --bg:#07090B;
+    --panel:#0C1114;
+    --panel-2:#0F1519;
+    --panel-border:rgba(157,214,203,0.16);
+    --ink:#EAF2EF;
+    --ink-soft:#9FB6B0;
+    --ink-faint:#5B6E69;
+    --line:rgba(234,242,239,0.08);
+    --teal:#2FD9C4;
+    --teal-soft:rgba(47,217,196,0.16);
+    --gold:#FF6A3D;
+    --gold-soft:rgba(255,106,61,0.16);
+    --coral:#FF5C72;
+    --coral-soft:rgba(255,92,114,0.14);
+    --usbound:#4C8DFF;
+    --mxbound:#22C55E;
+    --shadow:0 30px 70px -30px rgba(0,0,0,0.85), 0 0 60px -20px rgba(47,217,196,0.15);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse 900px 500px at 10% -8%, rgba(47,217,196,0.10), transparent 60%),
+      radial-gradient(ellipse 900px 550px at 95% 0%, rgba(255,106,61,0.08), transparent 60%),
+      var(--bg);
+    color:var(--ink);
+    font-family:"Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+    font-size:16px;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  @media (prefers-reduced-motion: reduce){ *{animation-duration:0.01ms !important; transition-duration:0.01ms !important;} }
+
+  .wrap{max-width:1320px;margin:0 auto;padding:0 clamp(18px,4vw,44px) clamp(48px,8vw,80px);}
+
+  header.hero{padding:clamp(28px,5vw,52px) 0 clamp(8px,2vw,16px);}
+  .eyebrow{
+    font-family:"IBM Plex Mono", ui-monospace, monospace;
+    font-size:12px; letter-spacing:0.18em; text-transform:uppercase;
+    color:var(--teal); margin:0 0 10px;
+  }
+  .eyebrow::before{ content:"◆ "; color:var(--gold); }
+  h1{
+    font-family:"Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+    font-weight:700;
+    font-size:clamp(2rem,4.2vw,3.2rem);
+    line-height:1.03; letter-spacing:-0.02em; margin:0 0 14px;
+    text-wrap:balance;
+    color:var(--ink);
+  }
+  .dek{ max-width:76ch; font-size:clamp(0.94rem,1.25vw,1.05rem); color:var(--ink-soft); margin:0; }
+  .dek strong{color:var(--ink); font-weight:600;}
+  .dek .swatch{display:inline-block;width:8px;height:8px;border-radius:50%;margin:0 2px -1px 0;}
+
+  .layout{
+    display:grid;
+    grid-template-columns: minmax(0,1fr) 320px;
+    gap:clamp(14px,2.6vw,24px);
+    align-items:start;
+    margin:clamp(22px,4vw,36px) 0 0;
+  }
+  @media (max-width:920px){ .layout{ grid-template-columns: 1fr; } }
+
+  .map-frame{
+    position:relative;
+    border-radius:16px;
+    border:1px solid var(--panel-border);
+    background:#050707;
+    box-shadow:var(--shadow);
+    overflow:hidden;
+    aspect-ratio:1600/800;
+  }
+  #map{ position:absolute; inset:0; width:100%; height:100%; }
+  .mapboxgl-ctrl-logo, .mapboxgl-ctrl-attrib{ filter:invert(0.85) opacity(0.6); }
+  .mapboxgl-popup{ display:none; } /* we use our own tooltip */
+
+  .setup-banner{
+    position:absolute; inset:0; z-index:30; display:flex; align-items:center; justify-content:center;
+    background:rgba(5,7,7,0.96); padding:32px; text-align:center;
+  }
+  .setup-banner[hidden]{ display:none; }
+  .setup-banner .box{ max-width:480px; }
+  .setup-banner h3{ font-family:"Space Grotesk"; font-size:18px; margin:0 0 10px; color:var(--ink); }
+  .setup-banner p{ font-size:13px; color:var(--ink-soft); margin:0 0 8px; }
+  .setup-banner code{ background:rgba(255,255,255,0.08); padding:2px 6px; border-radius:5px; font-family:"IBM Plex Mono"; font-size:12px; color:var(--gold); }
+
+  .chip{
+    position:absolute;
+    background:rgba(9,13,15,0.82);
+    backdrop-filter:blur(6px);
+    border:1px solid var(--panel-border);
+    border-radius:12px;
+    padding:12px 14px;
+    box-shadow:0 14px 30px -16px rgba(0,0,0,0.7);
+    z-index:5;
+  }
+  .chip-title{ top:14px; left:14px; max-width:260px; }
+  .chip-title .name{ font-family:"Space Grotesk"; font-weight:700; font-size:14px; letter-spacing:0.02em; }
+  .chip-title .sub{ font-family:"IBM Plex Mono"; font-size:10.5px; color:var(--ink-faint); letter-spacing:0.08em; text-transform:uppercase; margin-top:3px; }
+
+  .chip-clock{ top:14px; right:14px; text-align:right; min-width:150px; }
+  .chip-clock .time{ font-family:"IBM Plex Mono"; font-size:24px; font-weight:600; letter-spacing:0.02em; color:var(--ink); }
+  .chip-clock .time span{ font-size:13px; color:var(--ink-faint); margin-left:3px;}
+  .chip-clock .period{ font-family:"IBM Plex Mono"; font-size:10.5px; letter-spacing:0.1em; text-transform:uppercase; margin-top:2px; }
+  .chip-clock .period.day{ color:var(--gold); }
+  .chip-clock .period.night{ color:var(--teal); }
+
+  .chip-legend{ bottom:14px; left:14px; min-width:206px; }
+  .chip-legend h4{ margin:0 0 8px; font-family:"IBM Plex Mono"; font-size:10.5px; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-faint); }
+  .leg-row{ display:flex; align-items:center; gap:8px; font-size:12px; color:var(--ink-soft); margin:5px 0; }
+  .leg-swatch{ width:10px; height:10px; border-radius:50%; flex:none; }
+  .leg-ring{ width:12px; height:12px; border-radius:50%; border:1.5px dashed var(--ink-faint); flex:none; }
+
+  .tooltip{
+    position:absolute; pointer-events:none; z-index:20;
+    background:rgba(9,13,15,0.95); border:1px solid var(--panel-border); border-radius:10px;
+    padding:9px 11px; font-size:12px; color:var(--ink-soft);
+    box-shadow:0 14px 30px -16px rgba(0,0,0,0.8);
+    opacity:0; transform:translate(-50%,calc(-100% - 14px)); transition:opacity 120ms ease;
+    white-space:nowrap;
+  }
+  .tooltip.show{ opacity:1; }
+  .tooltip b{ color:var(--ink); font-family:"Space Grotesk"; font-size:13px; }
+  .tooltip .tt-tag{ font-family:"IBM Plex Mono"; font-size:10px; letter-spacing:0.06em; text-transform:uppercase; }
+
+  /* ---- side panel ---- */
+  aside.panel{ display:flex; flex-direction:column; gap:14px; }
+  .block{
+    background:linear-gradient(180deg, var(--panel), var(--panel-2));
+    border:1px solid var(--panel-border);
+    border-radius:14px;
+    padding:16px 16px 14px;
+  }
+  .block h3{
+    margin:0 0 12px; font-family:"IBM Plex Mono"; font-size:10.5px;
+    letter-spacing:0.14em; text-transform:uppercase; color:var(--ink-faint);
+  }
+
+  .transport{ display:flex; align-items:center; gap:10px; }
+  .playbtn{
+    width:36px; height:36px; border-radius:50%; flex:none;
+    background:var(--teal-soft); border:1px solid rgba(47,217,196,0.4);
+    color:var(--teal); cursor:pointer; display:flex; align-items:center; justify-content:center;
+    font-size:14px;
+  }
+  .playbtn:hover{ background:rgba(47,217,196,0.28); }
+  .speedrow{ display:flex; gap:6px; }
+  .speedbtn{
+    font-family:"IBM Plex Mono"; font-size:11px; padding:5px 8px; border-radius:7px;
+    background:transparent; border:1px solid var(--panel-border); color:var(--ink-faint); cursor:pointer;
+  }
+  .speedbtn.active{ color:var(--gold); border-color:rgba(255,106,61,0.5); background:var(--gold-soft); }
+
+  input[type=range]{
+    -webkit-appearance:none; width:100%; height:6px; border-radius:4px; margin:12px 0 4px;
+    background:linear-gradient(90deg,
+      rgba(47,217,196,0.10) 0%, rgba(47,217,196,0.10) 29%,
+      rgba(255,106,61,0.32) 29%, rgba(255,106,61,0.32) 42%,
+      rgba(47,217,196,0.10) 42%, rgba(47,217,196,0.10) 66%,
+      rgba(255,92,114,0.30) 66%, rgba(255,92,114,0.30) 79%,
+      rgba(47,217,196,0.10) 79%, rgba(47,217,196,0.10) 100%);
+    outline:none; cursor:pointer;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:14px; height:14px; border-radius:50%;
+    background:var(--ink); border:2px solid var(--gold); cursor:pointer;
+    box-shadow:0 0 10px rgba(255,106,61,0.7);
+  }
+  .ticks{ display:flex; justify-content:space-between; font-family:"IBM Plex Mono"; font-size:9.5px; color:var(--ink-faint); }
+
+  .stat{ margin:10px 0; }
+  .stat-top{ display:flex; justify-content:space-between; align-items:baseline; font-size:12.5px; margin-bottom:5px; }
+  .stat-top .lbl{ color:var(--ink-soft); }
+  .stat-top .val{ font-family:"IBM Plex Mono"; font-weight:600; color:var(--ink); }
+  .bar{ height:6px; border-radius:4px; background:rgba(255,255,255,0.06); overflow:hidden; }
+  .bar > i{ display:block; height:100%; border-radius:4px; transition:width 220ms linear; }
+  .bar.teal > i{ background:var(--teal); box-shadow:0 0 8px rgba(47,217,196,0.6); }
+  .bar.gold > i{ background:var(--gold); box-shadow:0 0 8px rgba(255,106,61,0.6); }
+  .bar.ink > i{ background:var(--ink-soft); }
+
+  .rank{ max-height:392px; overflow-y:auto; padding-right:2px; }
+  .rank::-webkit-scrollbar{ width:6px; }
+  .rank::-webkit-scrollbar-thumb{ background:rgba(255,255,255,0.12); border-radius:4px; }
+  .rank-row{ display:flex; align-items:center; gap:9px; padding:6px 4px; border-radius:8px; cursor:pointer; }
+  .rank-row:hover, .rank-row.hl{ background:rgba(255,255,255,0.05); }
+  .rank-dot{ width:8px; height:8px; border-radius:50%; flex:none; }
+  .rank-name{ flex:1; min-width:0; }
+  .rank-name .n{ font-size:12.5px; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .rank-name .s{ font-size:10.5px; color:var(--ink-faint); }
+  .rank-bar{ width:56px; height:5px; border-radius:3px; background:rgba(255,255,255,0.06); overflow:hidden; flex:none; }
+  .rank-bar > i{ display:block; height:100%; border-radius:3px; }
+
+  footer.note{
+    margin-top:clamp(22px,4vw,34px); padding-top:16px; border-top:1px solid var(--line);
+    font-size:12px; color:var(--ink-faint); max-width:92ch;
+  }
+  footer.note a{ color:var(--ink-soft); }
+  footer.note p{ margin:0 0 8px; }
+
+  /* HTML marker pieces (placed via mapboxgl.Marker) */
+  .m-halo{ width:34px; height:34px; border-radius:50%; pointer-events:none; opacity:0.16; }
+  .m-core{ border-radius:50%; cursor:pointer; transform-box:fill-box; }
+  .m-core.commuter{ background:var(--teal); }
+  .m-core.commercial{ background:var(--gold); }
+  .m-core.closed{ background:var(--coral); }
+  @keyframes pulse{ 0%,100%{ opacity:0.6; transform:scale(0.92);} 50%{ opacity:1; transform:scale(1.16);} }
+  .m-core.pulse{ animation:pulse 2.6s ease-in-out infinite; }
+  .m-ring{ border-radius:50%; border:1.5px dashed; pointer-events:none; }
+  .m-pill{
+    font-family:"IBM Plex Mono"; font-size:9.5px; letter-spacing:0.04em; color:var(--ink);
+    background:rgba(9,13,15,0.85); border-radius:9px; padding:4px 8px; white-space:nowrap;
+    pointer-events:none;
+  }
+</style>
+
+<div class="wrap">
+  <header class="hero">
+    <p class="eyebrow">US–Mexico Border · 24-Hour Flow Model</p>
+    <h1>The Crossing Hours</h1>
+    <p class="dek">Nineteen real US–Mexico land crossings, each its own official CBP port of entry in federal crossing data — including the two metros where CBP tracks bridges separately, El Paso vs. Ysleta and Calexico vs. Calexico East. Marker size and color reflect each port's real 2024 crossing volume<sup>1</sup>: <span class="swatch" style="background:var(--teal)"></span><strong>teal</strong> ports run heavier on personal vehicles and pedestrians, <span class="swatch" style="background:var(--gold)"></span><strong>orange</strong> ports run heavier on commercial trucking. Every dot stands for roughly <strong>400 modeled crossings</strong> and follows the real highway network between two interior cities; <span class="swatch" style="background:var(--usbound)"></span><strong>blue</strong> dots are northbound, entering the US, <span class="swatch" style="background:var(--mxbound)"></span><strong>green</strong> dots are southbound, entering Mexico. Watch the tide turn with the morning and evening rush, and the smaller ports go quiet overnight. Click a port to fly to its real road network.</p>
+  </header>
+
+  <div class="layout">
+    <div class="map-frame" id="mapFrame">
+      <div id="map"></div>
+      <div class="setup-banner" id="setupBanner" hidden>
+        <div class="box">
+          <h3>Add a Mapbox token to see the map</h3>
+          <p>This page reads a token from <code>.env</code> next to it (never hardcoded in the HTML). Open <code>.env</code> in this project folder, replace the placeholder with your public token from <code>account.mapbox.com/access-tokens</code> (starts with <code>pk.</code>), save, and reload. If a token is already there, this is usually a network hiccup or the token/style being rejected — check the detail below.</p>
+          <p id="setupDetail" style="color:var(--coral)"></p>
+        </div>
+      </div>
+      <div class="chip chip-title">
+        <div class="name">THE CROSSING HOURS</div>
+        <div class="sub">Border flow · live model</div>
+      </div>
+      <div class="chip chip-clock">
+        <div class="time" id="clockTime">07:30<span>hrs</span></div>
+        <div class="period" id="clockPeriod">Morning Rush</div>
+      </div>
+      <div class="chip chip-legend">
+        <h4>Legend</h4>
+        <div class="leg-row"><span class="leg-swatch" style="background:var(--teal)"></span>Commuter-dominant port</div>
+        <div class="leg-row"><span class="leg-swatch" style="background:var(--gold)"></span>Commercial/freight-dominant port</div>
+        <div class="leg-row"><span class="leg-ring"></span>High-volume port (top tier)</div>
+        <div class="leg-row"><span class="leg-swatch" style="background:var(--coral)"></span>Closed this hour</div>
+        <div class="leg-row"><span class="leg-swatch" style="background:var(--usbound)"></span>Northbound dot (entering US)</div>
+        <div class="leg-row"><span class="leg-swatch" style="background:var(--mxbound)"></span>Southbound dot (entering Mexico)</div>
+        <div class="leg-row"><span class="leg-swatch" style="background:var(--ink-soft);width:6px;height:6px"></span>1 dot ≈ 400 crossings</div>
+      </div>
+      <div class="tooltip" id="tooltip"></div>
+    </div>
+
+    <aside class="panel">
+      <div class="block">
+        <h3>Playback</h3>
+        <div class="transport">
+          <button class="playbtn" id="playBtn">❚❚</button>
+          <div class="speedrow">
+            <button class="speedbtn" data-speed="0.5">0.5×</button>
+            <button class="speedbtn active" data-speed="1">1×</button>
+            <button class="speedbtn" data-speed="2">2×</button>
+            <button class="speedbtn" data-speed="4">4×</button>
+          </div>
+        </div>
+        <input type="range" id="scrubber" min="0" max="1439" value="450">
+        <div class="ticks"><span>12a</span><span>3</span><span>6</span><span>9</span><span>12p</span><span>15</span><span>18</span><span>21</span><span>12a</span></div>
+      </div>
+
+      <div class="block">
+        <h3>This hour, southern border</h3>
+        <div class="stat">
+          <div class="stat-top"><span class="lbl">Northbound flow</span><span class="val" id="nbVal">—</span></div>
+          <div class="bar teal"><i id="nbBar" style="width:0%"></i></div>
+        </div>
+        <div class="stat">
+          <div class="stat-top"><span class="lbl">Southbound flow</span><span class="val" id="sbVal">—</span></div>
+          <div class="bar gold"><i id="sbBar" style="width:0%"></i></div>
+        </div>
+        <div class="stat">
+          <div class="stat-top"><span class="lbl">Travelers on map</span><span class="val" id="activeVal">—</span></div>
+          <div class="bar ink"><i id="activeBar" style="width:0%"></i></div>
+        </div>
+      </div>
+
+      <div class="block">
+        <h3>Ports, by real 2024 volume</h3>
+        <div class="rank" id="rankList"></div>
+      </div>
+    </aside>
+  </div>
+
+  <footer class="note">
+    <p><sup>1</sup> Every port here is a real CBP land border crossing with its own record in the Bureau of Transportation Statistics' Border Crossing/Entry Data, queried directly from BTS's public dataset for calendar-year 2024: Personal Vehicle Passengers + Pedestrians (each port's "commuter" volume) and Trucks (its "commercial" volume). Where CBP itself reports a metro's bridges as separate ports — El Paso vs. Ysleta, and Calexico vs. Calexico East — they're kept separate here rather than merged into one node. A port is classified commercial-dominant when trucks make up at least 3.5% of its 2024 total; that includes Laredo, whose 7.7 million trucks in 2024 alone make it the single busiest commercial crossing on the border. Ports under roughly 15 million total 2024 crossings are modeled with reduced overnight hours; larger ports run around the clock in the model. Marker size scales with each port's real total 2024 volume. The road each dot follows is a real driving route from the Mapbox Directions API between the interior city on each side (e.g. Laredo↔San Antonio, Laredo↔Monterrey) — it follows the actual highway network, not a straight line; where a route request fails, that one port falls back to a straight line between the same two real endpoints. Hour-by-hour flow shapes, the north/south commute skew, and the fixed "1 dot ≈ 400 crossings" value remain a modeled simulation — CBP doesn't publish hour-level crossing counts — but every port's relative size, category, and total volume are real, sourced 2024 figures, not estimates.</p>
+    <p>Sources: <a href="https://data.bts.gov/d/keg4-3bc2" target="_blank" rel="noopener">Bureau of Transportation Statistics, Border Crossing/Entry Data (Socrata dataset, queried directly for this piece)</a> · <a href="https://www.bts.gov/newsroom/border-crossing-data-annual-release-2023-2024" target="_blank" rel="noopener">BTS, Border Crossing Data Annual Release 2023–2024</a></p>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- real crossing + anchor data (lon,lat) ---------------- */
+  /* commuterM = Personal Vehicle Passengers + Pedestrians, truckM = Trucks,
+     both in millions, both real calendar-year-2024 totals pulled directly from
+     BTS's Border Crossing/Entry Data (data.bts.gov, dataset keg4-3bc2) — not
+     estimates. cat/closes/sizeFactor are DERIVED below from these real numbers
+     by an explicit, disclosed rule rather than hand-picked per port. */
+  var CROSSINGS = [
+    {id:"sanysidro",    us:"San Ysidro, CA",      mx:"Tijuana, B.C.",           pt:[-117.0297,32.5422], usA:[-117.1611,32.7157,"San Diego"], mxA:[-117.0382,32.5283,"Tijuana"],       commuterM:82.81, truckM:0},
+    {id:"otaymesa",     us:"Otay Mesa, CA",       mx:"Mesa de Otay, B.C.",      pt:[-116.9358,32.5678], usA:[-117.1611,32.7157,"San Diego"], mxA:[-117.0382,32.5283,"Tijuana"],       commuterM:34.26, truckM:2.63},
+    {id:"calexico",     us:"Calexico, CA",        mx:"Mexicali, B.C.",          pt:[-115.4989,32.6789], usA:[-115.5631,32.7920,"El Centro"], mxA:[-115.4523,32.6245,"Mexicali"],      commuterM:30.88, truckM:0},
+    {id:"calexicoeast", us:"Calexico East, CA",   mx:"Mexicali (East), B.C.",   pt:[-115.3891,32.6650], usA:[-115.5631,32.7920,"El Centro"], mxA:[-115.4523,32.6245,"Mexicali"],      commuterM:13.95, truckM:1.16},
+    {id:"sanluis",      us:"San Luis, AZ",        mx:"San Luis Río Colorado, Son.", pt:[-114.7719,32.4859], usA:[-114.6277,32.6927,"Yuma"], mxA:[-114.7833,32.4551,"San Luis Río Colorado"], commuterM:21.69, truckM:0.12},
+    {id:"nogales",      us:"Nogales, AZ",         mx:"Nogales, Son.",           pt:[-110.9385,31.3398], usA:[-110.9747,32.2226,"Tucson"],    mxA:[-111.1197,30.5411,"Santa Ana"],     commuterM:26.77, truckM:1.07},
+    {id:"douglas",      us:"Douglas, AZ",         mx:"Agua Prieta, Son.",       pt:[-109.5453,31.3437], usA:[-109.9284,31.4481,"Bisbee"],    mxA:[-109.5453,31.3286,"Agua Prieta"],   commuterM:9.35,  truckM:0.07},
+    {id:"columbus",     us:"Columbus, NM",        mx:"Puerto Palomas, Chih.",   pt:[-107.6428,31.8267], usA:[-107.7586,32.2687,"Deming"],    mxA:[-107.6333,31.7833,"Puerto Palomas"], commuterM:2.92,  truckM:0.04},
+    {id:"santateresa",  us:"Santa Teresa, NM",    mx:"San Jerónimo, Chih.",     pt:[-106.6553,31.8225], usA:[-106.7637,32.3199,"Las Cruces"], mxA:[-106.6167,31.7333,"San Jerónimo"],  commuterM:4.08,  truckM:0.45},
+    {id:"elpaso",       us:"El Paso, TX",         mx:"Ciudad Juárez, Chih.",    pt:[-106.4869,31.7598], usA:[-106.7637,32.3199,"Las Cruces"], mxA:[-106.4245,31.6904,"Ciudad Juárez"], commuterM:46.04, truckM:0.40},
+    {id:"ysleta",       us:"Ysleta, TX",          mx:"Zaragoza, Chih.",         pt:[-106.3300,31.6944], usA:[-106.4850,31.7619,"El Paso"],   mxA:[-106.4245,31.6904,"Ciudad Juárez"], commuterM:20.55, truckM:1.70},
+    {id:"presidio",     us:"Presidio, TX",        mx:"Ojinaga, Chih.",          pt:[-104.3736,29.5608], usA:[-104.0227,30.3095,"Marfa"],     mxA:[-104.4092,29.5647,"Ojinaga"],       commuterM:4.18,  truckM:0.03},
+    {id:"delrio",       us:"Del Rio, TX",         mx:"Ciudad Acuña, Coah.",     pt:[-100.8961,29.3630], usA:[-99.7862,29.2097,"Uvalde"],     mxA:[-100.9420,29.3231,"Ciudad Acuña"],  commuterM:8.96,  truckM:0.22},
+    {id:"eaglepass",    us:"Eagle Pass, TX",      mx:"Piedras Negras, Coah.",   pt:[-100.4995,28.7091], usA:[-99.7862,29.2097,"Uvalde"],     mxA:[-100.5229,28.6994,"Piedras Negras"], commuterM:17.55, truckM:0.80},
+    {id:"laredo",       us:"Laredo, TX",          mx:"Nuevo Laredo, Tamps.",    pt:[-99.5075,27.5064],  usA:[-98.4936,29.4241,"San Antonio"], mxA:[-100.3161,25.6866,"Monterrey"],     commuterM:33.49, truckM:7.73},
+    {id:"riograndecity",us:"Rio Grande City, TX", mx:"Camargo, Tamps.",         pt:[-98.8203,26.3798],  usA:[-98.2300,26.2034,"McAllen"],    mxA:[-98.8064,26.2621,"Camargo"],        commuterM:2.83,  truckM:0.09},
+    {id:"hidalgo",      us:"Hidalgo–Pharr, TX",   mx:"Reynosa, Tamps.",         pt:[-98.2633,26.1004],  usA:[-98.2300,26.2034,"McAllen"],    mxA:[-100.3161,25.6866,"Monterrey"],     commuterM:29.85, truckM:1.85},
+    {id:"progreso",     us:"Progreso, TX",        mx:"Nuevo Progreso, Tamps.",  pt:[-97.9561,26.0909],  usA:[-97.9906,26.1596,"Weslaco"],    mxA:[-97.9522,26.0587,"Nuevo Progreso"], commuterM:10.28, truckM:0.17},
+    {id:"brownsville",  us:"Brownsville, TX",     mx:"Matamoros, Tamps.",       pt:[-97.4975,25.9018],  usA:[-97.6961,26.1906,"Harlingen"],  mxA:[-97.5044,25.8697,"Matamoros"],      commuterM:30.70, truckM:0.79}
+  ];
+
+  /* ---------------- geo helpers (real great-circle math now that coords are real) ---------------- */
+  function toRad(d){ return d*Math.PI/180; }
+  function toDeg(r){ return r*180/Math.PI; }
+  function haversineKm(a,b){
+    var R=6371, dLat=toRad(b[1]-a[1]), dLon=toRad(b[0]-a[0]);
+    var lat1=toRad(a[1]), lat2=toRad(b[1]);
+    var h=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLon/2)*Math.sin(dLon/2);
+    return 2*R*Math.asin(Math.sqrt(h));
+  }
+  function bearingDeg(a,b){
+    var lat1=toRad(a[1]), lat2=toRad(b[1]), dLon=toRad(b[0]-a[0]);
+    var y=Math.sin(dLon)*Math.cos(lat2);
+    var x=Math.cos(lat1)*Math.sin(lat2)-Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLon);
+    return (toDeg(Math.atan2(y,x))+360)%360;
+  }
+  function destPoint(a,brngDeg,distKm){
+    var brng=toRad(brngDeg);
+    var dLat=(distKm/111.32)*Math.cos(brng);
+    var dLon=(distKm/(111.32*Math.cos(toRad(a[1]))))*Math.sin(brng);
+    return [a[0]+dLon, a[1]+dLat];
+  }
+  function lerp(a,b,f){ return [a[0]+(b[0]-a[0])*f, a[1]+(b[1]-a[1])*f]; }
+  function segLen(a,b){ return haversineKm(a,b); }
+  function pathLenKm(pts){ var s=0; for(var i=0;i<pts.length-1;i++) s+=segLen(pts[i],pts[i+1]); return s; }
+  // Precompute cumulative distance once per path so pointAtT (called every frame,
+  // per active traveler) doesn't re-sum haversine distances across the whole
+  // route each time — matters once real Directions routes (overview=full) can
+  // carry hundreds of points on the longer corridors (e.g. Laredo <-> San Antonio).
+  function buildPathIndex(pts){
+    var cum=[0];
+    for(var i=0;i<pts.length-1;i++){ cum.push(cum[i]+haversineKm(pts[i],pts[i+1])); }
+    return {pts:pts, cum:cum, total:cum[cum.length-1]};
+  }
+  function pointAtT(pathIdx,t){
+    var pts=pathIdx.pts, cum=pathIdx.cum, total=pathIdx.total;
+    if(total===0) return {pos:pts[0], bearing:0};
+    var target=Math.max(0,Math.min(1,t))*total;
+    var i=0;
+    while(i<cum.length-2 && cum[i+1]<target) i++;
+    var segStart=cum[i], segEnd=cum[i+1]===undefined?total:cum[i+1];
+    var L=segEnd-segStart;
+    var f=L===0?0:(target-segStart)/L;
+    return {pos:lerp(pts[i],pts[i+1],f), bearing:bearingDeg(pts[i],pts[i+1])};
+  }
+
+  /* per-crossing geometry: starts as a straight fallback path, upgraded to a real
+     driving route (following the actual highway network) once Directions resolves */
+  var LANE_OFFSET_KM = 0.12;
+  function offsetPath(c, sign){
+    // lane-offset copy of the path, perpendicular to local bearing, so NB/SB don't sit on one line
+    var out=[];
+    for(var i=0;i<c.path.length;i++){
+      var p=c.path[i];
+      var segBearing = i<c.path.length-1 ? bearingDeg(c.path[i],c.path[i+1]) : bearingDeg(c.path[i-1],c.path[i]);
+      out.push(destPoint(p, segBearing+90*sign, LANE_OFFSET_KM));
+    }
+    return out;
+  }
+  function finalizeCrossingGeometry(c){
+    c.lengthKm = pathLenKm(c.path);
+    c.pathN = buildPathIndex(offsetPath(c,1));
+    c.pathS = buildPathIndex(offsetPath(c,-1));
+  }
+  CROSSINGS.forEach(function(c){
+    c.totalM = c.commuterM + c.truckM;
+    // Derived, not hand-picked: a port is "commercial" when trucks are at
+    // least 3.5% of its real 2024 total; ports under ~15M total 2024
+    // crossings are modeled with reduced overnight hours.
+    c.cat = (c.truckM / c.totalM) >= 0.035 ? "commercial" : "commuter";
+    c.closes = c.totalM < 15;
+    c.sizeFactor = Math.pow(c.totalM, 0.55);
+    c.path = [c.mxA.slice(0,2), c.pt, c.usA.slice(0,2)]; // south -> north fallback, straight line
+    finalizeCrossingGeometry(c);
+  });
+  var maxSizeFactor = Math.max.apply(null, CROSSINGS.map(function(c){ return c.sizeFactor; }));
+
+  function fetchRoute(c, token){
+    var coords = c.mxA[0]+","+c.mxA[1]+";"+c.usA[0]+","+c.usA[1];
+    var url = "https://api.mapbox.com/directions/v5/mapbox/driving/"+coords
+      + "?geometries=geojson&overview=full&access_token="+encodeURIComponent(token);
+    return fetch(url).then(function(r){
+      if(!r.ok) throw new Error("directions "+r.status);
+      return r.json();
+    }).then(function(data){
+      var route = data.routes && data.routes[0];
+      if(route && route.geometry && route.geometry.coordinates && route.geometry.coordinates.length>1){
+        c.path = route.geometry.coordinates; // real, highway-following geometry
+        c.routed = true;
+      }
+    }).catch(function(){ /* keep the straight-line fallback for this one port */ });
+  }
+
+  /* ---------------- simulation (time-of-day flow model, unchanged in spirit) ---------------- */
+  var DOT_UNIT = 400, BASE_UNIT = 500;
+  function gauss(h,mu,sigma){ var d=Math.abs(h-mu); if(d>12) d=24-d; return Math.exp(-(d*d)/(2*sigma*sigma)); }
+  function smoothstep(e0,e1,x){ var t=Math.min(1,Math.max(0,(x-e0)/(e1-e0))); return t*t*(3-2*t); }
+  function openFactor(c,h){ if(!c.closes) return 1; return smoothstep(5.5,6.5,h)*(1-smoothstep(21.5,22.5,h)); }
+  function shape(h,dir,cat){
+    var base = cat==="commuter" ? 0.10 : 0.32;
+    if(cat==="commuter"){
+      return dir==="N" ? base+0.55*gauss(h,7.5,1.7)+0.20*gauss(h,17,2.4)
+                        : base+0.55*gauss(h,17.5,1.8)+0.20*gauss(h,8,2.2);
+    }
+    return dir==="N" ? base+0.30*gauss(h,10,4.5) : base+0.30*gauss(h,15,4.5);
+  }
+  var AVG_SPEED_KMH = 75;
+
+  /* ---------------- clock / transport state ---------------- */
+  var minutes = 450, playing = true, speed = 1;
+  var DAY_SECONDS = 90;
+  var scrubber = document.getElementById("scrubber");
+  var playBtn = document.getElementById("playBtn");
+  scrubber.value = minutes;
+  document.querySelectorAll(".speedbtn").forEach(function(b){
+    b.addEventListener("click", function(){
+      document.querySelectorAll(".speedbtn").forEach(function(x){x.classList.remove("active");});
+      b.classList.add("active"); speed = parseFloat(b.dataset.speed);
+    });
+  });
+  playBtn.addEventListener("click", function(){ playing=!playing; playBtn.textContent = playing?"❚❚":"►"; });
+  scrubber.addEventListener("input", function(){ minutes=parseFloat(scrubber.value); playing=false; playBtn.textContent="►"; });
+
+  function periodFor(h){
+    if(h<5) return ["Late Night","night"];
+    if(h<7) return ["Dawn","night"];
+    if(h<10) return ["Morning Rush","day"];
+    if(h<15) return ["Midday","day"];
+    if(h<19) return ["Evening Rush","day"];
+    if(h<22) return ["Evening","night"];
+    return ["Night","night"];
+  }
+  function fmtClock(h){ var hh=Math.floor(h), mm=Math.floor((h-hh)*60); return (hh<10?"0":"")+hh+":"+(mm<10?"0":"")+mm; }
+  var clockTime=document.getElementById("clockTime"), clockPeriod=document.getElementById("clockPeriod");
+  var nbVal=document.getElementById("nbVal"), sbVal=document.getElementById("sbVal"), activeVal=document.getElementById("activeVal");
+  var nbBar=document.getElementById("nbBar"), sbBar=document.getElementById("sbBar"), activeBar=document.getElementById("activeBar");
+
+  /* ---------------- leaderboard ---------------- */
+  var rankList=document.getElementById("rankList");
+  var sorted=CROSSINGS.slice().sort(function(a,b){return b.totalM-a.totalM;});
+  var rankBars={};
+  sorted.forEach(function(c){
+    var row=document.createElement("div");
+    row.className="rank-row"; row.dataset.id=c.id;
+    row.innerHTML=
+      '<span class="rank-dot" style="background:'+(c.cat==="commuter"?"var(--teal)":"var(--gold)")+'"></span>'+
+      '<span class="rank-name"><div class="n">'+c.us+'</div><div class="s">'+c.mx+'</div></span>'+
+      '<span class="rank-bar"><i style="width:0%;background:'+(c.cat==="commuter"?"var(--teal)":"var(--gold)")+'"></i></span>';
+    rankList.appendChild(row);
+    rankBars[c.id]=row.querySelector(".rank-bar > i");
+    row.addEventListener("mouseenter", function(){ setHighlight(c.id,true); });
+    row.addEventListener("mouseleave", function(){ setHighlight(c.id,false); });
+    row.addEventListener("click", function(){ flyToCrossing(c); });
+  });
+
+  function showSetupBanner(msg){
+    document.getElementById("setupDetail").textContent = msg||"";
+    document.getElementById("setupBanner").hidden = false;
+  }
+  function parseEnv(text){
+    var out={};
+    text.split(/\r?\n/).forEach(function(line){
+      line=line.trim();
+      if(!line||line[0]==="#") return;
+      var idx=line.indexOf("=");
+      if(idx===-1) return;
+      out[line.slice(0,idx).trim()] = line.slice(idx+1).trim().replace(/^["']|["']$/g,"");
+    });
+    return out;
+  }
+
+  fetch("./.env", {cache:"no-store"}).then(function(r){
+    if(!r.ok) throw new Error("could not read .env ("+r.status+")");
+    return r.text();
+  }).then(function(text){
+    var token = parseEnv(text).MAPBOX_TOKEN;
+    if(!token || token.indexOf("YOUR_TOKEN_HERE")!==-1){
+      showSetupBanner("Found .env but MAPBOX_TOKEN is still the placeholder.");
+      return;
+    }
+    initMap(token);
+  }).catch(function(err){
+    showSetupBanner("Serve this file over http:// (not double-clicked as a local file) so it can read .env — e.g. `python serve.py` in this folder. (" + err.message + ")");
+  });
+
+  /* ---------------- map ---------------- */
+  var map, markerEls = {}, travelers = [];
+
+  function initMap(token){
+    mapboxgl.accessToken = token;
+    map = new mapboxgl.Map({
+      container: "map",
+      style: "mapbox://styles/mapbox/dark-v11",
+      center: [-106.8, 28.8],
+      zoom: 4.7,
+      pitch: 0,
+      attributionControl: true
+    });
+    map.addControl(new mapboxgl.NavigationControl({showCompass:false}), "top-right");
+    map.dragRotate.disable();
+    map.touchZoomRotate.disableRotation();
+
+    var didLoad = false;
+    map.on("load", function(){
+      didLoad = true;
+      document.getElementById("setupBanner").hidden = true; // self-heal if a slow load already tripped the banner below
+      boostBorderLine();
+      // Force a dark light-preset if this style is built on Mapbox Standard;
+      // a no-op (caught and ignored) on styles that don't expose that config.
+      try{ map.setConfigProperty("basemap", "lightPreset", "night"); }catch(e){}
+
+      Promise.allSettled(CROSSINGS.map(function(c){ return fetchRoute(c, token); })).then(function(){
+        CROSSINGS.forEach(finalizeCrossingGeometry);
+        buildRoutes();
+        buildMarkers();
+        buildTravelerLayer();
+        requestAnimationFrame(tick);
+      });
+    });
+
+    map.on("error", function(e){
+      if(e && e.error && /access token|unauthorized|401|403|forbidden/i.test(e.error.message||"")){
+        showSetupBanner("Mapbox rejected this token or style: " + e.error.message);
+      }
+    });
+
+    // Only surface a banner if the map genuinely never comes up — a harmless
+    // warning-level "error" event shouldn't hide a map that's actually working.
+    setTimeout(function(){
+      if(!didLoad){ showSetupBanner("The basemap didn't finish loading in time — check your internet connection, token, and style access, then reload."); }
+    }, 15000);
+
+    window.addEventListener("resize", function(){ map.resize(); });
+  }
+
+  function boostBorderLine(){
+    // Exact layer ids for Mapbox's own admin boundaries, falling back to a loose
+    // match in case this custom style renames or restructures them.
+    var layers = map.getStyle().layers;
+    var boundaries = layers.filter(function(l){
+      if(l.type!=="line") return false;
+      if(l.id==="admin-0-boundary" || l.id==="admin-0-boundary-bg") return true;
+      var id = l.id.toLowerCase();
+      return id.indexOf("boundary")!==-1 && (id.indexOf("country")!==-1 || id.indexOf("admin")!==-1) && id.indexOf("disputed")===-1;
+    });
+    boundaries.forEach(function(l){
+      try{
+        var isBg = l.id.indexOf("-bg")!==-1;
+        map.setPaintProperty(l.id, "line-color", "#3FA9C9");
+        map.setPaintProperty(l.id, "line-opacity", isBg?0.18:0.85);
+        map.setPaintProperty(l.id, "line-width", isBg
+          ? ["interpolate",["linear"],["zoom"], 3,4, 7,8, 12,14]
+          : ["interpolate",["linear"],["zoom"], 3,1.4, 7,2.4, 12,3.6]);
+      }catch(e){ /* layer paint props vary by style; skip quietly */ }
+    });
+  }
+
+  function buildRoutes(){
+    var features = CROSSINGS.map(function(c){
+      return { type:"Feature", properties:{cat:c.cat}, geometry:{type:"LineString", coordinates:c.path} };
+    });
+    map.addSource("routes", { type:"geojson", data:{type:"FeatureCollection", features:features} });
+    map.addLayer({
+      id:"routes-line", type:"line", source:"routes",
+      layout:{"line-cap":"round","line-join":"round"},
+      paint:{
+        "line-color":["match",["get","cat"],"commuter","#2FD9C4","commercial","#FF6A3D","#888"],
+        "line-width":["interpolate",["linear"],["zoom"],3,1,8,2.2,12,3.4],
+        "line-opacity":0.42
+      }
+    });
+  }
+
+  function buildMarkers(){
+    CROSSINGS.forEach(function(c){
+      if(c.sizeFactor >= maxSizeFactor*0.53){
+        var ringSize = 28 + (c.sizeFactor/maxSizeFactor)*34;
+        var ringEl = document.createElement("div");
+        ringEl.className="m-ring";
+        ringEl.style.width=ringSize+"px"; ringEl.style.height=ringSize+"px";
+        ringEl.style.borderColor = c.cat==="commuter" ? "rgba(47,217,196,0.55)" : "rgba(255,106,61,0.55)";
+        new mapboxgl.Marker({element:ringEl}).setLngLat(c.pt).addTo(map);
+      }
+
+      var haloEl = document.createElement("div");
+      haloEl.className="m-halo";
+      haloEl.style.background = c.cat==="commuter" ? "var(--teal)" : "var(--gold)";
+      new mapboxgl.Marker({element:haloEl}).setLngLat(c.pt).addTo(map);
+
+      var r = 5 + (c.sizeFactor/maxSizeFactor)*17;
+      var coreEl = document.createElement("div");
+      coreEl.className="m-core "+c.cat+" pulse";
+      coreEl.style.width=(r*2)+"px"; coreEl.style.height=(r*2)+"px";
+      coreEl.style.animationDelay=(Math.random()*2.6).toFixed(2)+"s";
+      var coreMarker = new mapboxgl.Marker({element:coreEl}).setLngLat(c.pt).addTo(map);
+      markerEls[c.id] = {el:coreEl, r:r};
+
+      coreEl.addEventListener("mouseenter", function(){ setHighlight(c.id,true); showTooltip(c); });
+      coreEl.addEventListener("mouseleave", function(){ setHighlight(c.id,false); hideTooltip(); });
+      coreEl.addEventListener("click", function(){ flyToCrossing(c); });
+
+      if(c.sizeFactor >= maxSizeFactor*0.37){
+        var pillEl = document.createElement("div");
+        pillEl.className="m-pill";
+        pillEl.style.border = "1px solid " + (c.cat==="commuter" ? "var(--teal)" : "var(--gold)");
+        pillEl.textContent = c.us.split(",")[0].toUpperCase();
+        new mapboxgl.Marker({element:pillEl, anchor:"bottom", offset:[0,-(r+16)]}).setLngLat(c.pt).addTo(map);
+      }
+    });
+  }
+
+  function flyToCrossing(c){
+    map.flyTo({center:c.pt, zoom:12.2, duration:1400, essential:true});
+  }
+  document.getElementById("mapFrame").addEventListener("dblclick", function(){
+    map.flyTo({center:[-106.8,28.8], zoom:4.7, duration:900});
+  });
+
+  function setHighlight(id,on){
+    var m = markerEls[id];
+    if(m){ m.el.style.boxShadow = on ? "0 0 16px 4px currentColor" : "none"; m.el.style.transform = on?"scale(1.3)":"scale(1)"; }
+    var row = rankList.querySelector('.rank-row[data-id="'+id+'"]');
+    if(row) row.classList.toggle("hl", on);
+  }
+
+  var tooltip=document.getElementById("tooltip"), mapFrame=document.getElementById("mapFrame");
+  function showTooltip(c){
+    var p = map.project(c.pt);
+    tooltip.style.left = p.x+"px"; tooltip.style.top = p.y+"px";
+    tooltip.innerHTML = "<b>"+c.us+"</b> ↔ "+c.mx+"<br><span class='tt-tag' style='color:"+(c.cat==="commuter"?"var(--teal)":"var(--gold)")+"'>"+c.cat+"</span> · 2024: "+c.commuterM.toFixed(1)+"M commuter + "+c.truckM.toFixed(2)+"M truck (real, BTS)"+(c.closes?" · modeled reduced hours":" · modeled 24-hour")+"<br><span style='color:var(--ink-faint)'>click to fly in · real road, "+Math.round(c.lengthKm)+" km</span>";
+    tooltip.classList.add("show");
+  }
+  function hideTooltip(){ tooltip.classList.remove("show"); }
+
+  /* ---------------- travelers as plain, direction-colored dots ---------------- */
+  // Color now encodes travel direction, not port category: blue = northbound
+  // (entering the US), green = southbound (entering Mexico) — distinct from
+  // the teal/orange used on the static port markers and route lines above.
+  function buildTravelerLayer(){
+    map.addSource("travelers", { type:"geojson", data:{type:"FeatureCollection", features:[]} });
+
+    // Soft color glow underneath, sized up so a dot reads clearly before you
+    // even resolve its edge — this is what makes travelers pop off the road
+    // network and basemap rather than blending into them.
+    map.addLayer({
+      id:"travelers-glow", type:"circle", source:"travelers",
+      paint:{
+        "circle-radius":["interpolate",["linear"],["zoom"], 4,11, 8,14, 12,18],
+        "circle-color":["match",["get","dir"],"N","#4C8DFF","S","#22C55E","#fff"],
+        "circle-opacity":0.26,
+        "circle-blur":0.6
+      }
+    });
+    // Bright core dot with a dark stroke so it keeps a crisp edge over any
+    // basemap color underneath it.
+    map.addLayer({
+      id:"travelers-dot", type:"circle", source:"travelers",
+      paint:{
+        "circle-radius":["interpolate",["linear"],["zoom"], 4,5.5, 8,7, 12,9],
+        "circle-color":["match",["get","dir"],"N","#4C8DFF","S","#22C55E","#fff"],
+        "circle-stroke-color":"#030503",
+        "circle-stroke-width":1.6,
+        "circle-opacity":1
+      }
+    });
+  }
+
+  function spawnTraveler(c,dir){
+    var durationSec = (c.lengthKm/AVG_SPEED_KMH) * (DAY_SECONDS/24/speed);
+    travelers.push({ c:c, dir:dir, t: dir==="N"?0:1, durationSec:Math.max(0.6,durationSec) });
+  }
+
+  /* ---------------- main loop ---------------- */
+  var last = performance.now();
+  function tick(now){
+    var dt = Math.min(0.12, (now-last)/1000); last = now;
+    if(playing){ minutes += dt*speed*(1440/DAY_SECONDS); if(minutes>=1440) minutes-=1440; scrubber.value=minutes; }
+    var h = minutes/60;
+
+    var per = periodFor(h);
+    clockTime.innerHTML = fmtClock(h)+"<span>hrs</span>";
+    clockPeriod.textContent = per[0]; clockPeriod.className = "period "+per[1];
+
+    var totalN=0, totalS=0;
+    CROSSINGS.forEach(function(c){
+      var open = openFactor(c,h);
+      var rN = BASE_UNIT*c.sizeFactor*shape(h,"N",c.cat)*open;
+      var rS = BASE_UNIT*c.sizeFactor*shape(h,"S",c.cat)*open;
+      totalN+=rN; totalS+=rS;
+
+      var simSecPerHour = DAY_SECONDS/24/speed;
+      c._spawnAccN = (c._spawnAccN||0) + (rN/DOT_UNIT)*(dt/simSecPerHour);
+      c._spawnAccS = (c._spawnAccS||0) + (rS/DOT_UNIT)*(dt/simSecPerHour);
+      while(c._spawnAccN>=1 && travelers.length<260){ spawnTraveler(c,"N"); c._spawnAccN-=1; }
+      while(c._spawnAccS>=1 && travelers.length<260){ spawnTraveler(c,"S"); c._spawnAccS-=1; }
+
+      var m = markerEls[c.id];
+      if(m){
+        var closedNow = open<0.08;
+        m.el.className = "m-core pulse " + (closedNow?"closed":c.cat);
+      }
+      var rb = rankBars[c.id];
+      if(rb) rb.style.width = Math.min(100, ((rN+rS)/(BASE_UNIT*maxSizeFactor*0.85))*100)+"%";
+    });
+
+    var features = [];
+    for(var i=travelers.length-1;i>=0;i--){
+      var tr = travelers[i];
+      var dirSign = tr.dir==="N" ? 1 : -1;
+      tr.t += dirSign*(dt/tr.durationSec);
+      if(tr.t>=1 || tr.t<=0){ travelers.splice(i,1); continue; }
+      var lanePath = tr.dir==="N" ? tr.c.pathN : tr.c.pathS;
+      var here = pointAtT(lanePath, tr.t);
+      features.push({ type:"Feature", properties:{dir:tr.dir}, geometry:{type:"Point", coordinates:here.pos} });
+    }
+    if(map && map.getSource("travelers")){
+      map.getSource("travelers").setData({type:"FeatureCollection", features:features});
+    }
+
+    var maxFlow = BASE_UNIT*maxSizeFactor*0.9;
+    nbVal.textContent = Math.round(totalN)+"/hr (model)";
+    sbVal.textContent = Math.round(totalS)+"/hr (model)";
+    nbBar.style.width = Math.min(100,(totalN/maxFlow)*100)+"%";
+    sbBar.style.width = Math.min(100,(totalS/maxFlow)*100)+"%";
+    activeVal.textContent = travelers.length;
+    activeBar.style.width = Math.min(100,(travelers.length/220)*100)+"%";
+
+    requestAnimationFrame(tick);
+  }
+})();
+</script>

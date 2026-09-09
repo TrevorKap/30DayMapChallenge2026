@@ -1,0 +1,422 @@
+<meta charset="utf-8">
+<title>The River That Runs Dry</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Hanken+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F3F6F5;
+    --panel:#FFFFFF;
+    --panel-border:rgba(13,27,30,0.11);
+    --basin-fill:#E2E9E7;
+    --basin-line:#AEBDB9;
+    --ink:#0E1B1D;
+    --ink-soft:#4C5C59;
+    --ink-faint:#84928E;
+    --line:rgba(13,27,30,0.10);
+    --canal:#2563A8;
+    --focus:#0EA394;
+    --shadow:0 16px 36px -18px rgba(13,27,30,0.22);
+
+    --biv-00:#C9C9BF; --biv-10:#BE9575; --biv-20:#A65C4C;
+    --biv-01:#9AA098; --biv-11:#A39C93; --biv-21:#A57A6C;
+    --biv-02:#5E8B87; --biv-12:#7C948F; --biv-22:#8C7E78;
+
+    --lake-water:#2563A8;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0B1315;
+      --panel:#121C1F;
+      --panel-border:rgba(226,236,233,0.13);
+      --basin-fill:#182422;
+      --basin-line:#324340;
+      --ink:#E7EEEC;
+      --ink-soft:#9FB0AB;
+      --ink-faint:#647471;
+      --line:rgba(226,236,233,0.12);
+      --canal:#6BAEEA;
+      --focus:#3FD8C4;
+      --shadow:0 16px 36px -18px rgba(0,0,0,0.6);
+
+      --biv-00:#4A4E48; --biv-10:#A98467; --biv-20:#B16E5E;
+      --biv-01:#6E7A6E; --biv-11:#7C766E; --biv-21:#966A5D;
+      --biv-02:#5C9490; --biv-12:#6E8481; --biv-22:#7D716A;
+
+      --lake-water:#6BAEEA;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0B1315;
+    --panel:#121C1F;
+    --panel-border:rgba(226,236,233,0.13);
+    --basin-fill:#182422;
+    --basin-line:#324340;
+    --ink:#E7EEEC;
+    --ink-soft:#9FB0AB;
+    --ink-faint:#647471;
+    --line:rgba(226,236,233,0.12);
+    --canal:#6BAEEA;
+    --focus:#3FD8C4;
+    --shadow:0 16px 36px -18px rgba(0,0,0,0.6);
+
+    --biv-00:#4A4E48; --biv-10:#A98467; --biv-20:#B16E5E;
+    --biv-01:#6E7A6E; --biv-11:#7C766E; --biv-21:#966A5D;
+    --biv-02:#5C9490; --biv-12:#6E8481; --biv-22:#7D716A;
+
+    --lake-water:#6BAEEA;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"Hanken Grotesk", ui-sans-serif, system-ui, -apple-system, sans-serif;
+    font-size:16px;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  @media (prefers-reduced-motion: reduce){ *{animation-duration:0.01ms !important; transition-duration:0.01ms !important;} }
+
+  a{color:var(--focus);}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 clamp(18px,4vw,48px);}
+
+  .sr-only{
+    position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+    overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;
+  }
+
+  /* ---------- map ---------- */
+  section.map-section{ margin:clamp(28px,5vw,48px) 0 0; }
+  .map-frame{
+    position:relative;
+    border-radius:18px;
+    border:1px solid var(--panel-border);
+    background:var(--bg);
+    box-shadow:var(--shadow);
+    overflow:hidden;
+  }
+  .map-frame svg{ display:block; width:100%; height:auto; }
+
+  .basin{ fill:var(--basin-fill); stroke:var(--basin-line); stroke-width:1; stroke-linejoin:round; }
+
+  .river{ fill:none; stroke-linecap:round; stroke-linejoin:round; }
+  .river.dry{ stroke-dasharray:0.01 6.5; }
+  .biv-00{ stroke:var(--biv-00); } .biv-10{ stroke:var(--biv-10); } .biv-20{ stroke:var(--biv-20); }
+  .biv-01{ stroke:var(--biv-01); } .biv-11{ stroke:var(--biv-11); } .biv-21{ stroke:var(--biv-21); }
+  .biv-02{ stroke:var(--biv-02); } .biv-12{ stroke:var(--biv-12); } .biv-22{ stroke:var(--biv-22); }
+
+  .canal-line{ fill:none; stroke:var(--canal); stroke-width:1.6; stroke-dasharray:5 4; stroke-linecap:round; opacity:0.4; }
+
+  .lake{ stroke:none; }
+  .lake-water{ fill:var(--lake-water); }
+
+  .place-dot{ fill:var(--ink); paint-order:stroke fill; stroke:var(--bg); stroke-width:1.5px; }
+  .halo{ paint-order:stroke fill; stroke:var(--bg); stroke-width:3px; stroke-linejoin:round; }
+  .place-label{ font-family:"Hanken Grotesk", sans-serif; font-weight:600; font-size:9.5px; fill:var(--ink-soft); }
+  .river-label{ font-family:"IBM Plex Mono", ui-monospace, monospace; font-size:8px; letter-spacing:0.02em; fill:var(--ink-faint); }
+  .state-label{
+    font-family:"IBM Plex Mono", ui-monospace, monospace;
+    font-size:10px; letter-spacing:0.14em; fill:var(--basin-line); text-transform:uppercase;
+  }
+  .reservoir-label{ font-family:"Hanken Grotesk", sans-serif; font-weight:700; font-size:10.5px; fill:var(--ink); }
+  .reservoir-stat{
+    font-family:"IBM Plex Mono", ui-monospace, monospace; font-size:9px;
+    font-variant-numeric:tabular-nums; fill:var(--ink-soft);
+  }
+  .note{ font-family:"Hanken Grotesk", sans-serif; font-style:italic; font-size:9px; fill:var(--ink-faint); }
+
+  /* ---------- title, description & legend, baked into the SVG itself ---------- */
+  .map-card{ fill:var(--bg); stroke:var(--panel-border); stroke-width:1; }
+  .map-title-svg{
+    font-family:"Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+    font-weight:800; letter-spacing:-0.02em; fill:var(--ink);
+  }
+  .map-dek-svg{ font-family:"Hanken Grotesk", sans-serif; font-size:12px; fill:var(--ink-soft); }
+  .legend-card-title{
+    font-family:"IBM Plex Mono", ui-monospace, monospace;
+    font-size:10px; letter-spacing:0.06em; text-transform:uppercase; fill:var(--ink-faint);
+  }
+  .legend-axis-label{
+    font-family:"IBM Plex Mono", ui-monospace, monospace;
+    font-size:9px; letter-spacing:0.04em; fill:var(--ink-soft);
+  }
+  .legend-line-label{
+    font-family:"IBM Plex Mono", ui-monospace, monospace;
+    font-size:8.5px; fill:var(--ink-soft);
+  }
+  .ghost-signature{
+    font-family:"Bricolage Grotesque", ui-sans-serif, sans-serif;
+    font-style:italic; font-weight:600; font-size:13px; letter-spacing:0.02em;
+    fill:var(--ink); opacity:0.16;
+  }
+
+  .state-border{ fill:none; stroke:var(--ink-soft); stroke-width:1.3; stroke-dasharray:5 3; stroke-linejoin:round; opacity:0.4; }
+
+  .park{ fill:#8FBF8A; fill-opacity:0.3; stroke:#8FBF8A; stroke-opacity:0.5; stroke-width:0.6; stroke-linejoin:round; }
+  .park-label{
+    font-family:"IBM Plex Mono", ui-monospace, monospace;
+    font-size:7px; letter-spacing:0.03em; text-transform:uppercase;
+    fill:#5A8C57; fill-opacity:0.75;
+  }
+
+  /* ---------- stat strip ---------- */
+  .stat-strip{
+    margin:clamp(18px,3vw,26px) 0 0;
+    display:grid; grid-template-columns:repeat(4,1fr); gap:14px;
+  }
+  @media (max-width:820px){ .stat-strip{ grid-template-columns:repeat(2,1fr); } }
+  .stat-card{
+    background:var(--panel); border:1px solid var(--panel-border); border-radius:12px;
+    padding:14px 16px;
+  }
+  .stat-card .num{
+    font-family:"IBM Plex Mono", ui-monospace, monospace;
+    font-weight:600; font-size:1.5rem; color:var(--biv-20);
+    font-variant-numeric:tabular-nums; line-height:1;
+    margin:0 0 6px;
+  }
+  .stat-card .cap{ font-size:0.82rem; color:var(--ink-soft); margin:0; }
+
+  /* ---------- footer ---------- */
+  footer{
+    margin:clamp(40px,6vw,64px) 0 60px;
+    padding-top:24px; border-top:1px solid var(--line);
+    display:grid; grid-template-columns:1.3fr 1fr; gap:40px;
+  }
+  @media (max-width:760px){ footer{ grid-template-columns:1fr; } }
+  footer h3{
+    font-family:"IBM Plex Mono", ui-monospace, monospace;
+    font-size:0.7rem; letter-spacing:0.08em; text-transform:uppercase;
+    color:var(--ink-faint); margin:0 0 10px;
+  }
+  footer p{ margin:0 0 10px; font-size:0.86rem; color:var(--ink-soft); max-width:62ch; }
+  footer a{ text-decoration:underline; text-decoration-color:var(--panel-border); text-underline-offset:3px; }
+  footer a:hover{ text-decoration-color:currentColor; }
+  footer a:focus-visible{ outline:2px solid var(--focus); outline-offset:2px; }
+  footer ul{ margin:0 0 10px; padding-left:1.1em; font-size:0.82rem; color:var(--ink-soft); }
+  footer li{ margin:0 0 4px; }
+</style>
+
+<section class="map-section">
+  <div class="wrap">
+    <div class="map-frame">
+      <h1 class="sr-only">The River That Runs Dry</h1>
+      <p class="sr-only">The Colorado once ran wild from the Rockies to the Gulf of California, carrying spring snowmelt through a wide desert delta. Over the last century, dams and canals turned it into one of the most heavily managed rivers in the world, split among seven states, Mexico, and millions of acres of farmland. Now Lake Mead and Lake Powell sit at record lows, and the river runs dry before it reaches the sea in most years.</p>
+
+      <svg viewBox="0 0 700.0 1147.1" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="mapTitle mapDesc">
+        <title id="mapTitle">Bivariate map of the Colorado River Basin's tributary network</title>
+        <desc id="mapDesc">A map of the Colorado River's real tributary network, traced from public hydrography data, running from Rocky Mountain headwaters in Wyoming and Colorado south through Utah, Arizona, and Nevada into Mexico. Each reach is colored by a combination of water-stress level and current water level relative to historic norms. Nearly the entire basin below the headwaters falls into the highest-stress, lowest-level color, and the river itself runs dry before reaching the Gulf of California.</desc>
+        <defs>
+          <filter id="cardShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="#0D1B1E" flood-opacity="0.2"/>
+          </filter>
+        </defs>
+
+        <path class="basin" d="M391.3,24.0 L386.2,31.0 L376.5,33.8 L383.5,41.4 L380.0,51.7 L363.3,56.6 L357.7,63.0 L352.0,60.4 L356.3,75.1 L352.2,76.3 L353.8,97.5 L348.6,98.8 L346.0,93.6 L352.6,111.4 L342.3,115.2 L341.5,144.3 L355.0,155.5 L350.1,166.4 L338.4,164.7 L333.8,170.8 L337.6,182.1 L334.8,193.3 L340.5,192.5 L341.0,205.4 L348.1,208.7 L345.4,216.9 L350.5,227.2 L347.8,232.6 L349.4,241.3 L336.0,243.9 L330.4,256.5 L334.1,260.6 L314.4,268.9 L312.6,278.6 L308.5,279.5 L314.3,289.2 L313.0,298.9 L323.6,308.6 L317.2,319.3 L305.8,316.3 L309.7,340.0 L297.6,366.1 L295.8,381.1 L300.4,386.7 L296.6,390.8 L298.1,400.1 L284.2,406.8 L270.9,438.1 L273.9,447.4 L271.1,453.5 L282.7,458.6 L281.8,467.1 L271.1,471.3 L272.3,486.1 L260.7,485.6 L255.0,490.1 L254.2,496.8 L248.8,497.7 L248.5,506.7 L242.9,511.7 L243.6,518.4 L250.9,530.3 L249.7,535.9 L257.4,543.1 L256.6,555.7 L263.0,563.7 L274.9,567.7 L286.4,554.0 L290.7,555.8 L287.9,569.4 L292.9,575.3 L292.7,582.9 L299.8,574.9 L308.0,585.3 L319.5,581.3 L325.3,585.2 L341.3,577.1 L352.0,561.7 L356.5,561.7 L362.0,581.5 L367.9,573.2 L376.9,573.2 L382.7,586.2 L391.4,586.9 L404.4,595.4 L406.0,604.4 L396.4,618.4 L404.5,636.0 L403.0,640.2 L409.6,645.8 L418.1,646.6 L436.4,634.1 L445.2,635.3 L453.9,623.7 L460.3,627.3 L468.6,620.6 L468.6,633.2 L461.1,638.6 L464.2,650.3 L477.2,658.1 L488.5,649.6 L513.5,654.3 L513.0,659.2 L525.5,661.3 L532.9,656.1 L537.9,645.3 L555.7,638.6 L565.6,620.9 L577.8,621.1 L590.8,609.6 L591.3,598.4 L586.9,590.6 L590.8,584.2 L588.1,572.5 L592.2,560.7 L607.5,552.9 L605.4,548.2 L614.8,533.8 L614.4,528.2 L607.9,523.0 L610.2,510.4 L596.3,504.6 L595.4,499.4 L583.1,499.0 L578.2,493.5 L573.2,496.9 L570.7,488.8 L558.1,494.1 L552.2,481.2 L570.8,469.2 L600.0,467.8 L603.2,457.8 L613.3,453.3 L620.2,438.8 L631.0,441.0 L637.1,435.8 L637.0,428.7 L630.6,423.5 L629.3,414.5 L623.6,407.8 L631.8,390.7 L622.8,390.7 L614.3,384.2 L614.9,375.7 L620.5,368.6 L620.4,359.2 L626.8,352.8 L651.4,354.3 L664.4,340.7 L667.0,332.6 L657.8,326.5 L660.2,319.1 L672.6,315.7 L676.0,282.5 L662.3,263.4 L655.5,274.6 L638.0,276.6 L624.2,274.7 L621.2,269.5 L613.2,272.0 L607.1,253.0 L610.3,233.8 L597.7,228.0 L597.4,221.6 L592.1,220.3 L595.6,215.9 L580.0,203.7 L579.4,195.4 L574.5,189.5 L566.1,189.6 L567.4,178.8 L558.6,177.8 L563.0,171.4 L558.4,169.4 L565.0,161.5 L563.9,155.9 L568.8,145.2 L573.8,151.8 L580.7,151.1 L578.4,140.7 L583.4,133.0 L580.2,132.2 L580.7,127.3 L574.4,127.2 L574.6,121.1 L557.4,121.9 L549.8,115.8 L533.9,120.9 L527.3,116.0 L528.6,109.4 L526.0,108.9 L524.7,114.6 L509.1,117.7 L504.4,123.8 L495.4,123.0 L484.9,115.6 L468.3,120.1 L464.1,110.3 L445.3,100.2 L452.4,90.4 L450.0,81.6 L443.2,79.1 L444.8,76.7 L434.5,64.8 L422.7,59.4 L414.7,43.1 L413.5,30.9 L391.3,24.0 Z"/>
+        <path class="basin" d="M64.7,359.2 L53.4,375.7 L42.6,376.2 L42.2,390.8 L51.5,398.2 L50.7,412.9 L44.1,423.3 L46.5,428.2 L37.3,435.5 L50.3,443.9 L64.4,463.5 L58.0,477.0 L52.8,479.6 L51.7,488.2 L45.3,490.1 L41.6,503.6 L47.7,512.9 L52.8,532.7 L60.9,535.1 L63.0,559.6 L58.2,569.6 L35.0,565.6 L24.0,599.9 L24.7,604.2 L35.3,610.9 L38.5,622.1 L36.2,628.1 L41.7,629.2 L46.2,636.4 L61.0,635.1 L64.1,639.5 L67.7,628.8 L77.7,625.8 L85.4,628.7 L86.2,633.3 L85.3,640.2 L77.2,649.7 L80.5,653.6 L78.8,665.5 L73.4,666.2 L66.2,659.5 L58.4,660.9 L61.4,673.2 L48.6,688.7 L63.1,700.2 L59.3,702.3 L66.3,713.9 L77.3,717.5 L82.0,724.0 L77.8,737.0 L78.0,750.8 L81.2,754.9 L78.1,762.1 L92.0,780.9 L94.4,793.6 L91.0,798.2 L80.7,797.3 L75.0,803.5 L82.0,824.8 L74.4,836.6 L53.8,833.3 L48.3,825.9 L55.7,843.0 L54.9,850.0 L79.1,859.4 L88.4,870.3 L82.5,876.8 L87.1,883.0 L86.0,893.6 L79.7,897.3 L78.4,903.6 L58.2,908.8 L42.4,920.9 L45.8,926.1 L42.6,932.1 L49.5,936.7 L52.5,951.5 L60.7,960.4 L58.5,974.6 L61.6,977.5 L70.2,971.1 L83.9,976.6 L81.5,968.5 L84.2,962.7 L123.7,989.4 L132.8,989.8 L133.1,986.0 L144.5,981.2 L157.7,990.7 L158.8,1003.1 L185.5,1009.0 L191.5,1016.6 L192.3,1013.8 L194.9,1021.2 L190.9,1024.5 L190.7,1044.5 L199.9,1067.9 L205.5,1068.6 L211.3,1061.8 L223.8,1058.3 L237.4,1068.8 L244.5,1090.0 L240.8,1095.2 L236.6,1093.7 L238.5,1106.3 L252.6,1104.8 L257.3,1109.4 L263.6,1104.1 L285.7,1109.8 L304.1,1101.4 L304.7,1123.1 L312.1,1117.2 L317.2,1118.5 L319.5,1114.1 L316.8,1108.7 L326.7,1091.1 L341.3,1082.9 L344.9,1058.4 L353.2,1058.1 L369.0,1030.1 L395.4,1028.5 L396.4,1035.2 L403.2,1041.2 L402.8,1048.9 L409.7,1065.8 L420.1,1073.4 L423.9,1068.7 L420.8,1060.7 L425.1,1058.2 L427.5,1044.1 L443.2,1044.4 L455.2,1037.0 L462.0,1027.0 L469.2,1026.6 L467.8,1019.2 L475.1,1000.5 L472.4,984.7 L478.3,985.5 L480.6,980.2 L477.0,979.4 L480.4,973.5 L476.2,957.5 L479.4,950.2 L477.3,940.8 L487.1,940.7 L494.7,952.5 L511.2,951.0 L510.1,923.7 L495.3,901.1 L501.1,895.8 L500.3,881.3 L516.7,874.2 L533.7,853.7 L535.3,838.2 L531.8,831.7 L536.2,825.9 L534.3,816.7 L537.4,811.2 L525.1,807.6 L521.9,808.7 L523.1,812.6 L507.6,814.7 L497.2,823.1 L489.7,819.0 L495.7,816.6 L491.3,813.1 L494.9,808.2 L491.8,807.5 L496.2,800.8 L493.5,795.1 L497.2,793.6 L496.7,786.8 L506.7,781.1 L521.0,760.9 L504.6,750.4 L502.9,741.6 L496.5,740.4 L498.8,732.8 L502.1,734.1 L502.4,724.9 L518.3,705.7 L510.9,696.6 L499.3,690.8 L498.0,685.5 L497.8,678.4 L507.5,669.3 L513.6,654.4 L484.9,649.7 L477.2,658.1 L464.2,650.3 L461.1,638.6 L469.9,629.5 L467.2,620.5 L461.3,627.1 L453.9,623.7 L445.2,635.3 L436.4,634.1 L418.1,646.6 L409.6,645.8 L403.0,640.2 L404.5,636.0 L396.4,618.4 L406.0,604.4 L404.3,595.3 L382.7,586.2 L376.7,573.1 L367.9,573.2 L361.1,581.0 L356.2,561.5 L350.4,562.9 L341.3,577.1 L325.3,585.2 L319.5,581.3 L308.0,585.3 L299.8,574.9 L292.7,582.9 L292.9,575.3 L287.9,569.4 L290.7,555.8 L286.4,554.0 L274.9,567.7 L263.5,564.1 L256.8,556.2 L257.4,543.1 L249.7,535.9 L250.9,530.3 L243.2,511.0 L238.2,511.4 L239.1,504.4 L227.3,504.9 L222.1,512.3 L208.0,497.3 L201.2,496.7 L194.3,502.5 L177.2,497.8 L167.7,508.5 L157.2,503.5 L139.7,506.4 L130.6,496.2 L131.6,492.4 L125.2,493.0 L120.1,488.0 L131.7,469.2 L131.5,455.6 L127.3,442.3 L118.5,439.2 L115.4,433.2 L110.5,445.5 L107.5,441.7 L92.6,440.7 L90.8,447.8 L95.9,459.9 L98.6,487.2 L93.0,487.5 L88.0,498.5 L89.9,510.3 L84.7,523.7 L73.5,525.1 L67.6,503.3 L76.6,466.0 L74.2,449.0 L77.3,443.4 L71.8,437.9 L71.6,430.2 L76.8,420.6 L71.5,409.5 L78.1,391.2 L73.4,367.9 L64.7,359.2 Z"/>
+
+        <path class="state-border" d="M708.4,-16.4 L708.4,221.9 L325.7,221.9 L325.6,-16.4 Z"/>
+        <path class="state-border" d="M455.5,544.9 L455.5,221.9 L708.4,221.9 L708.4,544.9 L455.5,544.9 Z"/>
+        <path class="state-border" d="M455.5,544.9 L131.9,544.6 L131.8,141.1 L325.7,141.1 L325.7,221.9 L455.5,221.9 L455.5,544.9 Z"/>
+        <path class="state-border" d="M131.9,544.6 L131.8,611.0 L126.8,619.5 L122.7,623.3 L119.5,623.2 L113.1,616.3 L108.2,613.7 L101.8,613.1 L91.2,615.9 L88.2,618.9 L86.5,624.6 L90.0,632.4 L90.7,647.5 L92.7,655.6 L91.6,662.4 L96.3,678.0 L95.0,707.2 L-8.4,606.7 L-8.4,141.1 L131.8,141.1 L131.9,544.6 Z"/>
+        <path class="state-border" d="M455.4,1003.0 L326.2,1003.3 L80.4,907.7 L83.5,903.1 L87.8,890.3 L96.8,889.4 L101.1,886.4 L103.6,880.8 L104.2,875.1 L102.7,869.3 L98.9,865.0 L92.6,862.2 L88.9,854.3 L87.9,841.3 L89.1,834.3 L92.4,833.2 L95.5,830.1 L100.8,818.9 L102.2,812.6 L101.6,795.0 L107.4,783.1 L113.2,775.8 L126.4,764.1 L126.4,761.6 L124.3,758.6 L114.6,752.3 L110.5,747.8 L108.8,739.6 L98.4,723.1 L95.0,714.0 L96.3,678.0 L91.6,662.4 L92.7,655.6 L90.7,647.5 L90.0,632.4 L86.5,624.6 L88.2,618.9 L91.2,615.9 L101.8,613.1 L108.2,613.7 L113.1,616.3 L119.5,623.2 L122.7,623.3 L126.8,619.5 L131.8,611.0 L131.9,544.6 L455.5,544.9 L455.4,1003.0 Z"/>
+        <path class="state-border" d="M455.4,1003.0 L455.5,544.9 L708.4,544.9 L708.4,948.6 L609.6,948.7 L616.2,963.3 L624.1,967.5 L509.6,966.6 L509.4,1002.9 L455.4,1003.0 Z"/>
+        <path class="state-border" d="M95.0,707.2 L95.0,714.0 L98.4,723.1 L108.8,739.6 L110.5,747.8 L126.4,761.6 L126.4,764.1 L113.2,775.8 L107.4,783.1 L101.6,795.0 L102.2,812.6 L100.8,818.9 L95.5,830.1 L92.4,833.2 L89.1,834.3 L87.9,841.3 L88.9,854.3 L92.6,862.2 L98.9,865.0 L102.7,869.3 L104.2,875.1 L103.6,880.8 L101.1,886.4 L96.8,889.4 L87.6,891.0 L-8.4,900.1 L-8.4,606.7 L95.0,707.2 Z"/>
+
+        <!-- National park units the mapped rivers pass through (NPS Land Resources Division boundary data) -->
+        <path class="park" d="M683.1,278.2 L681.9,278.4 L681.9,279.0 L681.3,279.3 L681.7,281.0 L681.4,281.6 L682.6,281.6 L682.6,284.5 L683.2,284.5 L683.2,285.7 L682.6,285.7 L682.6,287.3 L680.8,288.5 L680.7,289.3 L680.2,289.7 L678.6,289.9 L674.7,288.9 L672.4,289.6 L670.5,288.2 L668.9,289.4 L667.7,289.2 L667.1,288.5 L664.8,289.2 L664.9,288.2 L663.1,285.4 L663.6,284.8 L663.6,283.8 L666.1,283.5 L666.1,282.8 L665.5,282.6 L665.9,282.0 L663.1,282.0 L663.1,280.8 L662.5,280.7 L662.8,279.4 L662.0,278.3 L662.1,277.3 L661.2,277.3 L661.4,272.7 L661.0,273.1 L660.8,272.5 L658.5,272.6 L659.0,272.1 L659.5,269.0 L659.2,267.8 L659.6,266.5 L659.4,265.1 L659.9,264.2 L661.8,263.9 L662.3,263.4 L664.4,264.2 L665.6,263.0 L667.6,262.3 L669.2,260.4 L669.1,259.2 L670.1,258.5 L672.5,258.0 L673.6,258.3 L674.7,260.0 L676.5,259.7 L677.5,259.1 L678.8,259.3 L679.6,260.6 L681.5,261.9 L684.2,260.8 L684.5,267.6 L685.7,267.7 L685.7,268.3 L685.4,268.3 L685.7,270.0 L685.0,270.0 L684.5,271.0 L682.8,271.4 L682.8,271.8 L681.9,271.7 L681.7,270.6 L679.6,270.0 L679.6,270.6 L681.1,270.9 L681.0,272.0 L681.9,272.0 L681.0,272.3 L681.0,272.9 L682.5,273.4 L681.0,273.6 L680.7,274.5 L679.4,275.0 L679.4,275.8 L680.0,275.6 L680.0,276.4 L682.2,276.4 L682.5,277.6 L683.0,277.3 L683.1,278.2 Z"/>
+        <text class="park-label" x="646" y="297">Rocky Mtn NP</text>
+
+        <path class="park" d="M408.3,423.2 L408.7,423.8 L408.5,428.2 L410.9,429.6 L411.1,430.1 L410.6,430.5 L411.5,430.5 L411.5,436.4 L409.7,436.4 L409.7,440.5 L407.9,440.5 L407.9,443.4 L407.4,443.4 L407.4,447.5 L408.0,447.5 L408.0,448.1 L409.2,448.1 L409.2,449.3 L410.4,449.3 L410.4,450.5 L412.7,450.5 L412.7,454.0 L414.3,454.0 L414.3,462.8 L415.5,462.8 L415.5,464.8 L415.0,465.0 L414.9,465.6 L415.1,467.1 L413.9,467.0 L413.8,466.5 L412.7,467.0 L411.8,465.8 L412.0,466.8 L412.6,467.4 L410.8,467.4 L410.2,466.3 L408.4,466.3 L408.4,463.9 L407.2,463.9 L407.2,461.6 L406.1,461.6 L406.1,459.2 L391.2,459.3 L391.2,458.1 L387.1,458.1 L387.1,455.7 L389.4,455.7 L389.4,452.0 L390.4,452.0 L390.4,443.2 L391.6,443.2 L391.6,442.6 L392.8,442.6 L392.8,442.0 L396.3,441.4 L396.3,439.1 L395.1,439.1 L395.1,436.7 L394.0,436.7 L394.0,435.0 L392.2,435.0 L392.2,433.8 L390.4,433.8 L390.4,426.8 L392.8,426.8 L392.8,424.7 L392.1,423.8 L395.3,423.8 L395.3,424.6 L396.1,424.4 L395.6,425.1 L396.2,425.4 L396.7,424.8 L397.2,425.2 L397.0,425.5 L397.5,425.3 L397.7,424.5 L398.1,424.8 L399.7,423.6 L399.4,424.7 L398.1,425.3 L398.8,425.5 L401.2,424.9 L401.2,425.3 L402.3,425.3 L403.3,424.6 L407.1,424.6 L407.1,423.8 L407.4,423.5 L407.8,424.1 L408.3,423.2 Z"/>
+        <path class="park" d="M381.4,426.2 L381.4,428.6 L379.7,428.6 L379.7,429.7 L378.5,429.7 L378.5,428.0 L379.7,428.0 L379.7,426.8 L380.8,426.2 L380.8,425.6 L381.4,425.6 L381.4,425.0 L382.0,425.0 L382.0,426.2 L381.4,426.2 Z"/>
+        <text class="park-label" x="415" y="475">Canyonlands NP</text>
+
+        <path class="park" d="M290.9,555.8 L273.7,585.1 L275.1,589.1 L272.1,593.5 L274.4,594.2 L271.5,595.7 L279.5,609.7 L279.5,625.2 L263.3,628.7 L248.3,624.0 L228.1,607.6 L227.6,599.3 L232.5,598.0 L227.0,596.8 L224.4,605.3 L216.2,602.4 L209.4,606.8 L207.6,613.4 L207.3,603.3 L188.9,611.8 L184.8,618.4 L178.8,617.8 L176.4,622.4 L179.3,636.9 L174.3,645.7 L166.1,644.6 L160.1,637.9 L157.2,640.0 L148.4,623.9 L141.0,618.5 L140.8,627.9 L135.9,623.7 L138.5,614.0 L148.1,611.9 L152.5,613.8 L152.9,618.5 L152.8,615.6 L156.2,616.0 L154.6,619.9 L158.2,615.4 L157.6,627.8 L160.8,624.2 L159.0,619.0 L161.9,620.0 L160.1,617.5 L164.3,619.4 L164.5,625.5 L168.7,618.1 L168.1,629.0 L163.6,630.6 L171.2,633.8 L168.8,639.0 L172.0,639.3 L174.9,632.5 L170.0,632.6 L170.8,622.4 L177.5,617.9 L174.5,618.1 L176.2,615.5 L172.6,610.2 L178.0,616.6 L184.3,617.2 L190.1,611.0 L188.4,599.5 L196.2,601.8 L197.7,592.5 L218.2,592.5 L218.2,589.0 L224.5,585.3 L239.2,590.4 L244.5,595.5 L242.0,597.3 L271.8,599.8 L267.8,598.0 L273.9,588.1 L268.6,588.6 L269.9,584.1 L278.5,577.7 L279.1,575.2 L275.5,576.3 L282.4,569.3 L281.1,565.6 L285.6,564.6 L290.9,555.8 Z"/>
+        <text class="park-label" x="220" y="637">Grand Canyon NP</text>
+
+        <path class="park" d="M193.9,531.1 L193.4,531.1 L193.4,528.8 L192.3,528.8 L192.2,525.9 L191.7,525.9 L191.7,524.2 L192.3,524.1 L192.3,517.7 L191.7,517.7 L191.7,516.6 L191.1,516.6 L191.1,514.8 L186.6,514.8 L186.6,513.6 L186.0,513.6 L186.0,512.5 L185.4,512.5 L185.3,508.4 L184.6,508.4 L184.8,507.3 L185.9,507.3 L185.9,506.1 L186.5,506.1 L186.5,504.2 L190.0,504.4 L190.0,509.0 L193.4,509.0 L193.5,514.8 L195.8,514.8 L195.8,514.2 L196.3,514.2 L196.3,513.7 L197.0,513.4 L197.0,512.8 L197.6,513.2 L198.7,512.8 L199.3,513.0 L199.3,515.1 L205.8,515.1 L205.9,523.4 L207.0,523.4 L207.0,524.6 L208.2,524.6 L208.2,532.7 L205.9,532.7 L205.9,533.5 L201.3,533.6 L201.3,531.7 L198.6,531.7 L198.9,531.1 L199.5,531.1 L199.5,530.2 L200.1,529.9 L200.1,528.7 L198.9,528.7 L198.9,530.2 L198.3,530.5 L198.3,531.1 L193.9,531.1 Z"/>
+        <text class="park-label" x="212" y="510">Zion NP</text>
+
+        <text class="state-label halo" x="560" y="120">WYOMING</text>
+        <text class="state-label halo" x="558" y="330">COLORADO</text>
+        <text class="state-label halo" x="330" y="470">UTAH</text>
+        <text class="state-label halo" x="470" y="645">ARIZONA</text>
+        <text class="state-label halo" x="20" y="475">NEVADA</text>
+        <text class="state-label halo" x="380" y="960">NEW MEXICO</text>
+        <text class="state-label halo" x="130" y="1050">MEXICO</text>
+
+        <!-- Rivers, colored by (water stress x water level). Real hydrography: USGS/Natural Earth mainstems, OSM tributaries -->
+        <path class="river biv-02" stroke-width="3.2" d="M662.9,270.1 L664.9,288.4 L643.7,296.2 L625.3,297.3 L610.7,312.8 L604.2,307.9 L593.4,311.5 L582.3,330.2 L569.4,336.5 L558.2,335.9 L548.5,337.9 L536.4,336.7 L531.9,341.1 L523.8,343.9 L510.3,354.9 L506.8,359.4 L506.0,365.0 L501.9,372.3 L494.4,376.7 L485.5,376.5"/>
+        <path class="river biv-01" stroke-width="4.4" d="M485.5,376.5 L474.5,369.1 L463.8,365.9 L454.2,372.9 L442.7,383.7 L441.0,397.0 L438.4,399.0 L437.3,403.6 L428.1,408.8 L427.1,412.8 L424.0,413.8 L420.6,420.1 L417.9,417.6 L416.8,425.9 L415.3,428.1 L412.2,428.1 L411.7,434.5 L409.8,435.3 L410.1,438.6 L405.8,446.0"/>
+        <path class="river biv-10" stroke-width="6.5" d="M405.8,446.0 L392.6,457.6 L389.3,464.1 L385.0,464.4 L380.2,472.8 L369.9,472.5 L292.8,555.2"/>
+        <path class="river biv-20" stroke-width="6.5" d="M292.8,555.2 L292.9,556.9 L288.1,559.3 L274.4,583.3 L275.2,588.0 L272.5,591.9 L274.3,593.1 L271.6,595.3 L276.5,604.1 L276.7,613.7"/>
+        <path class="river biv-20" stroke-width="7" d="M276.7,613.7 L269.4,621.0 L260.8,617.4 L249.7,616.3 L241.1,605.0 L238.6,605.0 L235.5,608.3 L230.9,604.2 L234.0,599.2 L234.0,594.4 L223.3,593.3 L221.4,597.1 L218.3,597.1 L218.1,599.1 L213.8,601.9 L198.0,606.9 L187.7,613.0 L185.1,618.6 L178.9,619.9 L177.4,622.5 L179.3,637.7 L177.9,643.3 L175.1,645.9 L168.1,644.9 L158.2,639.4 L92.7,655.6 L89.5,644.5 L91.2,635.0"/>
+        <path class="river biv-20" stroke-width="6" d="M91.2,635.0 L87.3,629.0 L86.5,624.6 L97.5,689.3 L96.8,694.3 L93.1,696.5 L94.9,699.8 L93.1,702.6 L94.6,716.2 L97.7,719.2 L99.4,725.2 L102.5,726.4 L110.0,743.6 L126.8,763.6 L120.0,771.3 L109.8,777.3 L106.8,784.9 L101.1,790.2 L102.8,796.1 L101.1,797.8 L102.9,809.4 L101.0,812.7 L100.0,822.1 L94.0,832.7 L87.4,834.8 L89.3,838.3 L87.7,842.1 L90.9,851.5 L89.4,860.8 L91.3,863.6 L102.0,866.4 L104.1,870.2 L104.7,879.7 L100.7,883.6 L99.8,889.2 L90.3,888.3 L87.8,890.3"/>
+        <path class="river biv-20 dry" stroke-width="2.2" d="M87.8,890.3 L82.5,900.7 L82.0,907.4 L74.5,909.8 L70.9,921.2 L67.3,925.2 L66.0,930.1 L58.1,933.4 L55.9,940.0 L57.1,946.7 L59.0,943.9 L62.5,946.7 L62.5,951.7 L67.5,951.5"/>
+        <text class="note halo" x="20" y="965">runs dry most years since 1960</text>
+
+        <path class="river biv-01" stroke-width="4.2" d="M399.7,30.6 L393.8,30.5 L393.1,43.9 L387.2,56.4 L385.3,65.4 L396.6,69.7 L397.4,79.9 L396.0,84.0 L398.5,91.4 L395.5,96.0 L390.1,98.4 L390.0,103.1 L382.8,117.5 L384.9,123.8 L383.1,128.2 L386.7,131.0 L386.2,133.8 L390.4,136.2 L392.3,141.7 L405.0,147.1 L408.9,152.5 L408.2,154.9 L418.0,168.0 L434.6,183.5 L433.0,188.0 L430.6,188.5 L431.7,192.0 L428.4,196.3 L425.8,196.0 L419.5,227.8 L431.5,226.7 L449.5,228.9 L452.8,233.4 L461.9,235.5 L467.5,241.1 L460.7,258.0 L450.7,258.3 L448.4,262.1 L443.7,264.6 L443.7,269.1 L439.7,267.5 L435.9,276.9 L429.3,277.1 L426.8,281.5 L424.0,279.2 L422.6,280.4 L422.0,286.1 L423.3,288.1 L406.7,303.6 L403.9,311.1 L401.4,313.0 L402.8,316.4 L399.8,318.5 L398.3,323.5 L395.9,323.6 L395.3,330.9 L391.9,338.2 L393.9,353.7 L390.8,359.3 L390.8,366.1 L388.0,369.2 L386.9,387.1 L384.4,392.2 L390.0,401.8 L388.4,406.1 L392.3,414.3 L394.9,415.1 L391.1,417.1 L395.9,420.3 L392.6,422.5 L394.7,426.2 L393.8,432.0 L398.0,436.5 L402.2,449.2"/>
+        <text class="river-label halo" x="416" y="222" transform="rotate(64 416 222)">Green River</text>
+
+        <path class="river biv-11" stroke-width="2.8" d="M598.0,410.6 L596.5,414.1 L591.8,418.2 L590.8,422.1 L587.8,422.3 L585.4,425.0 L577.0,427.2 L575.1,425.4 L573.2,426.8 L570.0,425.5 L565.9,427.7 L554.4,428.2 L544.4,420.6 L541.8,417.0 L539.2,417.7 L532.6,412.8 L534.0,408.0 L533.1,406.0 L534.4,402.7 L533.7,400.9 L531.2,402.3 L527.8,401.1 L520.8,401.7 L518.8,403.6 L512.9,404.1 L511.8,405.7 L510.4,403.9 L505.5,403.1 L502.2,400.3 L502.1,397.7 L501.1,398.2 L499.6,396.3 L498.9,397.3 L498.7,395.0 L495.7,393.7 L494.0,390.2 L494.9,389.0 L493.4,387.4 L494.1,384.5 L491.0,384.5 L488.1,381.9 L488.8,381.0 L486.9,381.4 L486.4,379.0"/>
+        <text class="river-label halo" x="529" y="407" transform="rotate(56 529 407)">Gunnison River</text>
+
+        <path class="river biv-20" stroke-width="2.8" d="M601.4,510.3 L597.6,511.4 L592.5,516.5 L582.1,538.7 L577.7,542.3 L563.5,542.9 L558.3,552.7 L549.3,558.1 L542.7,559.1 L531.8,568.2 L517.3,568.4 L506.0,565.0 L503.1,566.1 L480.0,561.7 L476.3,559.6 L473.3,554.5 L463.5,551.5 L458.7,546.8 L458.5,544.1 L453.3,537.9 L452.5,533.0 L448.4,529.6 L447.2,526.1 L431.5,519.6 L422.9,520.4 L411.7,527.8 L404.0,527.9 L403.4,530.5 L400.6,529.0 L399.3,530.8 L383.4,518.3 L375.0,520.8 L372.8,519.1 L362.3,522.4 L357.0,527.1 L353.4,524.3 L351.3,526.7"/>
+        <text class="river-label halo" x="453" y="547" transform="rotate(47 453 547)">San Juan River</text>
+
+        <path class="river biv-20 dry" stroke-width="1.6" d="M428.9,786.9 L430.3,784.1 L429.2,781.7 L431.3,780.0 L437.1,778.9 L439.6,776.2 L438.9,769.5 L435.8,765.7 L435.1,762.3 L435.9,758.9 L433.5,757.4 L432.2,753.5 L432.8,751.7 L435.2,751.4 L435.8,745.0 L431.3,739.0 L427.0,737.8 L426.3,739.2 L422.7,739.2 L420.9,737.2 L415.8,736.6 L414.2,734.6 L410.9,734.2 L408.9,736.0 L404.8,735.0 L400.6,729.3 L391.2,727.5 L389.4,719.2 L386.3,715.5 L377.0,714.5 L374.1,712.9 L374.1,711.7 L368.9,709.8 L359.5,710.4 L357.3,707.9 L352.7,707.9 L350.1,701.6 L351.9,697.4 L350.5,696.4 L349.0,691.9 L344.6,691.5 L343.1,686.6 L340.6,685.4 L331.2,684.4 L328.0,679.7 L325.7,679.0 L326.3,677.6 L323.0,674.5 L320.7,675.2 L316.9,672.6 L316.8,671.4 L314.4,671.0 L311.7,661.5 L309.1,659.2 L308.7,655.1 L307.5,653.7 L307.5,650.6 L309.2,649.4 L308.0,647.3 L308.2,642.1 L304.2,636.7 L297.3,632.4 L285.6,629.8 L286.6,628.6 L284.1,628.2 L284.2,626.5 L285.6,625.4 L284.9,621.2 L286.8,619.7 L284.1,617.7 L284.8,616.7 L283.0,614.6 L283.0,611.0 L280.3,609.3 L276.9,610.3"/>
+        <text class="river-label halo" x="356" y="693" transform="rotate(62 356 693)">Little Colorado River</text>
+
+        <path class="river biv-20" stroke-width="2" d="M202.7,521.3 L203.2,523.1 L198.2,532.1 L192.7,531.5 L187.7,528.5 L175.7,529.3 L171.2,535.6 L167.3,534.9 L164.3,538.1 L162.1,538.5 L160.4,541.6 L153.9,544.2 L152.3,547.7 L148.2,548.5 L145.2,551.9 L140.6,552.0 L134.2,560.4 L126.0,562.4 L115.1,570.8 L112.5,579.8 L113.3,586.5 L111.6,589.5 L112.8,590.8 L109.5,596.6 L107.5,614.0"/>
+        <text class="river-label halo" x="152" y="553" transform="rotate(-38 152 553)">Virgin River</text>
+
+        <path class="river biv-21" stroke-width="2.2" d="M510.1,821.4 L513.7,828.9 L513.7,832.7 L515.9,834.7 L510.1,853.0 L502.0,862.2 L489.5,862.1 L484.3,871.6 L484.4,879.8 L481.0,888.5 L466.2,897.9 L463.2,897.8 L450.2,889.2 L446.7,884.7 L443.2,873.7 L435.9,870.2 L430.2,871.9 L423.6,879.8 L416.0,882.1 L410.1,880.2 L403.1,874.8 L397.6,864.0 L384.6,853.3 L374.6,851.3 L362.4,852.2 L348.9,860.6 L344.3,867.2 L336.1,863.1 L331.5,858.2 L325.4,857.4 L316.7,860.3 L312.4,859.0 L295.0,866.5 L268.6,854.3 L262.6,854.9 L251.2,846.5 L249.2,842.2 L246.0,841.6 L243.9,837.7 L237.0,835.5 L231.7,839.1 L217.9,841.6 L212.9,845.4 L219.0,859.0 L219.3,865.4 L217.3,867.1 L203.8,865.3 L195.1,861.1 L190.4,867.1 L184.4,867.1 L179.3,870.4 L175.0,870.6 L144.7,887.1 L143.2,885.8 L136.5,888.1 L136.3,890.7 L128.0,889.0 L126.9,892.5 L124.3,890.9 L120.3,893.7 L114.6,891.9 L109.6,885.0 L103.6,890.5 L98.4,889.5"/>
+        <text class="river-label halo" x="359" y="860" transform="rotate(5 359 860)">Gila River</text>
+
+        <path class="river biv-21" stroke-width="2.2" d="M379.1,808.3 L371.5,803.3 L369.8,804.3 L370.4,803.4 L369.0,802.9 L369.3,802.0 L368.0,802.5 L367.6,804.3 L365.9,802.9 L360.4,804.1 L357.6,800.3 L357.0,801.4 L355.8,800.5 L353.3,801.3 L352.9,802.8 L351.1,802.6 L349.0,805.9 L349.0,808.2 L345.2,811.6 L345.6,813.1 L341.8,813.8 L342.0,816.6 L341.5,815.4 L340.1,816.0 L339.5,814.2 L336.2,817.5 L334.7,818.1 L332.2,816.7 L331.9,817.9 L330.8,817.3 L331.3,815.7 L329.2,815.7 L329.0,814.5 L319.0,813.2 L312.0,821.3 L306.9,820.1 L300.8,823.9 L297.2,821.5 L296.7,822.9 L294.5,821.8 L294.5,823.0 L292.8,823.6 L289.3,822.8 L285.5,824.2 L285.0,826.3 L280.1,828.8 L276.4,828.7 L272.3,832.7 L244.5,837.2"/>
+        <text class="river-label halo" x="342" y="821" transform="rotate(-17 342 821)">Salt River</text>
+
+        <path class="river biv-21" stroke-width="1.8" d="M235.4,717.5 L237.7,717.4 L239.4,715.7 L241.0,716.3 L241.6,715.0 L245.4,716.4 L245.1,714.1 L246.2,713.2 L252.6,714.9 L253.7,716.5 L255.6,715.3 L255.8,716.7 L260.5,719.1 L261.1,720.2 L259.9,720.7 L261.5,722.9 L260.1,723.3 L262.7,725.4 L262.6,726.6 L264.2,726.5 L264.9,729.7 L267.0,731.0 L266.4,731.8 L268.1,732.8 L268.7,735.6 L270.7,736.3 L270.9,738.0 L272.2,737.9 L271.7,739.7 L273.6,740.9 L273.0,744.4 L274.8,744.7 L277.1,749.6 L278.2,749.5 L277.7,751.6 L279.2,751.9 L278.0,754.6 L279.3,756.7 L282.6,757.9 L285.0,761.7 L284.7,763.4 L285.9,763.3 L284.5,764.4 L285.1,765.6 L283.2,770.1 L284.2,771.1 L282.8,771.3 L284.0,772.5 L281.8,775.9 L282.3,778.9 L283.5,778.8 L283.2,781.0 L281.7,782.5 L282.1,784.2 L280.7,784.6 L282.9,790.3 L284.3,790.4 L285.6,792.2 L285.2,793.2 L286.8,793.4 L286.0,794.4 L288.0,802.0 L285.6,802.9 L286.7,804.7 L285.3,806.8 L286.7,810.4 L284.9,818.9 L285.5,822.8 L285.2,815.8 L286.8,805.0"/>
+        <text class="river-label halo" x="278" y="768" transform="rotate(-86 278 768)">Verde River</text>
+
+        <!-- engineered transbasin diversions -->
+        <path class="canal-line" d="M664.4,282.8 L683.4,272.0 L697,266"/>
+        <text class="river-label halo" x="700" y="278" text-anchor="end" fill="var(--canal)">CBT Project &rarr; Denver</text>
+
+        <path class="canal-line" d="M124.1,762.9 L200,800 L259.3,831.8 L300,865 L333.7,930.8"/>
+        <text class="river-label halo" x="150" y="795" fill="var(--canal)">Central Arizona Project canal &rarr; Phoenix / Tucson</text>
+
+        <!-- Lake Powell: ~23% of live capacity, end of July 2026 (USBR) -->
+        <g>
+          <path class="lake lake-water" d="M367.1,471.4 L370.2,471.9 L368.3,475.1 L369.0,480.3 L365.3,479.6 L366.9,481.8 L367.1,483.2 L366.7,487.3 L363.9,488.4 L364.9,491.2 L360.0,494.1 L352.0,502.8 L352.9,504.4 L352.4,505.5 L348.4,506.7 L351.6,509.5 L348.0,512.8 L346.7,517.8 L341.3,520.7 L339.6,524.4 L340.0,525.0 L337.8,528.3 L341.4,530.0 L349.0,529.2 L350.3,528.4 L351.1,526.6 L352.1,527.7 L351.1,530.5 L335.6,531.1 L330.8,535.6 L324.0,536.6 L322.9,538.3 L321.8,537.2 L318.1,537.9 L317.8,539.6 L320.3,543.3 L319.6,543.8 L316.0,541.6 L314.9,543.2 L315.2,545.5 L312.8,543.9 L312.3,541.6 L310.0,544.1 L304.0,544.9 L303.5,545.3 L304.7,545.9 L304.6,547.8 L298.3,550.4 L296.0,545.1 L292.9,541.0 L300.3,542.1 L301.3,541.3 L299.2,536.1 L306.2,543.1 L309.1,541.7 L307.8,538.8 L307.7,536.7 L308.6,535.4 L311.0,535.9 L311.8,534.4 L311.2,532.6 L309.0,531.0 L312.6,531.9 L315.2,537.7 L316.1,537.5 L318.1,534.2 L317.0,530.0 L321.4,532.4 L321.6,535.0 L329.3,534.6 L332.2,532.8 L335.4,528.6 L337.8,523.3 L335.6,518.4 L339.4,520.3 L339.9,519.0 L337.8,517.0 L338.7,516.4 L344.9,517.2 L345.9,515.7 L346.1,512.4 L348.0,510.4 L343.1,502.8 L343.6,502.3 L345.8,503.9 L344.4,499.4 L345.1,498.8 L348.4,503.9 L350.2,504.3 L354.6,496.2 L358.1,492.8 L360.9,491.9 L362.2,487.3 L364.6,484.3 L364.9,482.7 L363.1,481.0 L362.7,479.3 L363.1,478.0 L366.5,475.2 L366.8,473.1 L365.8,472.4 L367.1,471.4 Z"/>
+          <text class="reservoir-label halo" x="374" y="497">Lake Powell</text>
+          <text class="reservoir-stat halo" x="374" y="510">23% of capacity</text>
+        </g>
+
+        <!-- Lake Mead: record-low elevation 1,038.94 ft on 27 Aug 2026 -- roughly a quarter full -->
+        <g>
+          <path class="lake lake-water" d="M157.2,636.1 L158.0,637.1 L158.2,639.4 L155.4,637.9 L156.2,636.2 L153.4,634.8 L152.7,630.5 L150.4,628.7 L148.2,622.8 L142.9,620.6 L138.9,615.2 L136.2,615.8 L134.9,609.8 L130.9,611.1 L127.0,623.6 L120.5,624.6 L113.1,621.5 L113.2,617.7 L111.4,614.7 L110.0,617.4 L108.2,616.3 L109.0,618.6 L105.6,621.3 L104.7,620.7 L105.3,619.5 L102.9,618.0 L100.2,613.3 L92.8,615.4 L88.9,619.1 L88.1,623.7 L86.5,624.6 L87.4,622.4 L84.7,623.5 L81.7,621.5 L82.5,619.1 L78.9,614.7 L86.3,615.2 L88.3,614.7 L87.8,613.3 L89.8,614.1 L92.7,612.4 L104.9,611.8 L107.7,604.5 L106.6,597.3 L110.5,590.4 L108.2,587.5 L107.8,584.9 L108.7,584.2 L111.7,586.9 L112.7,578.1 L113.5,579.8 L113.5,585.9 L112.8,587.1 L113.9,592.1 L111.0,597.2 L109.4,608.3 L110.2,610.7 L115.8,617.4 L115.9,619.3 L118.1,620.6 L117.6,621.3 L119.5,622.7 L124.7,622.1 L126.9,613.9 L133.1,607.7 L133.3,605.5 L134.5,604.1 L137.2,612.8 L140.3,614.7 L143.3,619.0 L148.1,620.7 L149.6,622.1 L150.4,623.9 L150.0,625.7 L152.9,628.7 L154.6,633.3 L157.2,636.1 Z"/>
+          <text class="reservoir-label halo" x="90" y="571" text-anchor="middle">Lake Mead</text>
+          <text class="reservoir-stat halo" x="90" y="583" text-anchor="middle">record-low, ~25% of capacity</text>
+        </g>
+
+        <path class="lake lake-water" d="M127.8,761.0 L130.4,762.4 L126.2,761.5 L120.1,756.1 L116.4,754.3 L114.1,751.2 L109.3,749.5 L108.7,747.8 L110.5,744.1 L110.0,743.6 L111.2,744.9 L111.8,749.1 L113.7,749.4 L118.8,754.5 L123.5,756.9 L127.8,761.0 Z"/>
+
+        <!-- places -->
+        <circle class="place-dot" cx="662.9" cy="270.1" r="2.4"/>
+        <text class="place-label halo" x="633" y="261" text-anchor="end">La Poudre Pass</text>
+
+        <circle class="place-dot" cx="486.6" cy="378.3" r="2.6"/>
+        <text class="place-label halo" x="493" y="374">Grand Junction</text>
+
+        <circle class="place-dot" cx="422.9" cy="417.9" r="2.2"/>
+        <text class="place-label halo" x="404" y="410" text-anchor="end">Moab</text>
+
+        <circle class="place-dot" cx="299.5" cy="551.9" r="2.4"/>
+        <text class="place-label halo" x="306" y="548">Page &amp; Glen Canyon Dam</text>
+
+        <circle class="place-dot" cx="255.1" cy="621.3" r="2.2"/>
+        <text class="place-label halo" x="248" y="618" text-anchor="end">Grand Canyon Village</text>
+
+        <circle class="place-dot" cx="60.7" cy="612.0" r="2.6"/>
+        <text class="place-label halo" x="53" y="600" text-anchor="end">Las Vegas</text>
+
+        <circle class="place-dot" cx="112.4" cy="748.2" r="2.2"/>
+        <text class="place-label halo" x="118" y="744">Lake Havasu City</text>
+
+        <circle class="place-dot" cx="259.3" cy="831.8" r="3"/>
+        <text class="place-label halo" x="267" y="828">Phoenix</text>
+
+        <circle class="place-dot" cx="93.9" cy="892.8" r="2.4"/>
+        <text class="place-label halo" x="60" y="906">Yuma</text>
+
+        <!-- title + description card -->
+        <g>
+          <rect class="map-card" x="24" y="24" width="452" height="244" rx="14" filter="url(#cardShadow)"/>
+          <text class="map-title-svg" x="44" y="72" font-size="32">The River That Runs Dry</text>
+          <text class="map-dek-svg" x="44" y="136">
+            <tspan x="44" dy="0">The Colorado once ran wild from the Rockies to the Gulf of California,</tspan>
+            <tspan x="44" dy="20">carrying spring snowmelt through a wide desert delta. Over the last</tspan>
+            <tspan x="44" dy="20">century, dams and canals turned it into one of the most heavily managed</tspan>
+            <tspan x="44" dy="20">rivers in the world, split among seven states, Mexico, and millions of acres</tspan>
+            <tspan x="44" dy="20">of farmland. Now Lake Mead and Lake Powell sit at record lows, and the</tspan>
+            <tspan x="44" dy="20">river runs dry before it reaches the sea in most years.</tspan>
+          </text>
+        </g>
+
+        <!-- bivariate color + line-weight legend -->
+        <g>
+          <rect class="map-card" x="486" y="24" width="190" height="300" rx="14" filter="url(#cardShadow)"/>
+          <text class="legend-card-title" x="502" y="50">How to read the color</text>
+
+          <text class="legend-axis-label" x="512" y="123" text-anchor="middle" transform="rotate(-90 512 123)">Level: low &rarr; high</text>
+
+          <rect x="532" y="78" width="28" height="28" fill="var(--biv-02)"/><rect x="563" y="78" width="28" height="28" fill="var(--biv-12)"/><rect x="594" y="78" width="28" height="28" fill="var(--biv-22)"/>
+          <rect x="532" y="109" width="28" height="28" fill="var(--biv-01)"/><rect x="563" y="109" width="28" height="28" fill="var(--biv-11)"/><rect x="594" y="109" width="28" height="28" fill="var(--biv-21)"/>
+          <rect x="532" y="140" width="28" height="28" fill="var(--biv-00)"/><rect x="563" y="140" width="28" height="28" fill="var(--biv-10)"/><rect x="594" y="140" width="28" height="28" fill="var(--biv-20)"/>
+
+          <text class="legend-axis-label" x="577" y="182" text-anchor="middle">Water stress: low &rarr; high</text>
+
+          <line x1="502" y1="196" x2="662" y2="196" stroke="var(--line)" stroke-width="1"/>
+
+          <text class="legend-card-title" x="502" y="214">Line weight (avg. flow)</text>
+
+          <line x1="502" y1="230" x2="528" y2="230" stroke="var(--ink-soft)" stroke-width="1.8" stroke-linecap="round"/>
+          <text class="legend-line-label" x="534" y="233">~150 cfs (tributary)</text>
+          <line x1="502" y1="252" x2="528" y2="252" stroke="var(--ink-soft)" stroke-width="4" stroke-linecap="round"/>
+          <text class="legend-line-label" x="534" y="255">~4.6k cfs (upper mainstem)</text>
+          <line x1="502" y1="274" x2="528" y2="274" stroke="var(--ink-soft)" stroke-width="7" stroke-linecap="round"/>
+          <text class="legend-line-label" x="534" y="277">~20k cfs (lower mainstem)</text>
+          <line x1="502" y1="296" x2="528" y2="296" stroke="var(--ink-soft)" stroke-width="1.8" stroke-dasharray="0.01 6.5" stroke-linecap="round"/>
+          <text class="legend-line-label" x="534" y="299">Runs dry</text>
+        </g>
+
+        <text class="ghost-signature" x="676" y="1130" text-anchor="end">Trevor Kapuvari</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<div class="wrap">
+  <div class="stat-strip">
+    <div class="stat-card">
+      <p class="num">23%</p>
+      <p class="cap">Lake Powell's live storage at the end of July 2026 &mdash; about 178 feet below full pool. Source: Bureau of Reclamation.</p>
+    </div>
+    <div class="stat-card">
+      <p class="num">1,038.9<span style="font-size:0.9rem">ft</span></p>
+      <p class="cap">Lake Mead's surface elevation on Aug 27, 2026 &mdash; its lowest point since the reservoir was first filled in the 1930s.</p>
+    </div>
+    <div class="stat-card">
+      <p class="num">40M</p>
+      <p class="cap">People across seven U.S. states, 30 Tribal Nations and Mexico who depend on this basin. Source: Bureau of Reclamation.</p>
+    </div>
+    <div class="stat-card">
+      <p class="num">2014</p>
+      <p class="cap">The one time since 1960 the river was deliberately let to reach the Gulf of California &mdash; an 8&#8209;week "pulse flow," Minute 319.</p>
+    </div>
+  </div>
+
+  <footer>
+    <div>
+      <h3>About this map</h3>
+      <p>The river network, basin outline, and reservoir shapes are traced from real hydrography, not invented geometry. The Colorado, Green, Gila, and San Juan mainstems come from Natural Earth's rivers layer. The Gunnison, Little Colorado, Virgin, Salt, and Verde come from OpenStreetMap waterway relations. The basin boundary is the USGS Watershed Boundary Dataset's Upper and Lower Colorado regions (HUC 14 and 15). Lake Mead, Lake Powell, and Lake Havasu are traced from Natural Earth's lakes layer, and the national park boundaries come from the NPS Land Resources Division.</p>
+      <p>Color combines two qualitative reads at each reach: <strong>water stress</strong> (demand pressure from agriculture, cities, and interstate allocation) and <strong>water level</strong> (how the reach's flow or reservoir storage compares with its historic norm). Both come from the reporting cited below, not a live per-reach gauge feed. Line width scales with each reach's typical flow, labeled in cubic feet per second in the legend.</p>
+    </div>
+    <div>
+      <h3>Sources</h3>
+      <ul>
+        <li><a href="https://www.usbr.gov/uc/water/crsp/cs/gcd.html" target="_blank" rel="noopener">Bureau of Reclamation: Glen Canyon Dam / Lake Powell operations</a></li>
+        <li><a href="https://www.usbr.gov/ColoradoRiverBasin/" target="_blank" rel="noopener">Bureau of Reclamation: Colorado River Basin overview</a></li>
+        <li><a href="https://www.wri.org/insights/worlds-18-most-water-stressed-rivers" target="_blank" rel="noopener">World Resources Institute: Aqueduct, world's most water-stressed rivers</a></li>
+        <li><a href="https://www.usgs.gov/national-hydrography/watershed-boundary-dataset" target="_blank" rel="noopener">USGS Watershed Boundary Dataset (HUC2 14 &amp; 15)</a></li>
+        <li><a href="https://www.naturalearthdata.com/" target="_blank" rel="noopener">Natural Earth: rivers, lake centerlines &amp; lakes</a></li>
+        <li><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">&copy; OpenStreetMap contributors: tributary waterway relations</a></li>
+        <li><a href="https://www.nps.gov/subjects/gisandmapping/data-store.htm" target="_blank" rel="noopener">NPS Land Resources Division: park boundary polygons</a></li>
+      </ul>
+      <p>Every major sub-basin below the Rocky Mountain headwaters (the San Juan, the mainstem through Grand Canyon and Lake Mead, and the Gila) sits in the same high-stress, low-level cell of the legend. Only the uppermost reaches, fed directly by mountain snowpack, land near the healthy corner.</p>
+    </div>
+  </footer>
+</div>

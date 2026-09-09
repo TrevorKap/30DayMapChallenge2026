@@ -1,0 +1,639 @@
+<meta charset="utf-8">
+<title>A Very Balkan Roadtrip</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,500&family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js"></script>
+<style>
+  :root{
+    --bg:#F2F2EA;
+    --panel:#E7E7DB;
+    --panel-2:#D9D9C6;
+    --panel-border:rgba(20,26,22,0.16);
+    --ink:#181410;
+    --ink-soft:#4A4438;
+    --ink-faint:#7C7562;
+    --line:rgba(24,20,16,0.18);
+    --route:#A3341B;
+    --route-soft:rgba(163,52,27,0.2);
+    --gold:#B8770A;
+    --gold-soft:rgba(184,119,10,0.2);
+    --focus:#16665C;
+    --focus-soft:rgba(22,102,92,0.18);
+    --shadow:0 18px 40px -20px rgba(20,20,16,0.4);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#17140F;
+      --panel:#211C15;
+      --panel-2:#2A2418;
+      --panel-border:rgba(242,236,221,0.16);
+      --ink:#F2ECDD;
+      --ink-soft:#C2AE8C;
+      --ink-faint:#8C7A5E;
+      --line:rgba(242,236,221,0.14);
+      --route:#E36A3E;
+      --route-soft:rgba(227,106,62,0.22);
+      --gold:#E3A63A;
+      --gold-soft:rgba(227,166,58,0.22);
+      --focus:#3FC2AE;
+      --focus-soft:rgba(63,194,174,0.2);
+      --shadow:0 18px 40px -20px rgba(0,0,0,0.65);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#17140F;
+    --panel:#211C15;
+    --panel-2:#2A2418;
+    --panel-border:rgba(242,236,221,0.16);
+    --ink:#F2ECDD;
+    --ink-soft:#C2AE8C;
+    --ink-faint:#8C7A5E;
+    --line:rgba(242,236,221,0.14);
+    --route:#E36A3E;
+    --route-soft:rgba(227,106,62,0.22);
+    --gold:#E3A63A;
+    --gold-soft:rgba(227,166,58,0.22);
+    --focus:#3FC2AE;
+    --focus-soft:rgba(63,194,174,0.2);
+    --shadow:0 18px 40px -20px rgba(0,0,0,0.65);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"Source Sans 3", ui-sans-serif, system-ui, -apple-system, sans-serif;
+    font-size:16px;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  @media (prefers-reduced-motion: reduce){ *{animation-duration:0.01ms !important; transition-duration:0.01ms !important;} }
+
+  .wrap{max-width:1280px;margin:0 auto;padding:0 clamp(18px,4vw,44px) clamp(48px,8vw,80px);}
+
+  header.hero{padding:clamp(28px,5vw,52px) 0 clamp(10px,2vw,18px);}
+  .eyebrow{
+    font-family:"IBM Plex Mono", ui-monospace, monospace;
+    font-size:12px; letter-spacing:0.18em; text-transform:uppercase;
+    color:var(--route); margin:0 0 10px;
+  }
+  .eyebrow::before{ content:"✦ "; color:var(--gold); }
+  h1{
+    font-family:"Source Serif 4", Georgia, serif;
+    font-weight:700;
+    font-size:clamp(2rem,4.2vw,3.1rem);
+    line-height:1.02; letter-spacing:-0.01em; margin:0 0 14px;
+    text-wrap:balance;
+  }
+  h1 em{ font-style:italic; font-weight:500; color:var(--route); }
+  .dek{ max-width:74ch; font-size:clamp(0.92rem,1.2vw,1.02rem); color:var(--ink-soft); margin:0 0 18px; }
+  .dek strong{color:var(--ink); font-weight:600;}
+
+  .stat-strip{
+    display:flex; flex-wrap:wrap; gap:0;
+    font-family:"IBM Plex Mono", ui-monospace, monospace;
+    font-size:clamp(11px,1.4vw,13px); letter-spacing:0.1em; text-transform:uppercase;
+    color:var(--ink); margin:0 0 4px;
+  }
+  .stat-strip .stat{ padding:8px 18px 8px 0; }
+  .stat-strip .stat b{ color:var(--route); font-weight:700; margin-right:6px; }
+  .stat-strip .sep{ padding:8px 0; color:var(--ink-faint); }
+
+  .layout{
+    display:grid;
+    grid-template-columns: minmax(0,1fr) 320px;
+    gap:clamp(14px,2.6vw,24px);
+    align-items:start;
+    margin:clamp(22px,4vw,36px) 0 0;
+  }
+  @media (max-width:920px){ .layout{ grid-template-columns: 1fr; } }
+
+  .map-frame{
+    position:relative;
+    border-radius:16px;
+    border:1px solid var(--panel-border);
+    background:var(--panel);
+    box-shadow:var(--shadow);
+    overflow:hidden;
+    aspect-ratio:1400/1050;
+  }
+  #map{ position:absolute; inset:0; width:100%; height:100%; }
+  .mapboxgl-ctrl-logo, .mapboxgl-ctrl-attrib{ filter:opacity(0.55); }
+  .mapboxgl-ctrl-attrib{ font-size:10px !important; }
+  .mapboxgl-popup{ display:none; }
+
+  .setup-banner{
+    position:absolute; inset:0; z-index:30; display:flex; align-items:center; justify-content:center;
+    background:rgba(242,242,234,0.97); padding:32px; text-align:center;
+  }
+  :root[data-theme="dark"] .setup-banner{ background:rgba(23,20,15,0.97); }
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .setup-banner{ background:rgba(23,20,15,0.97); } }
+  .setup-banner[hidden]{ display:none; }
+  .setup-banner .box{ max-width:460px; }
+  .setup-banner h3{ font-family:"Source Serif 4"; font-size:19px; margin:0 0 10px; color:var(--ink); }
+  .setup-banner p{ font-size:13px; color:var(--ink-soft); margin:0 0 8px; }
+  .setup-banner code{ background:var(--panel-2); padding:2px 6px; border-radius:5px; font-family:"IBM Plex Mono"; font-size:12px; color:var(--route); }
+
+  /* ---- chips ---- */
+  .chip{
+    position:absolute;
+    background:rgba(231,231,219,0.9);
+    backdrop-filter:blur(5px);
+    border:1px solid var(--panel-border);
+    border-radius:12px;
+    padding:11px 14px;
+    box-shadow:0 14px 30px -18px rgba(20,20,16,0.55);
+    z-index:5;
+  }
+  :root[data-theme="dark"] .chip{ background:rgba(33,28,21,0.9); }
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .chip{ background:rgba(33,28,21,0.9); } }
+
+  .chip-title{ top:14px; left:14px; max-width:230px; }
+  .chip-title .name{ font-family:"Source Serif 4"; font-weight:700; font-size:14.5px; letter-spacing:0.01em; }
+  .chip-title .sub{ font-family:"IBM Plex Mono"; font-size:10px; color:var(--ink-faint); letter-spacing:0.09em; text-transform:uppercase; margin-top:3px; }
+
+  .chip-legend{ bottom:14px; left:14px; min-width:214px; }
+  .chip-legend h4{ margin:0 0 8px; font-family:"IBM Plex Mono"; font-size:10px; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-faint); }
+  .leg-row{ display:flex; align-items:center; gap:8px; font-size:12px; color:var(--ink-soft); margin:5px 0; }
+  .leg-swatch{ width:12px; height:12px; border-radius:3px; flex:none; }
+  .leg-line{ width:16px; height:0; border-top:2.5px solid var(--route); flex:none; }
+  .leg-dash{ width:16px; height:0; border-top:2.5px dashed var(--ink-soft); flex:none; }
+
+  .chip-compass{ top:14px; right:14px; width:52px; height:52px; padding:6px; display:flex; align-items:center; justify-content:center; }
+  .chip-compass svg{ width:100%; height:100%; }
+
+  /* ---- route markers (HTML) ---- */
+  .stop-marker{ cursor:pointer; }
+  .stop-pin{
+    width:26px; height:26px; border-radius:50%;
+    background:var(--gold); border:2px solid var(--bg);
+    display:flex; align-items:center; justify-content:center;
+    font-family:"IBM Plex Mono"; font-weight:600; font-size:11.5px; color:var(--bg);
+    box-shadow:0 4px 10px -3px rgba(58,42,27,0.55);
+    transition:transform 140ms ease;
+  }
+  .stop-marker.start .stop-pin{ background:var(--route); width:30px; height:30px; font-size:13px; }
+  .stop-marker:hover .stop-pin, .stop-marker.active .stop-pin{ transform:scale(1.18); }
+  .stop-label{
+    position:absolute; top:50%; left:calc(100% + 7px); transform:translateY(-50%);
+    font-family:"Source Serif 4"; font-weight:600; font-size:12.5px; white-space:nowrap;
+    color:var(--ink);
+    text-shadow:0 0 3px var(--bg), 0 0 3px var(--bg), 0 0 5px var(--bg);
+    pointer-events:none;
+  }
+
+  /* ---- per-country monument icons ---- */
+  .monument-marker{ display:flex; flex-direction:column; align-items:center; pointer-events:none; }
+  .monument-badge{
+    border-radius:50%;
+    background:var(--panel);
+    border:1.5px solid var(--ink-faint);
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 4px 10px -4px rgba(20,20,16,0.4);
+  }
+  .monument-badge svg{ width:60%; height:60%; display:block; }
+  .monument-label{
+    margin-top:3px;
+    font-family:"Source Serif 4"; font-style:italic; font-weight:600;
+    font-size:10.5px; white-space:nowrap; color:var(--ink-soft);
+    text-shadow:0 0 3px var(--bg), 0 0 3px var(--bg), 0 0 4px var(--bg);
+  }
+
+  /* ---- itinerary aside ---- */
+  aside.panel{ display:flex; flex-direction:column; gap:14px; }
+  .block{
+    background:var(--panel); border:1px solid var(--panel-border); border-radius:14px;
+    padding:16px 16px 14px; box-shadow:var(--shadow);
+  }
+  .block h3{
+    font-family:"IBM Plex Mono"; font-size:10.5px; letter-spacing:0.12em; text-transform:uppercase;
+    color:var(--ink-faint); margin:0 0 12px;
+  }
+  .itin-row{
+    display:flex; gap:10px; align-items:flex-start;
+    padding:8px 6px; border-radius:8px; cursor:pointer;
+    transition:background 120ms ease;
+  }
+  .itin-row:hover, .itin-row.active{ background:var(--panel-2); }
+  .itin-num{
+    flex:none; width:26px; height:26px; border-radius:50%;
+    background:var(--panel); border:1.5px solid var(--ink-faint);
+    box-shadow:0 3px 8px -3px rgba(20,20,16,0.35);
+    display:flex; align-items:center; justify-content:center; margin-top:1px;
+  }
+  .itin-num svg{ width:60%; height:60%; display:block; }
+  .itin-row.start .itin-num, .itin-row.finish .itin-num{
+    border-color:var(--route);
+  }
+  .itin-city{ font-family:"Source Serif 4"; font-weight:600; font-size:14.5px; line-height:1.2; }
+  .itin-country{ font-family:"IBM Plex Mono"; font-size:10px; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink-faint); margin:2px 0 3px; }
+  .itin-day{ font-size:11.5px; color:var(--ink-soft); }
+  .itin-note{ font-size:12px; color:var(--ink-soft); margin-top:3px; }
+
+  footer.note{
+    margin-top:clamp(28px,5vw,44px);
+    padding-top:18px; border-top:1px solid var(--line);
+  }
+  footer.note p{ font-size:12.5px; color:var(--ink-faint); max-width:90ch; margin:0 0 8px; }
+  footer.note a{ color:var(--focus); text-decoration:underline; text-decoration-color:rgba(62,110,100,0.35); }
+  footer.note a:hover{ text-decoration-color:currentColor; }
+</style>
+
+<div class="wrap">
+  <header class="hero">
+    <p class="eyebrow">Western Balkans · Overland Loop</p>
+    <h1>A Very <em>Balkan</em> Roadtrip</h1>
+    <p class="stat-strip">
+      <span class="stat"><b>8</b>Cities</span><span class="sep">·</span>
+      <span class="stat"><b>7</b>Countries</span><span class="sep">·</span>
+      <span class="stat"><b>2</b>Weeks</span><span class="sep">·</span>
+      <span class="stat"><b>1</b>Trip</span>
+    </p>
+    <p class="dek">Eight cities, seven countries, two weeks, one loop — out of Sarajevo and back again. The route runs Belgrade, Sofia, Skopje, Pristina, Durrës, Budva, and Mostar, threading Bosnia and Herzegovina, Serbia, Bulgaria, North Macedonia, <strong>Kosovo</strong>, Albania, and Montenegro. Kosovo's border is drawn <strong>dashed</strong>, reflecting its contested international status; neighboring countries are shown for context only.</p>
+  </header>
+
+  <div class="layout">
+    <div class="map-frame" id="mapFrame">
+      <div id="map"></div>
+      <div class="setup-banner" id="setupBanner" hidden>
+        <div class="box">
+          <h3>Add a Mapbox token to see the map</h3>
+          <p>This page reads a token from <code>.env</code> next to it (never hardcoded in the HTML). Open <code>.env</code> in this project folder, replace the placeholder with your public token from <code>account.mapbox.com/access-tokens</code> (starts with <code>pk.</code>), save, and reload. If a token is already there, this is usually a network hiccup or the token/style being rejected — check the detail below.</p>
+          <p id="setupDetail" style="color:var(--route)"></p>
+        </div>
+      </div>
+      <div class="chip chip-title">
+        <div class="name">A VERY BALKAN ROADTRIP</div>
+        <div class="sub">8 cities · 7 countries · 2 weeks</div>
+      </div>
+      <div class="chip chip-compass" aria-hidden="true">
+        <svg viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="46" fill="none" stroke="var(--ink-faint)" stroke-width="1.2"/>
+          <path d="M50 8 L58 46 L50 92 L42 46 Z" fill="var(--route)" opacity="0.85"/>
+          <path d="M8 50 L46 42 L92 50 L46 58 Z" fill="var(--ink-soft)" opacity="0.55"/>
+          <text x="50" y="20" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="var(--ink)">N</text>
+        </svg>
+      </div>
+      <div class="chip chip-legend">
+        <h4>Legend</h4>
+        <div class="leg-row"><span class="leg-swatch" style="background:var(--route-soft);border:1px solid var(--route)"></span>The 7 countries on the route</div>
+        <div class="leg-row"><span class="leg-line"></span>Roadtrip route (looped)</div>
+        <div class="leg-row"><span class="leg-dash"></span>Kosovo border — the only line drawn differently</div>
+        <div class="leg-row"><span class="leg-swatch" style="background:var(--route);border-radius:50%;width:10px;height:10px"></span>Start / finish — Sarajevo</div>
+        <div class="leg-row"><span class="leg-swatch" style="background:var(--panel);border:1.5px solid var(--ink-faint);border-radius:50%"></span>Iconic monument, one per country</div>
+      </div>
+    </div>
+
+    <aside class="panel">
+      <div class="block">
+        <h3>Itinerary</h3>
+        <div id="itinList"></div>
+      </div>
+    </aside>
+  </div>
+
+  <footer class="note">
+    <p>Each country carries one iconic monument as a small line-art badge — Stari Most, Kalemegdan Fortress, Alexander Nevsky Cathedral, Skopje's Porta Macedonia, the Newborn monument, Krujë Castle, and Ostrog Monastery. Ostrog sits at its real coordinates; the rest are placed in open space within their country rather than pinned to the exact building, so they don't collide with the route or the numbered stops.</p>
+    <p>The route is drawn along real highways: each leg between stops is a live driving route from <a href="http://project-osrm.org/" target="_blank" rel="noopener">OSRM</a>, routed over OpenStreetMap's own road network, on top of a live Mapbox basemap. If a stretch is ever unreachable by the routing engine (an offline demo server, a network hiccup), that stretch falls back to a straight illustrative line rather than breaking the loop. Day counts are a suggested pace across a two-week loop, not a fixed itinerary. Country fills mark the seven nations the trip crosses — Bosnia and Herzegovina, Serbia, Bulgaria, North Macedonia, Kosovo, Albania, and Montenegro; surrounding countries are shown for geographic context only. Kosovo's boundary is rendered as a dashed line, a common cartographic convention for territories with disputed or partially recognized international status, per the same <a href="https://docs.mapbox.com/data/tilesets/reference/mapbox-boundaries-v4/" target="_blank" rel="noopener">Mapbox country boundaries</a> dataset used to draw every other border on this map.</p>
+  </footer>
+</div>
+
+<script>
+  var STOPS = [
+    {n:1, city:"Sarajevo", country:"Bosnia & Herzegovina", cc:"BA", pt:[18.4131,43.8563], day:"Day 1–2", note:"Start — Baščaršija's copper alleys, where East meets West.", start:true, icon:"fountain"},
+    {n:2, city:"Belgrade", country:"Serbia", cc:"RS", pt:[20.4489,44.7866], day:"Day 3–4", note:"Kalemegdan fortress over the Sava–Danube confluence.", icon:"fortress"},
+    {n:3, city:"Sofia", country:"Bulgaria", cc:"BG", pt:[23.3219,42.6977], day:"Day 5–6", note:"Vitosha at the city's edge, gold domes of Alexander Nevsky.", icon:"dome"},
+    {n:4, city:"Skopje", country:"North Macedonia", cc:"MK", pt:[21.4254,41.9981], day:"Day 7", note:"Stone Bridge over the Vardar, the Old Bazaar.", icon:"stonebridge"},
+    {n:5, city:"Pristina", country:"Kosovo", cc:"XK", pt:[21.1655,42.6629], day:"Day 8", note:"Newborn monument — Europe's youngest capital.", icon:"obelisk"},
+    {n:6, city:"Durrës", country:"Albania", cc:"AL", pt:[19.4565,41.3231], day:"Day 9–10", note:"Roman amphitheatre on the Adriatic, Albania's oldest port.", icon:"amphitheater"},
+    {n:7, city:"Budva", country:"Montenegro", cc:"ME", pt:[18.8403,42.2911], day:"Day 11–12", note:"Walled old town on the Budva Riviera.", icon:"citadel"},
+    {n:8, city:"Mostar", country:"Bosnia & Herzegovina", cc:"BA", pt:[17.8078,43.3438], day:"Day 13", note:"Stari Most arching over the Neretva.", icon:"bridge"},
+    {n:9, city:"Sarajevo", country:"Bosnia & Herzegovina", cc:"BA", pt:[18.4131,43.8563], day:"Day 14", note:"Loop closes — back where it began.", finish:true, icon:"fountain"}
+  ];
+  var TRIP_ISO = ["BA","RS","BG","MK","XK","AL","ME"];
+
+  var ICONS = {
+    bridge: '<svg viewBox="0 0 32 32"><path d="M4 22 Q16 8 28 22" fill="none" stroke="var(--ink)" stroke-width="2.2" stroke-linecap="round"/><line x1="4" y1="22" x2="4" y2="26" stroke="var(--ink)" stroke-width="2"/><line x1="28" y1="22" x2="28" y2="26" stroke="var(--ink)" stroke-width="2"/><line x1="2" y1="26" x2="30" y2="26" stroke="var(--ink)" stroke-width="2" stroke-linecap="round"/></svg>',
+    fortress: '<svg viewBox="0 0 32 32"><rect x="6" y="14" width="20" height="12" fill="none" stroke="var(--ink)" stroke-width="2"/><path d="M6 14 L6 9 L10 9 L10 12 L14 12 L14 9 L18 9 L18 12 L22 12 L22 9 L26 9 L26 14" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linejoin="miter"/><rect x="14" y="18" width="4" height="8" fill="var(--ink)"/></svg>',
+    dome: '<svg viewBox="0 0 32 32"><path d="M10 24 L10 16 Q10 8 16 6 Q22 8 22 16 L22 24 Z" fill="none" stroke="var(--ink)" stroke-width="2"/><line x1="16" y1="6" x2="16" y2="2" stroke="var(--gold)" stroke-width="2"/><line x1="14" y1="3.5" x2="18" y2="3.5" stroke="var(--gold)" stroke-width="2"/><line x1="8" y1="24" x2="24" y2="24" stroke="var(--ink)" stroke-width="2"/></svg>',
+    arch: '<svg viewBox="0 0 32 32"><rect x="6" y="10" width="5" height="16" fill="none" stroke="var(--ink)" stroke-width="2"/><rect x="21" y="10" width="5" height="16" fill="none" stroke="var(--ink)" stroke-width="2"/><path d="M11 14 Q16 8 21 14" fill="none" stroke="var(--ink)" stroke-width="2"/><line x1="4" y1="26" x2="28" y2="26" stroke="var(--ink)" stroke-width="2"/></svg>',
+    obelisk: '<svg viewBox="0 0 32 32"><path d="M13 26 L13 12 L16 6 L19 12 L19 26 Z" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round"/><path d="M16 6 L16 2 M14 4 L18 4" stroke="var(--gold)" stroke-width="1.6"/><line x1="8" y1="26" x2="24" y2="26" stroke="var(--ink)" stroke-width="2"/></svg>',
+    tower: '<svg viewBox="0 0 32 32"><rect x="10" y="12" width="12" height="14" fill="none" stroke="var(--ink)" stroke-width="2"/><path d="M10 12 L10 9 L13 9 L13 12 M19 12 L19 9 L22 9 L22 12" fill="none" stroke="var(--ink)" stroke-width="2"/><line x1="16" y1="9" x2="16" y2="3" stroke="var(--ink)" stroke-width="1.6"/><path d="M16 3 L23 5 L16 7 Z" fill="var(--gold)"/></svg>',
+    cliff: '<svg viewBox="0 0 32 32"><path d="M2 27 L9 15 L14 22 L18 12 L24 20 L30 27 Z" fill="none" stroke="var(--ink-faint)" stroke-width="1.6" stroke-linejoin="round"/><rect x="12" y="17" width="9" height="8" fill="var(--bg)" stroke="var(--ink)" stroke-width="2"/><path d="M16.5 17 L14 13 L19 13 Z" fill="none" stroke="var(--ink)" stroke-width="1.8" stroke-linejoin="round"/><line x1="16.5" y1="13" x2="16.5" y2="10" stroke="var(--gold)" stroke-width="1.6"/></svg>',
+    fountain: '<svg viewBox="0 0 32 32"><path d="M7 13 L16 6 L25 13" fill="none" stroke="var(--ink)" stroke-width="2.2" stroke-linejoin="round"/><line x1="9" y1="13" x2="9" y2="25" stroke="var(--ink)" stroke-width="2"/><line x1="23" y1="13" x2="23" y2="25" stroke="var(--ink)" stroke-width="2"/><line x1="16" y1="13" x2="16" y2="25" stroke="var(--ink)" stroke-width="1.4"/><line x1="6" y1="25" x2="26" y2="25" stroke="var(--ink)" stroke-width="2" stroke-linecap="round"/><circle cx="16" cy="5" r="1.3" fill="var(--gold)"/></svg>',
+    stonebridge: '<svg viewBox="0 0 32 32"><path d="M3 21 Q8 13 13 21 Q16 15 19 21 Q24 13 29 21" fill="none" stroke="var(--ink)" stroke-width="2.1" stroke-linecap="round"/><line x1="2" y1="24" x2="30" y2="24" stroke="var(--ink)" stroke-width="2" stroke-linecap="round"/></svg>',
+    amphitheater: '<svg viewBox="0 0 32 32"><ellipse cx="16" cy="22" rx="13" ry="5" fill="none" stroke="var(--ink)" stroke-width="2"/><path d="M4 20 Q16 7 28 20" fill="none" stroke="var(--ink)" stroke-width="2"/></svg>',
+    citadel: '<svg viewBox="0 0 32 32"><path d="M5 26 L5 14 L8 14 L8 11 L11 11 L11 14 L14 14 L14 11 L17 11 L17 14 L20 14 L20 11 L23 11 L23 14 L27 14 L27 26 Z" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round"/></svg>'
+  };
+  var MONUMENTS = [
+    {cc:"BA", name:"Stari Most", pt:[17.20,44.60], size:36, icon:"bridge"},
+    {cc:"RS", name:"Kalemegdan", pt:[20.35,43.62], size:36, icon:"fortress"},
+    {cc:"BG", name:"Alexander Nevsky", pt:[25.35,42.62], size:34, icon:"dome"},
+    {cc:"MK", name:"Porta Macedonia", pt:[20.80,41.15], size:30, icon:"arch"},
+    {cc:"XK", name:"Newborn", pt:[21.47,42.44], size:24, icon:"obelisk"},
+    {cc:"AL", name:"Krujë Castle", pt:[19.95,40.85], size:32, icon:"tower"},
+    {cc:"ME", name:"Ostrog Monastery", pt:[19.036,42.857], size:28, icon:"cliff"}
+  ];
+
+  function showSetupBanner(msg){
+    document.getElementById("setupDetail").textContent = msg||"";
+    document.getElementById("setupBanner").hidden = false;
+  }
+  function parseEnv(text){
+    var out={};
+    text.split(/\r?\n/).forEach(function(line){
+      line=line.trim();
+      if(!line||line[0]==="#") return;
+      var idx=line.indexOf("=");
+      if(idx===-1) return;
+      out[line.slice(0,idx).trim()] = line.slice(idx+1).trim().replace(/^["']|["']$/g,"");
+    });
+    return out;
+  }
+
+  fetch("./.env", {cache:"no-store"}).then(function(r){
+    if(!r.ok) throw new Error("could not read .env ("+r.status+")");
+    return r.text();
+  }).then(function(text){
+    var token = parseEnv(text).MAPBOX_TOKEN;
+    if(!token || token.indexOf("YOUR_TOKEN_HERE")!==-1){
+      showSetupBanner("Found .env but MAPBOX_TOKEN is still the placeholder.");
+      return;
+    }
+    initMap(token);
+  }).catch(function(err){
+    showSetupBanner("Serve this file over http:// (not double-clicked as a local file) so it can read .env — e.g. `python serve.py` in this folder. (" + err.message + ")");
+  });
+
+  var map, markers = [];
+
+  function initMap(token){
+    mapboxgl.accessToken = token;
+    map = new mapboxgl.Map({
+      container:"map",
+      style:"mapbox://styles/mapbox/light-v11",
+      center:[20.5,43.0],
+      zoom:5.6,
+      pitch:0,
+      attributionControl:true
+    });
+    map.addControl(new mapboxgl.NavigationControl({showCompass:false}), "top-right");
+    map.dragRotate.disable();
+    map.touchZoomRotate.disableRotation();
+
+    var didLoad=false;
+    map.on("load", function(){
+      didLoad=true;
+      document.getElementById("setupBanner").hidden = true;
+      restyleBasemap();
+      addCountryLayers();
+      buildMarkers();
+      buildMonuments();
+      buildItinerary();
+      fitToTrip();
+      buildRealRoadRoute();
+    });
+
+    map.on("error", function(e){
+      if(e && e.error && /access token|unauthorized|401|403|forbidden/i.test(e.error.message||"")){
+        showSetupBanner("Mapbox rejected this token or style: " + e.error.message);
+      }
+    });
+
+    setTimeout(function(){
+      if(!didLoad){ showSetupBanner("The basemap didn't finish loading in time — check your internet connection, token, and style access, then reload."); }
+    }, 25000);
+
+    window.addEventListener("resize", function(){ map.resize(); });
+  }
+
+  /* ---- mute the light-v11 basemap into a higher-contrast, non-beige vintage palette ---- */
+  function restyleBasemap(){
+    var layers = map.getStyle().layers;
+    layers.forEach(function(l){
+      var id = l.id.toLowerCase();
+      try{
+        if(id==="background" || id==="land"){
+          map.setPaintProperty(l.id,"background-color","#9FAE93");
+        } else if(l.type==="fill" && (id.indexOf("water")!==-1)){
+          map.setPaintProperty(l.id,"fill-color","#5F7C87");
+        } else if(l.type==="fill" && (id.indexOf("landuse")!==-1 || id.indexOf("landcover")!==-1 || id.indexOf("national-park")!==-1)){
+          map.setPaintProperty(l.id,"fill-color","#84987A");
+          map.setPaintProperty(l.id,"fill-opacity", Math.min(getNumericPaint(l.id,"fill-opacity",0.3), 0.35));
+        } else if(l.type==="fill" && id.indexOf("building")!==-1){
+          map.setPaintProperty(l.id,"fill-opacity",0.1);
+          map.setPaintProperty(l.id,"fill-color","#5E5A46");
+        } else if(l.type==="line" && id.indexOf("waterway")!==-1){
+          map.setPaintProperty(l.id,"line-color","#5F7C87");
+          map.setPaintProperty(l.id,"line-opacity",0.55);
+        } else if(l.type==="line" && id.indexOf("road")!==-1){
+          map.setPaintProperty(l.id,"line-color","#7C7862");
+          map.setPaintProperty(l.id,"line-opacity",0.35);
+        } else if(l.type==="line" && (id==="admin-1-boundary" || id==="admin-1-boundary-bg")){
+          map.setPaintProperty(l.id,"line-opacity",0.12);
+        } else if(l.type==="line" && (id==="admin-0-boundary-disputed")){
+          map.setPaintProperty(l.id,"line-opacity",0);
+        } else if(l.type==="line" && (id==="admin-0-boundary" || id==="admin-0-boundary-bg")){
+          var isBg = id.indexOf("-bg")!==-1;
+          map.setPaintProperty(l.id,"line-color","#241C12");
+          map.setPaintProperty(l.id,"line-opacity", isBg?0.15:0.5);
+        } else if(id.indexOf("poi-label")!==-1 || id.indexOf("transit")!==-1 || id.indexOf("airport")!==-1){
+          map.setLayoutProperty(l.id,"visibility","none");
+        } else if(id.indexOf("state-label")!==-1){
+          map.setLayoutProperty(l.id,"visibility","none");
+        } else if(id.indexOf("country-label")!==-1){
+          map.setPaintProperty(l.id,"text-color","#1E170E");
+          map.setPaintProperty(l.id,"text-halo-color","#F2F2EA");
+          map.setPaintProperty(l.id,"text-halo-width",1.5);
+        } else if(id.indexOf("settlement-major-label")!==-1 || id.indexOf("settlement-minor-label")!==-1){
+          map.setPaintProperty(l.id,"text-color","#181410");
+          map.setPaintProperty(l.id,"text-halo-color","#F2F2EA");
+          map.setPaintProperty(l.id,"text-halo-width",1.7);
+        } else if(id.indexOf("settlement-subdivision-label")!==-1){
+          map.setLayoutProperty(l.id,"visibility","none");
+        } else if(id.indexOf("water-point-label")!==-1 || id.indexOf("water-line-label")!==-1 || id.indexOf("natural")!==-1){
+          map.setPaintProperty(l.id,"text-color","#2E4750");
+          map.setPaintProperty(l.id,"text-halo-color","#DCE4DE");
+          map.setPaintProperty(l.id,"text-halo-width",1.3);
+        }
+      }catch(e){ /* layer paint props vary by style; skip quietly */ }
+    });
+  }
+  function getNumericPaint(layerId, prop, fallback){
+    try{ var v = map.getPaintProperty(layerId, prop); return (typeof v==="number") ? v : fallback; }
+    catch(e){ return fallback; }
+  }
+
+  function firstSymbolLayerId(){
+    var firstSymbol = null;
+    map.getStyle().layers.forEach(function(l){ if(!firstSymbol && l.type==="symbol") firstSymbol=l.id; });
+    return firstSymbol;
+  }
+
+  /* ---- country emphasis + Kosovo dashed border ---- */
+  function addCountryLayers(){
+    var firstSymbol = firstSymbolLayerId();
+
+    map.addSource("country-boundaries", {
+      type:"vector",
+      url:"mapbox://mapbox.country-boundaries-v1"
+    });
+    var worldviewOk = ["any", ["==", ["get","worldview"], "all"], ["in", "US", ["get","worldview"]]];
+    var tripFilter = ["all",
+      ["in", ["get","iso_3166_1"], ["literal", TRIP_ISO]],
+      worldviewOk
+    ];
+
+    // Kosovo's dashed line goes in FIRST, so Serbia's (and every other trip
+    // country's) fill and solid outline paint over it — the dashed line is
+    // the only thing that reads as different about Kosovo, not a bold
+    // border competing with Serbia's own.
+    map.addLayer({
+      id:"kosovo-outline-dashed", type:"line", source:"country-boundaries", "source-layer":"country_boundaries",
+      filter: ["all", ["==", ["get","iso_3166_1"], "XK"], worldviewOk],
+      layout:{ "line-cap":"round", "line-join":"round" },
+      paint:{
+        "line-color":"#6E6252",
+        "line-width":["interpolate",["linear"],["zoom"], 4,1, 8,1.8],
+        "line-dasharray":[1.6,1.6],
+        "line-opacity":0.55
+      }
+    }, firstSymbol);
+    map.addLayer({
+      id:"trip-countries-fill", type:"fill", source:"country-boundaries", "source-layer":"country_boundaries",
+      filter: tripFilter,
+      paint:{ "fill-color":"#A3341B", "fill-opacity":0.22 }
+    }, firstSymbol);
+    map.addLayer({
+      id:"trip-countries-outline", type:"line", source:"country-boundaries", "source-layer":"country_boundaries",
+      filter: ["all", tripFilter, ["!=", ["get","iso_3166_1"], "XK"]],
+      paint:{
+        "line-color":"#241C12",
+        "line-width":["interpolate",["linear"],["zoom"], 4,0.9, 8,1.8],
+        "line-opacity":0.8
+      }
+    }, firstSymbol);
+  }
+
+  function addRouteLayer(coords){
+    map.addSource("route", { type:"geojson", data:{ type:"Feature", geometry:{ type:"LineString", coordinates:coords } } });
+    map.addLayer({
+      id:"route-line", type:"line", source:"route",
+      layout:{ "line-cap":"round", "line-join":"round" },
+      paint:{
+        "line-color":"#7A2814",
+        "line-width":["interpolate",["linear"],["zoom"], 4,2.6, 7,3.6, 10,5],
+        "line-dasharray":[2.2,1.6],
+        "line-opacity":0.95
+      }
+    }, firstSymbolLayerId());
+  }
+
+  function arcSegment(a, b, bend, steps){
+    var mx=(a[0]+b[0])/2, my=(a[1]+b[1])/2;
+    var dx=b[0]-a[0], dy=b[1]-a[1];
+    var len=Math.sqrt(dx*dx+dy*dy) || 0.0001;
+    var nx=-dy/len, ny=dx/len;
+    var cx=mx+nx*len*bend, cy=my+ny*len*bend;
+    var pts=[];
+    for(var i=0;i<=steps;i++){
+      var t=i/steps;
+      var x=(1-t)*(1-t)*a[0] + 2*(1-t)*t*cx + t*t*b[0];
+      var y=(1-t)*(1-t)*a[1] + 2*(1-t)*t*cy + t*t*b[1];
+      pts.push([x,y]);
+    }
+    return pts;
+  }
+  function arcFallbackCoordinates(){
+    var coords=[];
+    for(var i=0;i<STOPS.length-1;i++){
+      var seg = arcSegment(STOPS[i].pt, STOPS[i+1].pt, 0.09, 20);
+      if(i>0) seg.shift();
+      coords = coords.concat(seg);
+    }
+    return coords;
+  }
+
+  /* ---- route the loop over OpenStreetMap's real road network via OSRM ---- */
+  function buildRealRoadRoute(){
+    var coordsParam = STOPS.map(function(s){ return s.pt[0]+","+s.pt[1]; }).join(";");
+    var url = "https://router.project-osrm.org/route/v1/driving/" + coordsParam
+      + "?overview=simplified&geometries=geojson";
+    fetch(url).then(function(r){
+      if(!r.ok) throw new Error("OSRM request failed (" + r.status + ")");
+      return r.json();
+    }).then(function(json){
+      if(json.code!=="Ok" || !json.routes || !json.routes[0]){
+        throw new Error("OSRM returned no drivable route: " + (json.code||"unknown"));
+      }
+      addRouteLayer(json.routes[0].geometry.coordinates);
+    }).catch(function(err){
+      console.warn("Falling back to an illustrative route — OSRM road routing failed:", err.message);
+      addRouteLayer(arcFallbackCoordinates());
+    });
+  }
+
+  function buildMarkers(){
+    STOPS.forEach(function(s, idx){
+      if(s.finish) return; // Sarajevo's start marker already covers the loop's close
+      var el=document.createElement("div");
+      el.className="stop-marker" + (s.start?" start":"");
+      var labelSide = (idx%2===0) ? "right" : "right";
+      el.innerHTML =
+        '<div class="stop-pin">'+ (s.start ? "★" : s.n) +'</div>' +
+        '<div class="stop-label">'+ s.city + (s.start ? " · Start/Finish" : "") +'</div>';
+      var m = new mapboxgl.Marker({element:el, anchor:"center"}).setLngLat(s.pt).addTo(map);
+      el.addEventListener("click", function(){ flyToStop(s); setActive(s.n); });
+      markers.push({stop:s, marker:m, el:el});
+    });
+  }
+
+  function buildMonuments(){
+    MONUMENTS.forEach(function(m){
+      var el=document.createElement("div");
+      el.className="monument-marker";
+      el.innerHTML =
+        '<div class="monument-badge" style="width:'+m.size+'px;height:'+m.size+'px">'+ ICONS[m.icon] +'</div>' +
+        '<div class="monument-label">'+ m.name +'</div>';
+      new mapboxgl.Marker({element:el, anchor:"center"}).setLngLat(m.pt).addTo(map);
+    });
+  }
+
+  function flyToStop(s){
+    map.flyTo({ center:s.pt, zoom:8.4, duration:900 });
+  }
+  function setActive(n){
+    markers.forEach(function(mk){ mk.el.classList.toggle("active", mk.stop.n===n); });
+    document.querySelectorAll(".itin-row").forEach(function(row){
+      row.classList.toggle("active", row.getAttribute("data-n")===String(n));
+    });
+  }
+
+  function buildItinerary(){
+    var host=document.getElementById("itinList");
+    STOPS.forEach(function(s){
+      var row=document.createElement("div");
+      row.className="itin-row" + (s.start?" start":"") + (s.finish?" finish":"");
+      row.setAttribute("data-n", s.n);
+      row.innerHTML =
+        '<div class="itin-num">'+ ICONS[s.icon] +'</div>' +
+        '<div>' +
+          '<div class="itin-city">'+ s.city + (s.finish ? " (loop closes)" : "") +'</div>' +
+          '<div class="itin-country">'+ s.country +'</div>' +
+          '<div class="itin-day">'+ s.day +'</div>' +
+          '<div class="itin-note">'+ s.note +'</div>' +
+        '</div>';
+      row.addEventListener("click", function(){ flyToStop(s); setActive(s.n); });
+      host.appendChild(row);
+    });
+  }
+
+  function fitToTrip(){
+    var bounds = new mapboxgl.LngLatBounds();
+    STOPS.forEach(function(s){ bounds.extend(s.pt); });
+    map.fitBounds(bounds, { padding:{top:70,bottom:70,left:70,right:70}, duration:0 });
+  }
+</script>
