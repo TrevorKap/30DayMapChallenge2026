@@ -1,0 +1,787 @@
+<meta charset="utf-8">
+<title>The Storm Lane</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js"></script>
+<style>
+  :root{
+    --bg:#050810;
+    --panel:#0A0E16;
+    --panel-2:#0D1220;
+    --panel-border:rgba(140,180,214,0.14);
+    --ink:#E9F0FA;
+    --ink-soft:#9FB0C7;
+    --ink-faint:#5C6A80;
+    --line:rgba(233,240,250,0.08);
+    --teal:#3FE0D0;
+    --teal-soft:rgba(63,224,208,0.16);
+    --coral:#FF6273;
+    --coral-soft:rgba(255,98,115,0.16);
+    --gold:#FFB23D;
+    --gold-soft:rgba(255,178,61,0.16);
+    /* Saffir-Simpson scale, the standard NHC intensity color convention */
+    --cat-td:#7C8A9A;
+    --cat-ts:#4ADE80;
+    --cat-1:#FACC15;
+    --cat-2:#FB923C;
+    --cat-3:#F97316;
+    --cat-4:#EF4444;
+    --cat-5:#D946EF;
+    --shadow:0 30px 70px -30px rgba(0,0,0,0.88), 0 0 60px -20px rgba(63,224,208,0.14);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse 900px 500px at 8% -8%, rgba(63,224,208,0.09), transparent 60%),
+      radial-gradient(ellipse 900px 550px at 96% 0%, rgba(217,70,239,0.08), transparent 60%),
+      var(--bg);
+    color:var(--ink);
+    font-family:"Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+    font-size:16px;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  @media (prefers-reduced-motion: reduce){ *{animation-duration:0.01ms !important; transition-duration:0.01ms !important;} }
+
+  .wrap{max-width:1320px;margin:0 auto;padding:0 clamp(18px,4vw,44px) clamp(48px,8vw,80px);}
+
+  header.hero{padding:clamp(28px,5vw,52px) 0 clamp(8px,2vw,16px);}
+  .eyebrow{
+    font-family:"IBM Plex Mono", ui-monospace, monospace;
+    font-size:12px; letter-spacing:0.18em; text-transform:uppercase;
+    color:var(--teal); margin:0 0 10px;
+  }
+  .eyebrow::before{ content:"◆ "; color:var(--cat-3); }
+  h1{
+    font-family:"Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+    font-weight:700;
+    font-size:clamp(2rem,4.2vw,3.2rem);
+    line-height:1.03; letter-spacing:-0.02em; margin:0 0 14px;
+    text-wrap:balance;
+    color:var(--ink);
+  }
+  .dek{ max-width:78ch; font-size:clamp(0.94rem,1.25vw,1.05rem); color:var(--ink-soft); margin:0; }
+  .dek strong{color:var(--ink); font-weight:600;}
+  .dek .swatch{display:inline-block;width:8px;height:8px;border-radius:50%;margin:0 2px -1px 0;}
+
+  .layout{
+    display:grid;
+    grid-template-columns: minmax(0,1fr) 320px;
+    gap:clamp(14px,2.6vw,24px);
+    align-items:start;
+    margin:clamp(22px,4vw,36px) 0 0;
+  }
+  @media (max-width:920px){ .layout{ grid-template-columns: 1fr; } }
+
+  .map-frame{
+    position:relative;
+    border-radius:16px;
+    border:1px solid var(--panel-border);
+    background:#03050A;
+    box-shadow:var(--shadow);
+    overflow:hidden;
+    aspect-ratio:1600/860;
+  }
+  #map{ position:absolute; inset:0; width:100%; height:100%; }
+  #map .mapboxgl-canvas{ filter:saturate(0.75) brightness(0.82) contrast(1.08); }
+  .mapboxgl-ctrl-logo, .mapboxgl-ctrl-attrib{ filter:invert(0.85) opacity(0.6); }
+  .mapboxgl-popup{ display:none; }
+  .map-scrim{
+    position:absolute; inset:0; pointer-events:none; z-index:2;
+    background:
+      radial-gradient(ellipse 100% 80% at 50% 45%, transparent 45%, rgba(3,5,10,0.55) 100%),
+      linear-gradient(180deg, rgba(3,5,10,0.35), transparent 18%, transparent 82%, rgba(3,5,10,0.45));
+  }
+
+  .setup-banner{
+    position:absolute; inset:0; z-index:30; display:flex; align-items:center; justify-content:center;
+    background:rgba(3,5,10,0.96); padding:32px; text-align:center;
+  }
+  .setup-banner[hidden]{ display:none; }
+  .setup-banner .box{ max-width:480px; }
+  .setup-banner h3{ font-family:"Space Grotesk"; font-size:18px; margin:0 0 10px; color:var(--ink); }
+  .setup-banner p{ font-size:13px; color:var(--ink-soft); margin:0 0 8px; }
+  .setup-banner code{ background:rgba(255,255,255,0.08); padding:2px 6px; border-radius:5px; font-family:"IBM Plex Mono"; font-size:12px; color:var(--gold); }
+
+  .chip{
+    position:absolute;
+    background:rgba(8,11,18,0.82);
+    backdrop-filter:blur(6px);
+    border:1px solid var(--panel-border);
+    border-radius:12px;
+    padding:12px 14px;
+    box-shadow:0 14px 30px -16px rgba(0,0,0,0.7);
+    z-index:5;
+  }
+  .chip-title{ top:14px; left:14px; max-width:280px; }
+  .chip-title .name{ font-family:"Space Grotesk"; font-weight:700; font-size:14px; letter-spacing:0.02em; }
+  .chip-title .sub{ font-family:"IBM Plex Mono"; font-size:10.5px; color:var(--ink-faint); letter-spacing:0.08em; text-transform:uppercase; margin-top:3px; }
+
+  .chip-clock{ top:14px; right:14px; text-align:right; min-width:168px; }
+  .chip-clock .date{ font-family:"IBM Plex Mono"; font-size:11px; letter-spacing:0.1em; color:var(--ink-faint); text-transform:uppercase; }
+  .chip-clock .time{ font-family:"IBM Plex Mono"; font-size:24px; font-weight:600; letter-spacing:0.02em; color:var(--ink); margin-top:2px; }
+  .chip-clock .time span{ font-size:12px; color:var(--ink-faint); margin-left:3px;}
+
+  .chip-legend{ bottom:14px; left:14px; min-width:196px; }
+  .chip-legend h4{ margin:0 0 8px; font-family:"IBM Plex Mono"; font-size:10.5px; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-faint); }
+  .leg-row{ display:flex; align-items:center; gap:8px; font-size:11.5px; color:var(--ink-soft); margin:4px 0; }
+  .leg-swatch{ width:9px; height:9px; border-radius:50%; flex:none; }
+  .leg-plane{ font-size:12px; flex:none; width:9px; text-align:center; }
+
+  .chip-storms{ bottom:14px; right:14px; min-width:196px; }
+  .chip-storms h4{ margin:0 0 8px; font-family:"IBM Plex Mono"; font-size:10.5px; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-faint); }
+  .st-row{ display:flex; align-items:center; gap:8px; font-size:12px; color:var(--ink-soft); margin:5px 0; }
+  .st-row .dot{ width:9px; height:9px; border-radius:50%; flex:none; }
+  .st-row .n{ color:var(--ink); font-weight:600; width:56px; flex:none; }
+  .st-row .c{ font-family:"IBM Plex Mono"; font-size:10.5px; color:var(--ink-faint); }
+  .st-row.inactive{ opacity:0.35; }
+
+  /* ---- side panel ---- */
+  aside.panel{ display:flex; flex-direction:column; gap:14px; }
+  .block{
+    background:linear-gradient(180deg, var(--panel), var(--panel-2));
+    border:1px solid var(--panel-border);
+    border-radius:14px;
+    padding:16px 16px 14px;
+  }
+  .block h3{
+    margin:0 0 12px; font-family:"IBM Plex Mono"; font-size:10.5px;
+    letter-spacing:0.14em; text-transform:uppercase; color:var(--ink-faint);
+  }
+
+  .transport{ display:flex; align-items:center; gap:10px; }
+  .playbtn{
+    width:36px; height:36px; border-radius:50%; flex:none;
+    background:var(--teal-soft); border:1px solid rgba(63,224,208,0.4);
+    color:var(--teal); cursor:pointer; display:flex; align-items:center; justify-content:center;
+    font-size:14px;
+  }
+  .playbtn:hover{ background:rgba(63,224,208,0.28); }
+  .speedrow{ display:flex; gap:6px; }
+  .speedbtn{
+    font-family:"IBM Plex Mono"; font-size:11px; padding:5px 8px; border-radius:7px;
+    background:transparent; border:1px solid var(--panel-border); color:var(--ink-faint); cursor:pointer;
+  }
+  .speedbtn.active{ color:var(--gold); border-color:rgba(255,178,61,0.5); background:var(--gold-soft); }
+
+  input[type=range]{
+    -webkit-appearance:none; width:100%; height:6px; border-radius:4px; margin:12px 0 4px;
+    background:linear-gradient(90deg,
+      rgba(74,222,128,0.22) 0%, rgba(74,222,128,0.22) 14%,
+      rgba(250,204,21,0.26) 14%, rgba(250,204,21,0.26) 33%,
+      rgba(217,70,239,0.30) 33%, rgba(217,70,239,0.30) 50%,
+      rgba(239,68,68,0.28) 50%, rgba(239,68,68,0.28) 66%,
+      rgba(63,224,208,0.10) 66%, rgba(63,224,208,0.10) 100%);
+    outline:none; cursor:pointer;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:14px; height:14px; border-radius:50%;
+    background:var(--ink); border:2px solid var(--gold); cursor:pointer;
+    box-shadow:0 0 10px rgba(255,178,61,0.7);
+  }
+  .ticks{ display:flex; justify-content:space-between; font-family:"IBM Plex Mono"; font-size:9.5px; color:var(--ink-faint); }
+
+  .stat{ margin:10px 0; }
+  .stat-top{ display:flex; justify-content:space-between; align-items:baseline; font-size:12.5px; margin-bottom:5px; }
+  .stat-top .lbl{ color:var(--ink-soft); }
+  .stat-top .val{ font-family:"IBM Plex Mono"; font-weight:600; color:var(--ink); }
+  .bar{ height:6px; border-radius:4px; background:rgba(255,255,255,0.06); overflow:hidden; }
+  .bar > i{ display:block; height:100%; border-radius:4px; transition:width 220ms linear; }
+  .bar.teal > i{ background:var(--teal); box-shadow:0 0 8px rgba(63,224,208,0.6); }
+  .bar.coral > i{ background:var(--coral); box-shadow:0 0 8px rgba(255,98,115,0.6); }
+
+  .rank{ max-height:220px; overflow-y:auto; padding-right:2px; }
+  .rank::-webkit-scrollbar{ width:6px; }
+  .rank::-webkit-scrollbar-thumb{ background:rgba(255,255,255,0.12); border-radius:4px; }
+  .rank-row{ display:flex; align-items:center; gap:9px; padding:6px 4px; border-radius:8px; }
+  .rank-row.hot{ background:rgba(255,98,115,0.08); }
+  .rank-dot{ width:8px; height:8px; border-radius:50%; flex:none; background:var(--teal); }
+  .rank-row.hot .rank-dot{ background:var(--coral); }
+  .rank-name{ flex:1; min-width:0; }
+  .rank-name .n{ font-size:12.5px; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .rank-name .s{ font-size:10.5px; color:var(--ink-faint); }
+  .rank-km{ font-family:"IBM Plex Mono"; font-size:10.5px; color:var(--ink-faint); flex:none; }
+
+  footer.note{
+    margin-top:clamp(22px,4vw,34px); padding-top:16px; border-top:1px solid var(--line);
+    font-size:12px; color:var(--ink-faint); max-width:94ch;
+  }
+  footer.note a{ color:var(--ink-soft); }
+  footer.note p{ margin:0 0 8px; }
+</style>
+
+<div class="wrap">
+  <header class="hero">
+    <p class="eyebrow">Eastern Pacific · 6-day illustrative timelapse</p>
+    <h1>The Storm Lane</h1>
+    <p class="dek">Three hurricanes move through the eastern Pacific over six modeled days while six real trans-Pacific and coastal flight corridors run underneath them. Track color follows the real NHC Saffir–Simpson scale, from <span class="swatch" style="background:var(--cat-ts)"></span><strong>tropical storm</strong> green through <span class="swatch" style="background:var(--cat-5)"></span><strong>Category&nbsp;5</strong> magenta; the soft shaded ring around each eye is a modeled hazard buffer, not an official NHC forecast cone. Airports, great-circle routing, and real-world distances for all six flight corridors are real; when a corridor's flight track crosses a storm's buffer it bends and turns <span class="swatch" style="background:var(--coral)"></span><strong>coral</strong>, a modeled reroute rather than actual airline dispatch data. Storm tracks are an illustrative composite built on typical Eastern Pacific hurricane behavior — not a specific NOAA/NHC advisory.</p>
+  </header>
+
+  <div class="layout">
+    <div class="map-frame" id="mapFrame">
+      <div id="map"></div>
+      <div class="map-scrim"></div>
+      <div class="setup-banner" id="setupBanner" hidden>
+        <div class="box">
+          <h3>Add a Mapbox token to see the map</h3>
+          <p>This page reads a token from <code>.env</code> next to it (never hardcoded in the HTML). Open <code>.env</code> in this project folder, replace the placeholder with your public token from <code>account.mapbox.com/access-tokens</code> (starts with <code>pk.</code>), save, and reload.</p>
+          <p id="setupDetail" style="color:var(--coral)"></p>
+        </div>
+      </div>
+      <div class="chip chip-title">
+        <div class="name">THE STORM LANE</div>
+        <div class="sub">Storms + flight traffic · modeled</div>
+      </div>
+      <div class="chip chip-clock">
+        <div class="date" id="clockDate">05 SEP 2026</div>
+        <div class="time" id="clockTime">00:00<span>UTC</span></div>
+      </div>
+      <div class="chip chip-legend">
+        <h4>Legend</h4>
+        <div class="leg-row"><span class="leg-swatch" style="background:var(--cat-ts)"></span>Tropical storm</div>
+        <div class="leg-row"><span class="leg-swatch" style="background:var(--cat-1)"></span>Category 1–2</div>
+        <div class="leg-row"><span class="leg-swatch" style="background:var(--cat-4)"></span>Category 3–4</div>
+        <div class="leg-row"><span class="leg-swatch" style="background:var(--cat-5)"></span>Category 5</div>
+        <div class="leg-row"><span class="leg-plane">✈</span>Flight, on corridor</div>
+        <div class="leg-row"><span class="leg-plane" style="color:var(--coral)">✈</span>Flight, modeled reroute</div>
+      </div>
+      <div class="chip chip-storms" id="stormChip">
+        <h4>Active storms</h4>
+        <div id="stormRows"></div>
+      </div>
+    </div>
+
+    <aside class="panel">
+      <div class="block">
+        <h3>Playback · 6 days</h3>
+        <div class="transport">
+          <button class="playbtn" id="playBtn">❚❚</button>
+          <div class="speedrow">
+            <button class="speedbtn" data-speed="0.5">0.5×</button>
+            <button class="speedbtn active" data-speed="1">1×</button>
+            <button class="speedbtn" data-speed="2">2×</button>
+            <button class="speedbtn" data-speed="4">4×</button>
+          </div>
+        </div>
+        <input type="range" id="scrubber" min="0" max="144" step="0.1" value="0">
+        <div class="ticks"><span>Day 1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>Day 6</span></div>
+      </div>
+
+      <div class="block">
+        <h3>Pacific air traffic, live</h3>
+        <div class="stat">
+          <div class="stat-top"><span class="lbl">Flights airborne</span><span class="val" id="airborneVal">—</span></div>
+          <div class="bar teal"><i id="airborneBar" style="width:0%"></i></div>
+        </div>
+        <div class="stat">
+          <div class="stat-top"><span class="lbl">Rerouting around a storm</span><span class="val" id="rerouteVal">—</span></div>
+          <div class="bar coral"><i id="rerouteBar" style="width:0%"></i></div>
+        </div>
+      </div>
+
+      <div class="block">
+        <h3>Corridors, real distance</h3>
+        <div class="rank" id="rankList"></div>
+      </div>
+    </aside>
+  </div>
+
+  <footer class="note">
+    <p><sup>1</sup> Storm tracks: three named systems ("Talon", "Reya", "Odessa") moving through the eastern Pacific over a modeled 6-day window (05–11 Sep 2026), built to follow typical Eastern Pacific hurricane behavior — westward-then-recurving tracks, realistic intensification/weakening curves, and the real NHC Saffir–Simpson wind-speed thresholds and color convention. This is an illustrative composite, not a transcription of any specific NOAA/National Hurricane Center advisory, best-track, or forecast-cone product. The shaded ring around each storm's eye is a modeled hazard buffer sized off its category, not an official forecast cone.</p>
+    <p><sup>2</sup> Flight corridors: all six routes connect real airports (LAX, SFO, TIJ, MEX, SJD, PVR, SAL, HNL) at their real coordinates, flown along the real great-circle path between them with distances computed from the haversine formula. Flights animate at a modeled 880&nbsp;km/h cruise speed compressed into the 6-day playback window. When a flight's position would fall inside a storm's modeled hazard buffer, its rendered track bends around the buffer's edge and is marked as rerouting — a modeled visualization of storm-avoidance, not real airline flight-planning or ADS-B data.</p>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- geo helpers ---------------- */
+  function toRad(d){ return d*Math.PI/180; }
+  function toDeg(r){ return r*180/Math.PI; }
+  function haversineKm(a,b){
+    var R=6371, dLat=toRad(b[1]-a[1]), dLon=toRad(b[0]-a[0]);
+    var lat1=toRad(a[1]), lat2=toRad(b[1]);
+    var h=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLon/2)*Math.sin(dLon/2);
+    return 2*R*Math.asin(Math.sqrt(h));
+  }
+  function bearingDeg(a,b){
+    var lat1=toRad(a[1]), lat2=toRad(b[1]), dLon=toRad(b[0]-a[0]);
+    var y=Math.sin(dLon)*Math.cos(lat2);
+    var x=Math.cos(lat1)*Math.sin(lat2)-Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLon);
+    return (toDeg(Math.atan2(y,x))+360)%360;
+  }
+  // Real spherical destination point (used for storm buffer polygons, geographically exact)
+  function destPointSpherical(a,brngDeg,distKm){
+    var R=6371;
+    var lat1=toRad(a[1]), lon1=toRad(a[0]), brng=toRad(brngDeg);
+    var lat2=Math.asin(Math.sin(lat1)*Math.cos(distKm/R)+Math.cos(lat1)*Math.sin(distKm/R)*Math.cos(brng));
+    var lon2=lon1+Math.atan2(Math.sin(brng)*Math.sin(distKm/R)*Math.cos(lat1), Math.cos(distKm/R)-Math.sin(lat1)*Math.sin(lat2));
+    return [toDeg(lon2), toDeg(lat2)];
+  }
+  // Small perpendicular offset (equirectangular approx, fine at this scale) used to
+  // push a flight point away from a storm center when it intrudes into the buffer.
+  function destPointFlat(a,brngDeg,distKm){
+    var brng=toRad(brngDeg);
+    var dLat=(distKm/111.32)*Math.cos(brng);
+    var dLon=(distKm/(111.32*Math.cos(toRad(a[1]))))*Math.sin(brng);
+    return [a[0]+dLon, a[1]+dLat];
+  }
+  function geoCirclePolygon(center, radiusKm, steps){
+    var coords=[];
+    for(var i=0;i<=steps;i++){ coords.push(destPointSpherical(center, i*360/steps, radiusKm)); }
+    return [coords];
+  }
+  // Real great-circle interpolation (slerp) — needed at trans-Pacific distances
+  // where a straight lon/lat lerp would visibly cut the wrong way across the globe.
+  function gcInterpolate(a,b,f){
+    var lat1=toRad(a[1]), lon1=toRad(a[0]), lat2=toRad(b[1]), lon2=toRad(b[0]);
+    var d = 2*Math.asin(Math.sqrt(Math.pow(Math.sin((lat2-lat1)/2),2) + Math.cos(lat1)*Math.cos(lat2)*Math.pow(Math.sin((lon2-lon1)/2),2)));
+    if(d===0) return [a[0],a[1]];
+    var A=Math.sin((1-f)*d)/Math.sin(d), B=Math.sin(f*d)/Math.sin(d);
+    var x=A*Math.cos(lat1)*Math.cos(lon1)+B*Math.cos(lat2)*Math.cos(lon2);
+    var y=A*Math.cos(lat1)*Math.sin(lon1)+B*Math.cos(lat2)*Math.sin(lon2);
+    var z=A*Math.sin(lat1)+B*Math.sin(lat2);
+    return [toDeg(Math.atan2(y,x)), toDeg(Math.atan2(z,Math.sqrt(x*x+y*y)))];
+  }
+  function buildGreatCirclePath(a,b,n){
+    var pts=[]; for(var i=0;i<=n;i++) pts.push(gcInterpolate(a,b,i/n)); return pts;
+  }
+  function lerp(a,b,f){ return [a[0]+(b[0]-a[0])*f, a[1]+(b[1]-a[1])*f]; }
+  function buildPathIndex(pts){
+    var cum=[0];
+    for(var i=0;i<pts.length-1;i++){ cum.push(cum[i]+haversineKm(pts[i],pts[i+1])); }
+    return {pts:pts, cum:cum, total:cum[cum.length-1]};
+  }
+  function pointAtT(pathIdx,t){
+    var pts=pathIdx.pts, cum=pathIdx.cum, total=pathIdx.total;
+    if(total===0) return {pos:pts[0], bearing:0};
+    var target=Math.max(0,Math.min(1,t))*total;
+    var i=0;
+    while(i<cum.length-2 && cum[i+1]<target) i++;
+    var segStart=cum[i], segEnd=cum[i+1]===undefined?total:cum[i+1];
+    var L=segEnd-segStart;
+    var f=L===0?0:(target-segStart)/L;
+    return {pos:lerp(pts[i],pts[i+1],f), bearing:bearingDeg(pts[i],pts[i+1])};
+  }
+
+  /* ---------------- Saffir-Simpson categories (real NHC thresholds, kt) ---------------- */
+  var CATS = [
+    {label:"TD",    min:0,   color:"#7C8A9A"},
+    {label:"TS",    min:34,  color:"#4ADE80"},
+    {label:"CAT 1", min:64,  color:"#FACC15"},
+    {label:"CAT 2", min:83,  color:"#FB923C"},
+    {label:"CAT 3", min:96,  color:"#F97316"},
+    {label:"CAT 4", min:113, color:"#EF4444"},
+    {label:"CAT 5", min:137, color:"#D946EF"}
+  ];
+  var CAT_RADIUS_KM = [70,100,140,180,230,290,360];
+  function catFromWind(kt){ var idx=0; for(var i=0;i<CATS.length;i++){ if(kt>=CATS[i].min) idx=i; } return idx; }
+
+  /* ---------------- illustrative storm tracks (see footnote 1) ---------------- */
+  var STORMS = [
+    { id:"talon", name:"Talon", pts:[
+      {h:0,  lon:-140,   lat:11,   wind:45},
+      {h:12, lon:-137,   lat:12.5, wind:70},
+      {h:24, lon:-134,   lat:13.5, wind:85},
+      {h:36, lon:-131,   lat:14.5, wind:100},
+      {h:48, lon:-128,   lat:15.3, wind:120},
+      {h:60, lon:-125,   lat:16,   wind:145},
+      {h:72, lon:-122.5, lat:16.8, wind:150},
+      {h:84, lon:-120,   lat:17.8, wind:130},
+      {h:96, lon:-118,   lat:19,   wind:110},
+      {h:108,lon:-117,   lat:20.5, wind:90},
+      {h:120,lon:-117.5, lat:22,   wind:70},
+      {h:132,lon:-119,   lat:23.5, wind:55},
+      {h:144,lon:-121,   lat:25,   wind:40}
+    ]},
+    { id:"reya", name:"Reya", pts:[
+      {h:20, lon:-122,   lat:13,   wind:45},
+      {h:32, lon:-119,   lat:14,   wind:65},
+      {h:44, lon:-116,   lat:15,   wind:85},
+      {h:56, lon:-113,   lat:16,   wind:105},
+      {h:68, lon:-111,   lat:17,   wind:125},
+      {h:80, lon:-109.5, lat:18.2, wind:120},
+      {h:92, lon:-108.5, lat:19.5, wind:105},
+      {h:104,lon:-108,   lat:21,   wind:85},
+      {h:116,lon:-108.5, lat:22.5, wind:65},
+      {h:128,lon:-110,   lat:24,   wind:50},
+      {h:140,lon:-112,   lat:25.5, wind:35}
+    ]},
+    { id:"odessa", name:"Odessa", pts:[
+      {h:40, lon:-112,   lat:14.5, wind:30},
+      {h:52, lon:-110.5, lat:15.8, wind:45},
+      {h:64, lon:-109,   lat:17,   wind:60},
+      {h:76, lon:-108,   lat:18.5, wind:58},
+      {h:88, lon:-107.5, lat:20,   wind:50},
+      {h:100,lon:-107.8, lat:21.5, wind:45},
+      {h:112,lon:-108.5, lat:23,   wind:35},
+      {h:124,lon:-109.5, lat:24.3, wind:30},
+      {h:136,lon:-110.5, lat:25.3, wind:25},
+      {h:144,lon:-111.5, lat:26,   wind:20}
+    ]}
+  ];
+  function stormStateAt(storm,h){
+    var pts=storm.pts;
+    if(h<pts[0].h || h>pts[pts.length-1].h) return null;
+    var i=0; while(i<pts.length-2 && pts[i+1].h<h) i++;
+    var p0=pts[i], p1=pts[i+1];
+    var f=(p1.h===p0.h)?0:(h-p0.h)/(p1.h-p0.h);
+    var lon=p0.lon+(p1.lon-p0.lon)*f, lat=p0.lat+(p1.lat-p0.lat)*f, wind=p0.wind+(p1.wind-p0.wind)*f;
+    var cat=catFromWind(wind);
+    return {lon:lon,lat:lat,wind:wind,cat:cat,radiusKm:CAT_RADIUS_KM[cat],color:CATS[cat].color,label:CATS[cat].label};
+  }
+
+  /* ---------------- real airports + flight corridors ---------------- */
+  var AIRPORTS = {
+    LAX:{name:"Los Angeles", lon:-118.4085, lat:33.9416},
+    SFO:{name:"San Francisco", lon:-122.3790, lat:37.6213},
+    TIJ:{name:"Tijuana", lon:-116.9702, lat:32.5411},
+    SJD:{name:"Los Cabos", lon:-109.7211, lat:23.1518},
+    PVR:{name:"Puerto Vallarta", lon:-105.2542, lat:20.6801},
+    MEX:{name:"Mexico City", lon:-99.0721, lat:19.4363},
+    SAL:{name:"San Salvador", lon:-89.0558, lat:13.4409},
+    HNL:{name:"Honolulu", lon:-157.9251, lat:21.3187}
+  };
+  var ROUTES = [
+    {id:"lax-sjd", a:"LAX", b:"SJD", interval:4.2},
+    {id:"tij-pvr", a:"TIJ", b:"PVR", interval:5.6},
+    {id:"lax-mex", a:"LAX", b:"MEX", interval:3.8},
+    {id:"lax-sal", a:"LAX", b:"SAL", interval:5.2},
+    {id:"lax-hnl", a:"LAX", b:"HNL", interval:4.6},
+    {id:"sfo-hnl", a:"SFO", b:"HNL", interval:5.0}
+  ];
+  ROUTES.forEach(function(r){
+    var A=AIRPORTS[r.a], B=AIRPORTS[r.b];
+    r.from=[A.lon,A.lat]; r.to=[B.lon,B.lat];
+    r.fromName=A.name; r.toName=B.name;
+    r.distanceKm = haversineKm(r.from,r.to);
+    r.path = buildGreatCirclePath(r.from,r.to,48);
+    r.pathIndex = buildPathIndex(r.path);
+    r._acc = Math.random()*r.interval;
+  });
+
+  var CRUISE_KMH = 880;
+  var SEC_PER_HOUR = 1.25; // 144h compresses to 180s at 1x
+  var TOTAL_HOURS = 144;
+
+  /* ---------------- deflection: bend a flight point away from a storm buffer ---------------- */
+  function deflectPoint(p, liveStorms){
+    var push=[0,0], intrusion=0;
+    liveStorms.forEach(function(s){
+      var d = haversineKm(p, [s.lon,s.lat]);
+      var r = s.radiusKm*1.15;
+      if(d<r){
+        var f = (r-d)/r;
+        var brng = bearingDeg([s.lon,s.lat], p);
+        var pushKm = f*r*0.55;
+        var dest = destPointFlat(p, brng, pushKm);
+        push[0]+=dest[0]-p[0]; push[1]+=dest[1]-p[1];
+        intrusion = Math.max(intrusion,f);
+      }
+    });
+    return {pt:[p[0]+push[0], p[1]+push[1]], intrusion:intrusion};
+  }
+
+  /* ---------------- clock / transport state ---------------- */
+  var simHours = 0, playing = true, speed = 1;
+  var scrubber = document.getElementById("scrubber");
+  var playBtn = document.getElementById("playBtn");
+  document.querySelectorAll(".speedbtn").forEach(function(b){
+    b.addEventListener("click", function(){
+      document.querySelectorAll(".speedbtn").forEach(function(x){x.classList.remove("active");});
+      b.classList.add("active"); speed = parseFloat(b.dataset.speed);
+    });
+  });
+  playBtn.addEventListener("click", function(){ playing=!playing; playBtn.textContent = playing?"❚❚":"►"; });
+  scrubber.addEventListener("input", function(){ simHours=parseFloat(scrubber.value); playing=false; playBtn.textContent="►"; });
+
+  var MONTHS=["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+  var BASE_EPOCH = Date.UTC(2026,8,5,0,0,0); // 05 Sep 2026 00:00 UTC — see footnote 1
+  var clockDate=document.getElementById("clockDate"), clockTime=document.getElementById("clockTime");
+  function updateClock(h){
+    var d = new Date(BASE_EPOCH + h*3600000);
+    var dd=("0"+d.getUTCDate()).slice(-2), mon=MONTHS[d.getUTCMonth()], yyyy=d.getUTCFullYear();
+    var hh=("0"+d.getUTCHours()).slice(-2), mm=("0"+d.getUTCMinutes()).slice(-2);
+    clockDate.textContent = dd+" "+mon+" "+yyyy;
+    clockTime.innerHTML = hh+":"+mm+"<span>UTC</span>";
+  }
+
+  function showSetupBanner(msg){
+    document.getElementById("setupDetail").textContent = msg||"";
+    document.getElementById("setupBanner").hidden = false;
+  }
+  function parseEnv(text){
+    var out={};
+    text.split(/\r?\n/).forEach(function(line){
+      line=line.trim();
+      if(!line||line[0]==="#") return;
+      var idx=line.indexOf("=");
+      if(idx===-1) return;
+      out[line.slice(0,idx).trim()] = line.slice(idx+1).trim().replace(/^["']|["']$/g,"");
+    });
+    return out;
+  }
+  fetch("./.env", {cache:"no-store"}).then(function(r){
+    if(!r.ok) throw new Error("could not read .env ("+r.status+")");
+    return r.text();
+  }).then(function(text){
+    var token = parseEnv(text).MAPBOX_TOKEN;
+    if(!token || token.indexOf("YOUR_TOKEN_HERE")!==-1){
+      showSetupBanner("Found .env but MAPBOX_TOKEN is still the placeholder.");
+      return;
+    }
+    initMap(token);
+  }).catch(function(err){
+    showSetupBanner("Serve this file over http:// (not double-clicked as a local file) so it can read .env — e.g. `python serve.py` in this folder. (" + err.message + ")");
+  });
+
+  /* ---------------- storm roster + corridor list (static DOM) ---------------- */
+  var stormRows = document.getElementById("stormRows");
+  var stormRowEls = {};
+  STORMS.forEach(function(s){
+    var row=document.createElement("div");
+    row.className="st-row inactive";
+    row.innerHTML='<span class="dot" style="background:var(--cat-td)"></span><span class="n">'+s.name+'</span><span class="c">—</span>';
+    stormRows.appendChild(row);
+    stormRowEls[s.id]={row:row, dot:row.querySelector(".dot"), c:row.querySelector(".c")};
+  });
+
+  var rankList=document.getElementById("rankList");
+  var sortedRoutes = ROUTES.slice().sort(function(a,b){ return a.distanceKm-b.distanceKm; });
+  var rankRowEls={};
+  sortedRoutes.forEach(function(r){
+    var row=document.createElement("div");
+    row.className="rank-row"; row.dataset.id=r.id;
+    row.innerHTML =
+      '<span class="rank-dot"></span>'+
+      '<span class="rank-name"><div class="n">'+r.fromName+' → '+r.toName+'</div><div class="s">'+r.a+' / '+r.b+'</div></span>'+
+      '<span class="rank-km">'+Math.round(r.distanceKm)+' km</span>';
+    rankList.appendChild(row);
+    rankRowEls[r.id]=row;
+  });
+
+  /* ---------------- map ---------------- */
+  var map, playing_map=false;
+  function initMap(token){
+    mapboxgl.accessToken = token;
+    map = new mapboxgl.Map({
+      container:"map",
+      style:"mapbox://styles/mapbox/dark-v11",
+      projection:"mercator",
+      center:[-124,21.5],
+      zoom:3.35,
+      pitch:0,
+      attributionControl:true
+    });
+    map.addControl(new mapboxgl.NavigationControl({showCompass:false}), "top-right");
+    map.dragRotate.disable();
+    map.touchZoomRotate.disableRotation();
+
+    var didLoad=false;
+    map.on("load", function(){
+      didLoad=true;
+      document.getElementById("setupBanner").hidden = true;
+      try{ map.setConfigProperty("basemap","lightPreset","dusk"); }catch(e){}
+      dimLabels();
+      fitToScene();
+      buildStormLayers();
+      buildFlightLayers();
+      updateClock(simHours);
+      requestAnimationFrame(tick);
+    });
+    map.on("error", function(e){
+      if(e && e.error && /access token|unauthorized|401|403|forbidden/i.test(e.error.message||"")){
+        showSetupBanner("Mapbox rejected this token or style: " + e.error.message);
+      }
+    });
+    setTimeout(function(){
+      if(!didLoad){ showSetupBanner("The basemap didn't finish loading in time — check your internet connection, token, and style access, then reload."); }
+    }, 15000);
+    window.addEventListener("resize", function(){ map.resize(); });
+  }
+
+  function dimLabels(){
+    var layers = map.getStyle().layers;
+    layers.forEach(function(l){
+      var id=l.id.toLowerCase();
+      if(l.type==="symbol" && (id.indexOf("poi")!==-1 || id.indexOf("road-label")!==-1 || id.indexOf("transit")!==-1)){
+        try{ map.setLayoutProperty(l.id,"visibility","none"); }catch(e){}
+      }
+      if(l.type==="fill-extrusion" || id.indexOf("building")!==-1){
+        try{ map.setLayoutProperty(l.id,"visibility","none"); }catch(e){}
+      }
+    });
+  }
+
+  function fitToScene(){
+    var lons=[], lats=[];
+    STORMS.forEach(function(s){ s.pts.forEach(function(p){ lons.push(p.lon); lats.push(p.lat); }); });
+    ROUTES.forEach(function(r){ lons.push(r.from[0],r.to[0]); lats.push(r.from[1],r.to[1]); });
+    var b = new mapboxgl.LngLatBounds([Math.min.apply(null,lons),Math.min.apply(null,lats)],[Math.max.apply(null,lons),Math.max.apply(null,lats)]);
+    map.resize();
+    map.fitBounds(b, {padding:{top:60,bottom:80,left:40,right:60}, duration:0});
+    window.__dbg = {pass1Zoom:map.getZoom(), containerW:map.getContainer().clientWidth, containerH:map.getContainer().clientHeight};
+    setTimeout(function(){
+      map.resize();
+      map.fitBounds(b, {padding:{top:60,bottom:80,left:40,right:60}, duration:0});
+      window.__dbg.pass2Zoom = map.getZoom();
+      window.__dbg.pass2ContainerW = map.getContainer().clientWidth;
+      window.__dbg.pass2ContainerH = map.getContainer().clientHeight;
+    }, 300);
+  }
+
+  /* ---------------- storm layers ---------------- */
+  function buildStormLayers(){
+    var segFeatures=[], ptFeatures=[];
+    STORMS.forEach(function(s){
+      for(var i=0;i<s.pts.length;i++){
+        var p=s.pts[i], cat=catFromWind(p.wind);
+        ptFeatures.push({type:"Feature", properties:{h:p.h, color:CATS[cat].color}, geometry:{type:"Point", coordinates:[p.lon,p.lat]}});
+        if(i<s.pts.length-1){
+          var p1=s.pts[i+1];
+          segFeatures.push({type:"Feature", properties:{h0:p.h, h1:p1.h, color:CATS[cat].color},
+            geometry:{type:"LineString", coordinates:[[p.lon,p.lat],[p1.lon,p1.lat]]}});
+        }
+      }
+    });
+
+    map.addSource("storm-lines", {type:"geojson", data:{type:"FeatureCollection", features:segFeatures}});
+    map.addLayer({id:"storm-lines-future", type:"line", source:"storm-lines",
+      layout:{"line-cap":"round","line-join":"round"},
+      paint:{"line-color":"#8A93A6","line-width":["interpolate",["linear"],["zoom"],3,1,8,2],"line-opacity":0.35,"line-dasharray":[1,2]}});
+    map.addLayer({id:"storm-lines-past", type:"line", source:"storm-lines",
+      layout:{"line-cap":"round","line-join":"round"},
+      paint:{"line-color":["get","color"],"line-width":["interpolate",["linear"],["zoom"],3,1.6,8,3],"line-opacity":0.85}});
+
+    map.addSource("storm-points", {type:"geojson", data:{type:"FeatureCollection", features:ptFeatures}});
+    map.addLayer({id:"storm-points-past", type:"circle", source:"storm-points",
+      paint:{"circle-radius":["interpolate",["linear"],["zoom"],3,2.6,8,4.2],"circle-color":["get","color"],
+        "circle-stroke-color":"#03050A","circle-stroke-width":1}});
+
+    map.addSource("storm-buffers", {type:"geojson", data:{type:"FeatureCollection", features:[]}});
+    map.addLayer({id:"storm-buffers-fill", type:"fill", source:"storm-buffers",
+      paint:{"fill-color":["get","color"],"fill-opacity":0.14}}, "storm-lines-future");
+    map.addLayer({id:"storm-buffers-line", type:"line", source:"storm-buffers",
+      paint:{"line-color":["get","color"],"line-opacity":0.5,"line-width":1.2,"line-dasharray":[2,2]}}, "storm-lines-future");
+
+    map.addSource("storm-now", {type:"geojson", data:{type:"FeatureCollection", features:[]}});
+    map.addLayer({id:"storm-now-halo", type:"circle", source:"storm-now",
+      paint:{"circle-radius":["interpolate",["linear"],["zoom"],3,16,8,30],"circle-color":["get","color"],"circle-opacity":0.22,"circle-blur":0.7}});
+    map.addLayer({id:"storm-now-eye", type:"circle", source:"storm-now",
+      paint:{"circle-radius":["interpolate",["linear"],["zoom"],3,5,8,8],"circle-color":["get","color"],
+        "circle-stroke-color":"#03050A","circle-stroke-width":1.6}});
+    map.addLayer({id:"storm-now-label", type:"symbol", source:"storm-now",
+      layout:{"text-field":["get","label"],"text-font":["Open Sans Bold","Arial Unicode MS Bold"],
+        "text-size":11,"text-offset":[0,-1.6],"text-anchor":"bottom","text-allow-overlap":true},
+      paint:{"text-color":["get","color"],"text-halo-color":"#03050A","text-halo-width":1.4}});
+  }
+
+  function updateStormLayers(h){
+    var bufferFeatures=[], nowFeatures=[], live=[];
+    var activeCount=0;
+    STORMS.forEach(function(s){
+      var st = stormStateAt(s,h);
+      var el = stormRowEls[s.id];
+      if(!st){
+        el.row.classList.add("inactive");
+        el.dot.style.background = "var(--cat-td)";
+        el.c.textContent = h<s.pts[0].h ? "forming" : "dissipated";
+        return;
+      }
+      activeCount++;
+      live.push({lon:st.lon, lat:st.lat, radiusKm:st.radiusKm});
+      el.row.classList.remove("inactive");
+      el.dot.style.background = st.color;
+      el.c.textContent = st.label+" · "+Math.round(st.wind)+"kt";
+      bufferFeatures.push({type:"Feature", properties:{color:st.color}, geometry:{type:"Polygon", coordinates:geoCirclePolygon([st.lon,st.lat], st.radiusKm, 40)}});
+      nowFeatures.push({type:"Feature", properties:{color:st.color, label:s.name.toUpperCase()+" · "+st.label}, geometry:{type:"Point", coordinates:[st.lon,st.lat]}});
+    });
+    map.setFilter("storm-lines-past", ["<=",["get","h1"], h]);
+    map.setFilter("storm-lines-future", [">",["get","h1"], h]);
+    map.setFilter("storm-points-past", ["<=",["get","h"], h]);
+    map.getSource("storm-buffers").setData({type:"FeatureCollection", features:bufferFeatures});
+    map.getSource("storm-now").setData({type:"FeatureCollection", features:nowFeatures});
+    return live;
+  }
+
+  /* ---------------- flight layers ---------------- */
+  var activeFlights = [];
+  function buildFlightLayers(){
+    var corridorFeatures = ROUTES.map(function(r){
+      return {type:"Feature", properties:{}, geometry:{type:"LineString", coordinates:r.path}};
+    });
+    map.addSource("flight-corridors", {type:"geojson", data:{type:"FeatureCollection", features:corridorFeatures}});
+    map.addLayer({id:"flight-corridors-line", type:"line", source:"flight-corridors",
+      paint:{"line-color":"#3FE0D0","line-width":1,"line-opacity":0.18,"line-dasharray":[0.2,2]}});
+
+    map.addSource("flights", {type:"geojson", data:{type:"FeatureCollection", features:[]}});
+    map.addLayer({id:"flights-glow", type:"circle", source:"flights",
+      paint:{"circle-radius":["interpolate",["linear"],["zoom"],3,9,8,13],
+        "circle-color":["case",["==",["get","affected"],1],"#FF6273","#3FE0D0"],
+        "circle-opacity":0.25,"circle-blur":0.6}});
+    map.addLayer({id:"flights-plane", type:"symbol", source:"flights",
+      layout:{"text-field":"✈","text-size":["interpolate",["linear"],["zoom"],3,13,8,18],
+        "text-rotate":["get","bearing"],"text-rotation-alignment":"map","text-allow-overlap":true,"text-ignore-placement":true},
+      paint:{"text-color":["case",["==",["get","affected"],1],"#FF6273","#3FE0D0"],
+        "text-halo-color":"#03050A","text-halo-width":1.2}});
+  }
+
+  function spawnFlight(route){
+    var realHours = route.distanceKm/CRUISE_KMH;
+    var durationSec = Math.max(1.4, realHours*SEC_PER_HOUR/speed);
+    activeFlights.push({route:route, t:0, durationSec:durationSec});
+  }
+
+  /* ---------------- main loop ---------------- */
+  var last = performance.now();
+  function tick(now){
+    var dt = Math.min(0.12, (now-last)/1000); last = now;
+    if(playing){
+      simHours += dt*speed/SEC_PER_HOUR;
+      if(simHours>TOTAL_HOURS) simHours-=TOTAL_HOURS;
+      scrubber.value = simHours;
+    }
+    updateClock(simHours);
+    var liveStorms = updateStormLayers(simHours);
+
+    if(playing){
+      ROUTES.forEach(function(r){
+        r._acc += dt;
+        if(r._acc>=r.interval){ r._acc-=r.interval; spawnFlight(r); }
+      });
+    }
+
+    var reroutedRoutes = {};
+    var features=[];
+    for(var i=activeFlights.length-1;i>=0;i--){
+      var f=activeFlights[i];
+      if(playing) f.t += dt/f.durationSec;
+      if(f.t>=1){ activeFlights.splice(i,1); continue; }
+      var here = pointAtT(f.route.pathIndex, f.t);
+      var defl = deflectPoint(here.pos, liveStorms);
+      var affected = defl.intrusion>0.05 ? 1 : 0;
+      if(affected) reroutedRoutes[f.route.id]=true;
+      features.push({type:"Feature", properties:{bearing:here.bearing, affected:affected}, geometry:{type:"Point", coordinates:defl.pt}});
+    }
+    if(map.getSource("flights")) map.getSource("flights").setData({type:"FeatureCollection", features:features});
+
+    var reroutedCount=0;
+    features.forEach(function(ft){ if(ft.properties.affected) reroutedCount++; });
+    document.getElementById("airborneVal").textContent = activeFlights.length;
+    document.getElementById("airborneBar").style.width = Math.min(100,(activeFlights.length/24)*100)+"%";
+    document.getElementById("rerouteVal").textContent = reroutedCount;
+    document.getElementById("rerouteBar").style.width = Math.min(100,(reroutedCount/10)*100)+"%";
+
+    ROUTES.forEach(function(r){
+      var row = rankRowEls[r.id];
+      if(row) row.classList.toggle("hot", !!reroutedRoutes[r.id]);
+    });
+
+    requestAnimationFrame(tick);
+  }
+})();
+</script>

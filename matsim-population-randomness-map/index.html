@@ -1,0 +1,823 @@
+<meta charset="utf-8">
+<title>Seeded City</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js"></script>
+<style>
+  :root{
+    --bg:#0A0714;
+    --panel:#120D1F;
+    --panel-2:#150F24;
+    --panel-border:rgba(196,168,255,0.16);
+    --ink:#F3EEFF;
+    --ink-soft:#B0A6D6;
+    --ink-faint:#655A85;
+    --line:rgba(243,238,255,0.08);
+    --violet:#8B6BFF;
+    --violet-soft:rgba(139,107,255,0.16);
+    --amber:#FFB020;
+    --amber-soft:rgba(255,176,32,0.16);
+    --rose:#FF4D8D;
+    --rose-soft:rgba(255,77,141,0.14);
+    --shadow:0 30px 70px -30px rgba(0,0,0,0.85), 0 0 60px -20px rgba(139,107,255,0.16);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse 900px 500px at 10% -8%, rgba(139,107,255,0.11), transparent 60%),
+      radial-gradient(ellipse 900px 550px at 95% 0%, rgba(255,176,32,0.07), transparent 60%),
+      var(--bg);
+    color:var(--ink);
+    font-family:"Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+    font-size:16px;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  @media (prefers-reduced-motion: reduce){ *{animation-duration:0.01ms !important; transition-duration:0.01ms !important;} }
+
+  .wrap{max-width:1320px;margin:0 auto;padding:0 clamp(18px,4vw,44px) clamp(48px,8vw,80px);}
+
+  header.hero{padding:clamp(28px,5vw,52px) 0 clamp(8px,2vw,16px);}
+  .eyebrow{
+    font-family:"IBM Plex Mono", ui-monospace, monospace;
+    font-size:12px; letter-spacing:0.18em; text-transform:uppercase;
+    color:var(--violet); margin:0 0 10px;
+  }
+  .eyebrow::before{ content:"◆ "; color:var(--amber); }
+  h1{
+    font-family:"Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+    font-weight:700;
+    font-size:clamp(2rem,4.2vw,3.2rem);
+    line-height:1.03; letter-spacing:-0.02em; margin:0 0 14px;
+    text-wrap:balance;
+    color:var(--ink);
+  }
+  .dek{ max-width:78ch; font-size:clamp(0.94rem,1.25vw,1.05rem); color:var(--ink-soft); margin:0; }
+  .dek strong{color:var(--ink); font-weight:600;}
+  .dek .swatch{display:inline-block;width:8px;height:8px;border-radius:50%;margin:0 2px -1px 0;}
+
+  .layout{
+    display:grid;
+    grid-template-columns: minmax(0,1fr) 320px;
+    gap:clamp(14px,2.6vw,24px);
+    align-items:start;
+    margin:clamp(22px,4vw,36px) 0 0;
+  }
+  @media (max-width:920px){ .layout{ grid-template-columns: 1fr; } }
+
+  .map-frame{
+    position:relative;
+    border-radius:16px;
+    border:1px solid var(--panel-border);
+    background:#050407;
+    box-shadow:var(--shadow);
+    overflow:hidden;
+    aspect-ratio:1600/800;
+  }
+  #map{ position:absolute; inset:0; width:100%; height:100%; }
+  .mapboxgl-ctrl-logo, .mapboxgl-ctrl-attrib{ filter:invert(0.85) opacity(0.6); }
+  .mapboxgl-popup{ display:none; }
+
+  .setup-banner{
+    position:absolute; inset:0; z-index:30; display:flex; align-items:center; justify-content:center;
+    background:rgba(5,4,7,0.96); padding:32px; text-align:center;
+  }
+  .setup-banner[hidden]{ display:none; }
+  .setup-banner .box{ max-width:480px; }
+  .setup-banner h3{ font-family:"Space Grotesk"; font-size:18px; margin:0 0 10px; color:var(--ink); }
+  .setup-banner p{ font-size:13px; color:var(--ink-soft); margin:0 0 8px; }
+  .setup-banner code{ background:rgba(255,255,255,0.08); padding:2px 6px; border-radius:5px; font-family:"IBM Plex Mono"; font-size:12px; color:var(--amber); }
+
+  .chip{
+    position:absolute;
+    background:rgba(14,10,22,0.82);
+    backdrop-filter:blur(6px);
+    border:1px solid var(--panel-border);
+    border-radius:12px;
+    padding:12px 14px;
+    box-shadow:0 14px 30px -16px rgba(0,0,0,0.7);
+    z-index:5;
+  }
+  .chip-title{ top:14px; left:14px; max-width:260px; }
+  .chip-title .name{ font-family:"Space Grotesk"; font-weight:700; font-size:14px; letter-spacing:0.02em; }
+  .chip-title .sub{ font-family:"IBM Plex Mono"; font-size:10.5px; color:var(--ink-faint); letter-spacing:0.08em; text-transform:uppercase; margin-top:3px; }
+
+  .chip-clock{ top:14px; right:14px; text-align:right; min-width:168px; }
+  .chip-clock .time{ font-family:"IBM Plex Mono"; font-size:22px; font-weight:600; letter-spacing:0.02em; color:var(--ink); }
+  .chip-clock .time span{ font-size:13px; color:var(--ink-faint); margin-left:3px;}
+  .chip-clock .draw{ font-family:"IBM Plex Mono"; font-size:10.5px; letter-spacing:0.1em; text-transform:uppercase; margin-top:2px; color:var(--rose); }
+  .chip-clock .pop{ font-family:"IBM Plex Mono"; font-size:10.5px; letter-spacing:0.06em; margin-top:4px; color:var(--ink-faint); }
+
+  .chip-legend{ bottom:14px; left:14px; min-width:212px; }
+  .chip-legend h4{ margin:0 0 8px; font-family:"IBM Plex Mono"; font-size:10.5px; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-faint); }
+  .leg-row{ display:flex; align-items:center; gap:8px; font-size:12px; color:var(--ink-soft); margin:5px 0; }
+  .leg-swatch{ width:10px; height:10px; border-radius:50%; flex:none; }
+  .leg-line{ width:14px; height:0; border-top:2px dashed var(--rose); flex:none; }
+  .leg-sq{ width:10px; height:10px; border-radius:2px; flex:none; }
+
+  .tooltip{
+    position:absolute; pointer-events:none; z-index:20;
+    background:rgba(14,10,22,0.96); border:1px solid var(--panel-border); border-radius:10px;
+    padding:9px 11px; font-size:12px; color:var(--ink-soft);
+    box-shadow:0 14px 30px -16px rgba(0,0,0,0.8);
+    opacity:0; transform:translate(-50%,calc(-100% - 14px)); transition:opacity 120ms ease;
+    white-space:nowrap;
+  }
+  .tooltip.show{ opacity:1; }
+  .tooltip b{ color:var(--ink); font-family:"Space Grotesk"; font-size:13px; }
+  .tooltip .tt-tag{ font-family:"IBM Plex Mono"; font-size:10px; letter-spacing:0.06em; text-transform:uppercase; }
+
+  /* ---- side panel ---- */
+  aside.panel{ display:flex; flex-direction:column; gap:14px; }
+  .block{
+    background:linear-gradient(180deg, var(--panel), var(--panel-2));
+    border:1px solid var(--panel-border);
+    border-radius:14px;
+    padding:16px 16px 14px;
+  }
+  .block h3{
+    margin:0 0 12px; font-family:"IBM Plex Mono"; font-size:10.5px;
+    letter-spacing:0.14em; text-transform:uppercase; color:var(--ink-faint);
+  }
+
+  .transport{ display:flex; align-items:center; gap:10px; }
+  .playbtn{
+    width:36px; height:36px; border-radius:50%; flex:none;
+    background:var(--violet-soft); border:1px solid rgba(139,107,255,0.4);
+    color:var(--violet); cursor:pointer; display:flex; align-items:center; justify-content:center;
+    font-size:14px;
+  }
+  .playbtn:hover{ background:rgba(139,107,255,0.28); }
+  .speedrow{ display:flex; gap:6px; }
+  .speedbtn{
+    font-family:"IBM Plex Mono"; font-size:11px; padding:5px 8px; border-radius:7px;
+    background:transparent; border:1px solid var(--panel-border); color:var(--ink-faint); cursor:pointer;
+  }
+  .speedbtn.active{ color:var(--amber); border-color:rgba(255,176,32,0.5); background:var(--amber-soft); }
+
+  input[type=range]{
+    -webkit-appearance:none; width:100%; height:6px; border-radius:4px; margin:12px 0 4px;
+    background:rgba(139,107,255,0.14);
+    outline:none; cursor:pointer;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:14px; height:14px; border-radius:50%;
+    background:var(--ink); border:2px solid var(--amber); cursor:pointer;
+    box-shadow:0 0 10px rgba(255,176,32,0.7);
+  }
+  .ticks{ display:flex; justify-content:space-between; font-family:"IBM Plex Mono"; font-size:9.5px; color:var(--ink-faint); }
+
+  .reseed{
+    width:100%; margin-top:14px; padding:10px 12px; border-radius:10px;
+    background:var(--rose-soft); border:1px solid rgba(255,77,141,0.45); color:var(--rose);
+    font-family:"Space Grotesk"; font-weight:700; font-size:13px; letter-spacing:0.01em; cursor:pointer;
+  }
+  .reseed:hover{ background:rgba(255,77,141,0.26); }
+  .reseed .r{ display:inline-block; margin-right:6px; transition:transform 400ms ease; }
+  .reseed.spin .r{ transform:rotate(360deg); }
+
+  .stat{ margin:10px 0; }
+  .stat-top{ display:flex; justify-content:space-between; align-items:baseline; font-size:12.5px; margin-bottom:5px; }
+  .stat-top .lbl{ color:var(--ink-soft); }
+  .stat-top .val{ font-family:"IBM Plex Mono"; font-weight:600; color:var(--ink); font-size:11.5px; }
+  .bar{ position:relative; height:7px; border-radius:4px; background:rgba(255,255,255,0.06); overflow:visible; }
+  .bar > i{ display:block; height:100%; border-radius:4px; width:0%; transition:width 220ms linear; overflow:hidden; }
+  .bar.violet > i{ background:var(--violet); box-shadow:0 0 8px rgba(139,107,255,0.6); }
+  .bar.amber > i{ background:var(--amber); box-shadow:0 0 8px rgba(255,176,32,0.6); }
+  .bar.rose > i{ background:var(--rose); box-shadow:0 0 8px rgba(255,77,141,0.55); }
+  .bar .target{
+    position:absolute; top:-3px; bottom:-3px; width:2px; background:var(--ink);
+    opacity:0.55;
+  }
+  .bar .target::after{
+    content:attr(data-t); position:absolute; top:-15px; left:50%; transform:translateX(-50%);
+    font-family:"IBM Plex Mono"; font-size:8.5px; color:var(--ink-faint); white-space:nowrap;
+  }
+
+  .feed{ max-height:168px; overflow-y:auto; padding-right:2px; }
+  .feed::-webkit-scrollbar{ width:6px; }
+  .feed::-webkit-scrollbar-thumb{ background:rgba(255,255,255,0.12); border-radius:4px; }
+  .feed-row{
+    display:flex; align-items:baseline; gap:7px; padding:5px 2px; font-size:11px;
+    font-family:"IBM Plex Mono"; color:var(--ink-faint); border-bottom:1px dashed var(--line);
+  }
+  .feed-row:last-child{ border-bottom:none; }
+  .feed-row .fdot{ width:6px; height:6px; border-radius:50%; flex:none; }
+  .feed-row .fid{ color:var(--ink-soft); }
+  .feed-row .fdesc{ color:var(--ink-faint); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .feed-empty{ font-size:11.5px; color:var(--ink-faint); font-style:italic; }
+
+  .tiles-list{ display:flex; flex-direction:column; gap:6px; }
+  .tile-row{ display:flex; align-items:center; gap:8px; font-size:12px; }
+  .tile-row .tdot{ width:9px; height:9px; border-radius:2px; flex:none; }
+  .tile-row .tname{ flex:1; color:var(--ink-soft); }
+  .tile-row .tqk{ font-family:"IBM Plex Mono"; font-size:9.5px; color:var(--ink-faint); }
+
+  footer.note{
+    margin-top:clamp(22px,4vw,34px); padding-top:16px; border-top:1px solid var(--line);
+    font-size:12px; color:var(--ink-faint); max-width:96ch;
+  }
+  footer.note a{ color:var(--ink-soft); }
+  footer.note p{ margin:0 0 8px; }
+
+  /* HTML marker pieces */
+  .m-pill{
+    font-family:"IBM Plex Mono"; font-size:9.5px; letter-spacing:0.04em; color:var(--ink);
+    background:rgba(14,10,22,0.85); border-radius:9px; padding:4px 8px; white-space:nowrap;
+    pointer-events:none;
+  }
+  .m-dot{ border-radius:50%; cursor:pointer; }
+  .m-dot.home{ background:var(--violet); }
+  .m-dot.hub{ background:var(--rose); }
+</style>
+
+<div class="wrap">
+  <header class="hero">
+    <p class="eyebrow">Budapest, Hungary · Synthetic Population Draw</p>
+    <h1>Seeded City</h1>
+    <p class="dek">A synthetic population isn't measured &mdash; it's rolled. This model runs, in the browser and over Budapest's real road network, the randomization steps from a real open-source MATSim population generator originally built for Alexandria, Egypt<sup>1</sup>: take an aggregate travel count between two map tiles, then manufacture individual commuters to match it. Each commuter gets a <strong>random point</strong> inside their home tile, a <strong>random point</strong> inside their destination tile, a <strong>random departure time</strong> in the 7&ndash;10am window, and a random travel mode drawn from real citywide splits: <span class="swatch" style="background:var(--violet)"></span><strong>43.4% car</strong>, <span class="swatch" style="background:var(--amber)"></span><strong>56.6% transit</strong> &mdash; then drives or rides the actual Budapest streets between them, routed live through the Mapbox Directions API. No two of these commuters are real people &mdash; but press <strong>Reseed</strong> and watch a brand-new random population converge back to the same fixed splits anyway.</p>
+  </header>
+
+  <div class="layout">
+    <div class="map-frame" id="mapFrame">
+      <div id="map"></div>
+      <div class="setup-banner" id="setupBanner" hidden>
+        <div class="box">
+          <h3>Add a Mapbox token to see the map</h3>
+          <p>This page reads a token from <code>.env</code> next to it (never hardcoded in the HTML). Open <code>.env</code> in this project folder, replace the placeholder with your public token from <code>account.mapbox.com/access-tokens</code> (starts with <code>pk.</code>), save, and reload. If a token is already there, this is usually a network hiccup or the token/style being rejected &mdash; check the detail below.</p>
+          <p id="setupDetail" style="color:var(--rose)"></p>
+        </div>
+      </div>
+      <div class="chip chip-title">
+        <div class="name">SEEDED CITY</div>
+        <div class="sub">Synthetic population · live draw</div>
+      </div>
+      <div class="chip chip-clock">
+        <div class="time" id="clockTime">07:00<span>hrs</span></div>
+        <div class="draw" id="drawLabel">Draw #1</div>
+        <div class="pop" id="popLabel">0 / 0 agents generated</div>
+      </div>
+      <div class="chip chip-legend">
+        <h4>Legend</h4>
+        <div class="leg-row"><span class="leg-swatch" style="background:var(--violet)"></span>Car trip · home tile</div>
+        <div class="leg-row"><span class="leg-swatch" style="background:var(--amber)"></span>Transit trip</div>
+        <div class="leg-row"><span class="leg-sq" style="background:var(--rose)"></span>Activity/hub tile</div>
+        <div class="leg-row"><span class="leg-line" style="border-top-color:var(--ink-soft)"></span>Real road route (Mapbox Directions)</div>
+        <div class="leg-row"><span class="leg-line"></span>Tile border (14-digit quadkey)</div>
+      </div>
+      <div class="tooltip" id="tooltip"></div>
+    </div>
+
+    <aside class="panel">
+      <div class="block">
+        <h3>Morning window · 7&ndash;10am</h3>
+        <div class="transport">
+          <button class="playbtn" id="playBtn">❚❚</button>
+          <div class="speedrow">
+            <button class="speedbtn" data-speed="0.5">0.5×</button>
+            <button class="speedbtn active" data-speed="1">1×</button>
+            <button class="speedbtn" data-speed="2">2×</button>
+            <button class="speedbtn" data-speed="4">4×</button>
+          </div>
+        </div>
+        <input type="range" id="scrubber" min="0" max="180" value="0">
+        <div class="ticks"><span>7:00</span><span>7:30</span><span>8:00</span><span>8:30</span><span>9:00</span><span>9:30</span><span>10:00</span></div>
+        <button class="reseed" id="reseedBtn"><span class="r">↻</span>Reseed population</button>
+      </div>
+
+      <div class="block">
+        <h3>Drawn so far, vs. real target split</h3>
+        <div class="stat">
+          <div class="stat-top"><span class="lbl">Car</span><span class="val" id="carVal">0 · 0.0%</span></div>
+          <div class="bar violet"><i id="carBar"></i><span class="target" data-t="43.4%" style="left:43.4%"></span></div>
+        </div>
+        <div class="stat">
+          <div class="stat-top"><span class="lbl">Transit</span><span class="val" id="ptVal">0 · 0.0%</span></div>
+          <div class="bar amber"><i id="ptBar"></i><span class="target" data-t="56.6%" style="left:56.6%"></span></div>
+        </div>
+        <div class="stat">
+          <div class="stat-top"><span class="lbl">Education</span><span class="val" id="eduVal">0 · 0.0%</span></div>
+          <div class="bar rose"><i id="eduBar"></i><span class="target" data-t="43.3%" style="left:43.3%"></span></div>
+        </div>
+        <div class="stat">
+          <div class="stat-top"><span class="lbl">Work</span><span class="val" id="workVal">0 · 0.0%</span></div>
+          <div class="bar rose"><i id="workBar"></i><span class="target" data-t="50.3%" style="left:50.3%"></span></div>
+        </div>
+      </div>
+
+      <div class="block">
+        <h3>Live draw feed</h3>
+        <div class="feed" id="feedList"><div class="feed-empty">Waiting for 7:00am&hellip;</div></div>
+      </div>
+
+      <div class="block">
+        <h3>Tiles (real 14-digit quadkeys)</h3>
+        <div class="tiles-list" id="tilesList"></div>
+      </div>
+    </aside>
+  </div>
+
+  <footer class="note">
+    <p><sup>1</sup> This piece reimplements, client-side, the randomization steps from <a href="https://github.com/go-hary/Facebook-to-MATSim" target="_blank" rel="noopener"><code>MATSim Syn_pop_genrator.ipynb</code> (go-hary/Facebook-to-MATSim)</a>, an open-source notebook that builds a MATSim agent-based travel model for Alexandria, Egypt from Meta's Data for Good Movement Range Maps, written for Elgohary, Casier, Pucci &amp; Witlox, &ldquo;Using Social Media Data to Construct an Agent-Based Model in a Data-Scarce Environment: A Case Study of Alexandria, Egypt,&rdquo; <em>Journal of Urban Technology</em> (2025). Three steps are reproduced faithfully: a uniformly random point is dropped inside each origin and destination tile, exactly as the notebook's <code>generate_random_points()</code> does by rejection-sampling inside a polygon; each trip draws a uniformly random departure time between 07:00 and 09:59, exactly as the notebook's <code>random.randint</code> call; and each trip draws its transport mode (car 43.37%, public transit 56.63%) and destination activity (work 50.3%, education 43.3%, business 4.3%, leisure 1.3%, shopping 0.8%) from the same fixed probabilities passed to the notebook's <code>np.random.choice</code> calls &mdash; activity type is drawn independently of which tile a trip lands in, matching the notebook's method, so a tile's name here isn't a guarantee of what happens there. What's different from the notebook: the geography is Budapest, Hungary, not Alexandria &mdash; the notebook's real input (Meta's tile-to-tile Movement Range OD matrix and its matching quadkey shapefile) is for Alexandria and isn't published in the repository anyway, so this transplants the same randomization method onto a different, real city instead of guessing at Alexandria's actual numbers. The nine home tiles and three activity tiles are real Budapest neighborhoods (their relative weights are an illustrative stand-in for residential/job density, not measured). Each trip's path is real, though: once every home-tile-to-hub-tile pair is drawn, its road route is fetched live from the Mapbox Directions API (driving profile, real OSM-derived street geometry) and every commuter on that pair rides the same real streets between their own random origin and destination points; a pair falls back to a straight line only if that one Directions request fails. Every tile is a real Bing/Google-style slippy map tile at zoom 14 (about 2.1km across at this latitude), computed live from each neighborhood's coordinates, with its 14-digit quadkey generated the same way the notebook pads its own IDs (<code>f"{int(x):014d}"</code>). Travel speeds used to animate each trip (34 km/h car, 19 km/h transit) are illustrative round-trip-time placeholders, not measured Budapest traffic data.</p>
+    <p>Source: <a href="https://github.com/go-hary/Facebook-to-MATSim" target="_blank" rel="noopener">go-hary/Facebook-to-MATSim on GitHub</a> · <a href="https://doi.org/10.1080/10630732.2025.2546785" target="_blank" rel="noopener">Elgohary et al., Journal of Urban Technology (2025), DOI 10.1080/10630732.2025.2546785</a></p>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- slippy-tile / quadkey math (real Bing-style tiling) ---------------- */
+  var TILE_Z = 14;
+  function lon2x(lon,z){ return Math.floor((lon+180)/360*Math.pow(2,z)); }
+  function lat2y(lat,z){
+    var r = lat*Math.PI/180;
+    return Math.floor((1-Math.log(Math.tan(r)+1/Math.cos(r))/Math.PI)/2*Math.pow(2,z));
+  }
+  function tileX2lon(x,z){ return x/Math.pow(2,z)*360-180; }
+  function tileY2lat(y,z){
+    var n = Math.PI - 2*Math.PI*y/Math.pow(2,z);
+    return 180/Math.PI*Math.atan(0.5*(Math.exp(n)-Math.exp(-n)));
+  }
+  function quadkey(x,y,z){
+    var q=[];
+    for(var i=z;i>0;i--){
+      var digit=0, mask=1<<(i-1);
+      if((x&mask)!==0) digit+=1;
+      if((y&mask)!==0) digit+=2;
+      q.push(String(digit));
+    }
+    return q.join("");
+  }
+  function tileBBox(x,y,z){
+    return { west:tileX2lon(x,z), east:tileX2lon(x+1,z), north:tileY2lat(y,z), south:tileY2lat(y+1,z) };
+  }
+  function bboxPolygon(b){
+    return [[ [b.west,b.south],[b.east,b.south],[b.east,b.north],[b.west,b.north],[b.west,b.south] ]];
+  }
+
+  /* ---------------- geo helpers ---------------- */
+  function toRad(d){ return d*Math.PI/180; }
+  function toDeg(r){ return r*180/Math.PI; }
+  function haversineKm(a,b){
+    var R=6371, dLat=toRad(b[1]-a[1]), dLon=toRad(b[0]-a[0]);
+    var lat1=toRad(a[1]), lat2=toRad(b[1]);
+    var h=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLon/2)*Math.sin(dLon/2);
+    return 2*R*Math.asin(Math.sqrt(h));
+  }
+  function bearingDeg(a,b){
+    var lat1=toRad(a[1]), lat2=toRad(b[1]), dLon=toRad(b[0]-a[0]);
+    var y=Math.sin(dLon)*Math.cos(lat2);
+    var x=Math.cos(lat1)*Math.sin(lat2)-Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLon);
+    return (toDeg(Math.atan2(y,x))+360)%360;
+  }
+  function destPoint(a,brngDeg,distKm){
+    var brng=toRad(brngDeg);
+    var dLat=(distKm/111.32)*Math.cos(brng);
+    var dLon=(distKm/(111.32*Math.cos(toRad(a[1]))))*Math.sin(brng);
+    return [a[0]+dLon, a[1]+dLat];
+  }
+  function lerp(a,b,f){ return [a[0]+(b[0]-a[0])*f, a[1]+(b[1]-a[1])*f]; }
+  function buildPathIndex(pts){
+    var cum=[0];
+    for(var i=0;i<pts.length-1;i++){ cum.push(cum[i]+haversineKm(pts[i],pts[i+1])); }
+    return {pts:pts, cum:cum, total:cum[cum.length-1]};
+  }
+  function pointAtT(pathIdx,t){
+    var pts=pathIdx.pts, cum=pathIdx.cum, total=pathIdx.total;
+    if(total===0) return pts[0];
+    var target=Math.max(0,Math.min(1,t))*total;
+    var i=0;
+    while(i<cum.length-2 && cum[i+1]<target) i++;
+    var segStart=cum[i], segEnd=cum[i+1]===undefined?total:cum[i+1];
+    var L=segEnd-segStart;
+    var f=L===0?0:(target-segStart)/L;
+    return lerp(pts[i],pts[i+1],f);
+  }
+
+  /* ---------------- neighborhoods: real coordinates, illustrative weights ---------------- */
+  /* Weights are a designed stand-in for residential density (home) and job/activity
+     capacity (hub) — the notebook's real Facebook Movement Range OD matrix and quadkey
+     shapefile (built for Alexandria, Egypt) aren't published in the repo, so these
+     aren't measured. Geography here is Budapest, Hungary — the notebook's method
+     transplanted onto a different, real city and its real road network. */
+  var HOMES = [
+    {name:"Újpest",        lon:19.0850, lat:47.5650, weight:0.75},
+    {name:"Rákospalota",   lon:19.1350, lat:47.5600, weight:0.55},
+    {name:"Óbuda",         lon:19.0333, lat:47.5350, weight:0.85},
+    {name:"Zugló",         lon:19.1050, lat:47.5150, weight:0.90},
+    {name:"Hegyvidék",     lon:18.9850, lat:47.5000, weight:0.45},
+    {name:"Kőbánya",       lon:19.1550, lat:47.4780, weight:0.80},
+    {name:"Kispest",       lon:19.1450, lat:47.4550, weight:0.70},
+    {name:"Pesterzsébet",  lon:19.0950, lat:47.4350, weight:0.55},
+    {name:"Csepel",        lon:19.0750, lat:47.4200, weight:0.65}
+  ];
+  var HUBS = [
+    {name:"Belváros (Downtown)", lon:19.0530, lat:47.4980, weight:1.00},
+    {name:"Váci Corridor",       lon:19.0630, lat:47.5250, weight:0.80},
+    {name:"Kelenföld",           lon:19.0350, lat:47.4700, weight:0.60}
+  ];
+  [HOMES,HUBS].forEach(function(list){
+    list.forEach(function(n){
+      n.x = lon2x(n.lon,TILE_Z); n.y = lat2y(n.lat,TILE_Z);
+      n.qk = quadkey(n.x,n.y,TILE_Z);
+      n.bbox = tileBBox(n.x,n.y,TILE_Z);
+      n.center = [n.lon,n.lat];
+    });
+  });
+
+  /* a straight-arc placeholder path between two tile centers, used until the real
+     driving route between them resolves (or as a fallback if that request fails) */
+  function buildFallbackSpine(a,b){
+    var distKm = haversineKm(a,b);
+    var mid = lerp(a,b,0.5);
+    var brng = bearingDeg(a,b)+90;
+    var arcPt = destPoint(mid, brng, Math.min(0.15*distKm, 1.2));
+    return [a,arcPt,b];
+  }
+
+  /* gravity-style flow weight between every home/hub pair, mild distance decay */
+  var FLOWS = [];
+  HOMES.forEach(function(h){
+    HUBS.forEach(function(u){
+      var dist = haversineKm(h.center,u.center);
+      var w = (h.weight*u.weight) / Math.pow(1+dist,0.6);
+      FLOWS.push({h:h,u:u,w:w, spine:buildFallbackSpine(h.center,u.center), routed:false});
+    });
+  });
+  function fetchPairRoute(f,token){
+    var coords = f.h.center[0]+","+f.h.center[1]+";"+f.u.center[0]+","+f.u.center[1];
+    var url = "https://api.mapbox.com/directions/v5/mapbox/driving/"+coords
+      + "?geometries=geojson&overview=full&access_token="+encodeURIComponent(token);
+    return fetch(url).then(function(r){
+      if(!r.ok) throw new Error("directions "+r.status);
+      return r.json();
+    }).then(function(data){
+      var route = data.routes && data.routes[0];
+      if(route && route.geometry && route.geometry.coordinates && route.geometry.coordinates.length>1){
+        f.spine = route.geometry.coordinates; // real, road-following geometry
+        f.routed = true;
+      }
+    }).catch(function(){ /* keep the straight-arc fallback spine for this pair */ });
+  }
+  var totalFlowW = FLOWS.reduce(function(s,f){return s+f.w;},0);
+  var cumFlow = []; (function(){ var acc=0; FLOWS.forEach(function(f){ acc+=f.w; cumFlow.push(acc); }); })();
+  function sampleFlow(){
+    var r = Math.random()*totalFlowW;
+    for(var i=0;i<cumFlow.length;i++){ if(r<=cumFlow[i]) return FLOWS[i]; }
+    return FLOWS[FLOWS.length-1];
+  }
+  function randInBBox(b){ return [ b.west+Math.random()*(b.east-b.west), b.south+Math.random()*(b.north-b.south) ]; }
+  function weightedChoice(options,probs){
+    var r=Math.random(), acc=0;
+    for(var i=0;i<options.length;i++){ acc+=probs[i]; if(r<=acc) return options[i]; }
+    return options[options.length-1];
+  }
+  var MODE_OPTS=["car","pt"], MODE_PROBS=[0.4337,0.5663];
+  var ACT_OPTS=["work","business","education","shopping","leisure"], ACT_PROBS=[0.503,0.043,0.433,0.008,0.013];
+  var SPEED_KMH = {car:34, pt:19};
+
+  var POP_SIZE = 240;
+  var AGENTS = [], drawCount = 1;
+  function buildAgentPath(a){
+    return buildPathIndex([a.origin].concat(a.flow.spine).concat([a.dest]));
+  }
+  function generateAgent(id){
+    var f = sampleFlow();
+    var agent = {
+      id:id, home:f.h, hub:f.u, flow:f,
+      origin: randInBBox(f.h.bbox), dest: randInBBox(f.u.bbox),
+      depHour: 7 + Math.random()*3, // uniform 7:00–10:00, matching the notebook's random.randint draw
+      mode: weightedChoice(MODE_OPTS,MODE_PROBS),
+      activity: weightedChoice(ACT_OPTS,ACT_PROBS),
+      status:"pending"
+    };
+    agent.path = buildAgentPath(agent);
+    agent.durationHr = Math.max(0.04, agent.path.total/SPEED_KMH[agent.mode]);
+    return agent;
+  }
+  function buildPopulation(){
+    AGENTS = [];
+    for(var i=0;i<POP_SIZE;i++){ AGENTS.push(generateAgent(i+1)); }
+  }
+  buildPopulation();
+
+  /* ---------------- observed counters + feed ---------------- */
+  var obsMode, obsAct, spawned, feed;
+  function resetCounters(){
+    obsMode = {car:0, pt:0};
+    obsAct = {work:0, business:0, education:0, shopping:0, leisure:0};
+    spawned = 0;
+    feed = [];
+  }
+  resetCounters();
+
+  function fmtClock(h){ var hh=Math.floor(h), mm=Math.floor((h-hh)*60); return (hh<10?"0":"")+hh+":"+(mm<10?"0":"")+mm; }
+
+  var carVal=document.getElementById("carVal"), ptVal=document.getElementById("ptVal");
+  var carBar=document.getElementById("carBar"), ptBar=document.getElementById("ptBar");
+  var eduVal=document.getElementById("eduVal"), workVal=document.getElementById("workVal");
+  var eduBar=document.getElementById("eduBar"), workBar=document.getElementById("workBar");
+  var feedList=document.getElementById("feedList");
+  var clockTime=document.getElementById("clockTime"), drawLabel=document.getElementById("drawLabel"), popLabel=document.getElementById("popLabel");
+
+  function pushFeed(a){
+    feed.unshift(a);
+    if(feed.length>8) feed.length=8;
+    feedList.innerHTML = feed.map(function(a){
+      var dotColor = a.mode==="car" ? "var(--violet)" : "var(--amber)";
+      return '<div class="feed-row"><span class="fdot" style="background:'+dotColor+'"></span>'+
+        '<span class="fid">#'+a.id+'</span>'+
+        '<span class="fdesc">'+fmtClock(a.depHour)+' · '+a.home.qk.slice(-6)+' → '+a.hub.qk.slice(-6)+' · '+a.mode+' · '+a.activity+'</span></div>';
+    }).join("");
+  }
+
+  function updateStats(){
+    var modeTotal = obsMode.car+obsMode.pt;
+    var carPct = modeTotal ? obsMode.car/modeTotal*100 : 0;
+    var ptPct = modeTotal ? obsMode.pt/modeTotal*100 : 0;
+    carVal.textContent = obsMode.car+" · "+carPct.toFixed(1)+"%";
+    ptVal.textContent = obsMode.pt+" · "+ptPct.toFixed(1)+"%";
+    carBar.style.width = carPct+"%";
+    ptBar.style.width = ptPct+"%";
+
+    var actTotal = spawned;
+    var eduPct = actTotal ? obsAct.education/actTotal*100 : 0;
+    var workPct = actTotal ? obsAct.work/actTotal*100 : 0;
+    eduVal.textContent = obsAct.education+" · "+eduPct.toFixed(1)+"%";
+    workVal.textContent = obsAct.work+" · "+workPct.toFixed(1)+"%";
+    eduBar.style.width = eduPct+"%";
+    workBar.style.width = workPct+"%";
+
+    popLabel.textContent = spawned+" / "+POP_SIZE+" agents generated";
+  }
+  updateStats();
+
+  /* ---------------- tiles list panel ---------------- */
+  var tilesList = document.getElementById("tilesList");
+  tilesList.innerHTML = HOMES.map(function(n){
+    return '<div class="tile-row"><span class="tdot" style="background:var(--violet);opacity:'+(0.35+0.5*n.weight)+'"></span><span class="tname">'+n.name+'</span><span class="tqk">'+n.qk+'</span></div>';
+  }).join("") + HUBS.map(function(n){
+    return '<div class="tile-row"><span class="tdot" style="background:var(--rose)"></span><span class="tname">'+n.name+'</span><span class="tqk">'+n.qk+'</span></div>';
+  }).join("");
+
+  /* ---------------- clock / transport state ---------------- */
+  var simHour = 7.0, playing = true, speed = 1;
+  var WINDOW_SECONDS = 70; // real seconds for one full 7:00–10:00 pass at 1x
+  var scrubber = document.getElementById("scrubber");
+  var playBtn = document.getElementById("playBtn");
+  document.querySelectorAll(".speedbtn").forEach(function(b){
+    b.addEventListener("click", function(){
+      document.querySelectorAll(".speedbtn").forEach(function(x){x.classList.remove("active");});
+      b.classList.add("active"); speed = parseFloat(b.dataset.speed);
+    });
+  });
+  playBtn.addEventListener("click", function(){ playing=!playing; playBtn.textContent = playing?"❚❚":"►"; });
+  scrubber.addEventListener("input", function(){
+    simHour = 7 + (parseFloat(scrubber.value)/180)*3;
+    playing=false; playBtn.textContent="►";
+    replayFromScratch(false);
+  });
+
+  function renderClock(){ clockTime.innerHTML = fmtClock(simHour)+"<span>hrs</span>"; }
+
+  function replayFromScratch(newPopulation){
+    if(newPopulation){ buildPopulation(); drawCount++; drawLabel.textContent = "Draw #"+drawCount; }
+    resetCounters();
+    AGENTS.forEach(function(a){ a.status = "pending"; });
+    feedList.innerHTML = '<div class="feed-empty">Waiting for 7:00am&hellip;</div>';
+    // fast-forward counters/feed to match current scrubber position
+    AGENTS.slice().sort(function(x,y){return x.depHour-y.depHour;}).forEach(function(a){
+      if(a.depHour<=simHour){
+        a.status = "active";
+        obsMode[a.mode]++; obsAct[a.activity]++; spawned++;
+        pushFeed(a);
+      }
+    });
+    updateStats();
+    renderClock();
+  }
+
+  var reseedBtn = document.getElementById("reseedBtn");
+  reseedBtn.addEventListener("click", function(){
+    simHour = 7.0; scrubber.value = 0;
+    replayFromScratch(true);
+  });
+
+  function showSetupBanner(msg){
+    document.getElementById("setupDetail").textContent = msg||"";
+    document.getElementById("setupBanner").hidden = false;
+  }
+  function parseEnv(text){
+    var out={};
+    text.split(/\r?\n/).forEach(function(line){
+      line=line.trim();
+      if(!line||line[0]==="#") return;
+      var idx=line.indexOf("=");
+      if(idx===-1) return;
+      out[line.slice(0,idx).trim()] = line.slice(idx+1).trim().replace(/^["']|["']$/g,"");
+    });
+    return out;
+  }
+
+  fetch("./.env", {cache:"no-store"}).then(function(r){
+    if(!r.ok) throw new Error("could not read .env ("+r.status+")");
+    return r.text();
+  }).then(function(text){
+    var token = parseEnv(text).MAPBOX_TOKEN;
+    if(!token || token.indexOf("YOUR_TOKEN_HERE")!==-1){
+      showSetupBanner("Found .env but MAPBOX_TOKEN is still the placeholder.");
+      return;
+    }
+    initMap(token);
+  }).catch(function(err){
+    showSetupBanner("Serve this file over http:// (not double-clicked as a local file) so it can read .env — e.g. `python serve.py` in this folder. (" + err.message + ")");
+  });
+
+  /* ---------------- map ---------------- */
+  var map, tooltip=document.getElementById("tooltip"), mapFrame=document.getElementById("mapFrame");
+
+  function initMap(token){
+    mapboxgl.accessToken = token;
+    map = new mapboxgl.Map({
+      container: "map",
+      style: "mapbox://styles/mapbox/dark-v11",
+      center: [19.045,47.4979],
+      zoom: 11.3,
+      pitch: 0,
+      attributionControl: true
+    });
+    map.addControl(new mapboxgl.NavigationControl({showCompass:false}), "top-right");
+    map.dragRotate.disable();
+    map.touchZoomRotate.disableRotation();
+
+    var didLoad = false;
+    map.on("load", function(){
+      didLoad = true;
+      document.getElementById("setupBanner").hidden = true;
+      try{ map.setConfigProperty("basemap", "lightPreset", "night"); }catch(e){}
+      buildTileLayers();
+
+      Promise.allSettled(FLOWS.map(function(f){ return fetchPairRoute(f,token); })).then(function(){
+        AGENTS.forEach(function(a){
+          a.path = buildAgentPath(a);
+          a.durationHr = Math.max(0.04, a.path.total/SPEED_KMH[a.mode]);
+        });
+        buildRouteLayer();
+        buildAgentLayer();
+        buildMarkers();
+        requestAnimationFrame(tick);
+      });
+    });
+
+    map.on("error", function(e){
+      if(e && e.error && /access token|unauthorized|401|403|forbidden/i.test(e.error.message||"")){
+        showSetupBanner("Mapbox rejected this token or style: " + e.error.message);
+      }
+    });
+    setTimeout(function(){
+      if(!didLoad){ showSetupBanner("The basemap didn't finish loading in time — check your internet connection, token, and style access, then reload."); }
+    }, 15000);
+    window.addEventListener("resize", function(){ map.resize(); });
+  }
+
+  function buildTileLayers(){
+    var homeFeatures = HOMES.map(function(n){
+      return { type:"Feature", properties:{name:n.name,qk:n.qk,weight:n.weight,kind:"home"}, geometry:{type:"Polygon", coordinates:bboxPolygon(n.bbox)} };
+    });
+    var hubFeatures = HUBS.map(function(n){
+      return { type:"Feature", properties:{name:n.name,qk:n.qk,weight:n.weight,kind:"hub"}, geometry:{type:"Polygon", coordinates:bboxPolygon(n.bbox)} };
+    });
+
+    map.addSource("home-tiles", { type:"geojson", data:{type:"FeatureCollection", features:homeFeatures} });
+    map.addLayer({
+      id:"home-tiles-fill", type:"fill", source:"home-tiles",
+      paint:{ "fill-color":"#8B6BFF", "fill-opacity":["interpolate",["linear"],["get","weight"],0.4,0.06,1.0,0.20] }
+    });
+    map.addLayer({
+      id:"home-tiles-line", type:"line", source:"home-tiles",
+      paint:{ "line-color":"#8B6BFF", "line-opacity":0.45, "line-width":1 }
+    });
+
+    map.addSource("hub-tiles", { type:"geojson", data:{type:"FeatureCollection", features:hubFeatures} });
+    map.addLayer({
+      id:"hub-tiles-fill", type:"fill", source:"hub-tiles",
+      paint:{ "fill-color":"#FF4D8D", "fill-opacity":0.14 }
+    });
+    map.addLayer({
+      id:"hub-tiles-line", type:"line", source:"hub-tiles",
+      paint:{ "line-color":"#FF4D8D", "line-opacity":0.8, "line-width":1.6, "line-dasharray":[2,1.5] }
+    });
+  }
+
+  function buildRouteLayer(){
+    var features = FLOWS.map(function(f){
+      return { type:"Feature", properties:{routed:f.routed}, geometry:{type:"LineString", coordinates:f.spine} };
+    });
+    map.addSource("flow-routes", { type:"geojson", data:{type:"FeatureCollection", features:features} });
+    map.addLayer({
+      id:"flow-routes-line", type:"line", source:"flow-routes",
+      layout:{"line-cap":"round","line-join":"round"},
+      paint:{
+        "line-color":"#B0A6D6",
+        "line-width":["interpolate",["linear"],["zoom"],10,0.6,14,1.6],
+        "line-opacity":0.28
+      }
+    });
+  }
+
+  function buildAgentLayer(){
+    map.addSource("agents", { type:"geojson", data:{type:"FeatureCollection", features:[]} });
+    map.addLayer({
+      id:"agents-glow", type:"circle", source:"agents",
+      paint:{
+        "circle-radius":["interpolate",["linear"],["zoom"], 9,10, 13,16],
+        "circle-color":["match",["get","mode"],"car","#8B6BFF","pt","#FFB020","#fff"],
+        "circle-opacity":0.24, "circle-blur":0.6
+      }
+    });
+    map.addLayer({
+      id:"agents-dot", type:"circle", source:"agents",
+      paint:{
+        "circle-radius":["interpolate",["linear"],["zoom"], 9,4.2, 13,6.4],
+        "circle-color":["match",["get","mode"],"car","#8B6BFF","pt","#FFB020","#fff"],
+        "circle-stroke-color":"#050407", "circle-stroke-width":1.4, "circle-opacity":1
+      }
+    });
+  }
+
+  function buildMarkers(){
+    HUBS.forEach(function(n){
+      var el = document.createElement("div");
+      el.className="m-pill"; el.style.border="1px solid var(--rose)"; el.style.color="var(--rose)";
+      el.textContent = n.name.toUpperCase();
+      new mapboxgl.Marker({element:el, anchor:"bottom", offset:[0,-6]}).setLngLat([(n.bbox.west+n.bbox.east)/2, n.bbox.north]).addTo(map);
+
+      var dot = document.createElement("div");
+      dot.className="m-dot hub"; dot.style.width="10px"; dot.style.height="10px";
+      new mapboxgl.Marker({element:dot}).setLngLat(n.center).addTo(map);
+      dot.addEventListener("mouseenter", function(){ showTileTooltip(n,"hub"); });
+      dot.addEventListener("mouseleave", hideTooltip);
+    });
+    HOMES.forEach(function(n){
+      var el = document.createElement("div");
+      el.className="m-pill"; el.style.border="1px solid rgba(139,107,255,0.5)"; el.style.color="var(--ink-soft)"; el.style.fontSize="8.5px"; el.style.opacity=(0.55+0.45*n.weight);
+      el.textContent = n.name;
+      new mapboxgl.Marker({element:el, anchor:"top", offset:[0,6]}).setLngLat([(n.bbox.west+n.bbox.east)/2, n.bbox.south]).addTo(map);
+
+      var dot = document.createElement("div");
+      dot.className="m-dot home"; var r=3+3*n.weight; dot.style.width=r+"px"; dot.style.height=r+"px";
+      new mapboxgl.Marker({element:dot}).setLngLat(n.center).addTo(map);
+      dot.addEventListener("mouseenter", function(){ showTileTooltip(n,"home"); });
+      dot.addEventListener("mouseleave", hideTooltip);
+    });
+  }
+
+  function showTileTooltip(n,kind){
+    var p = map.project(n.center);
+    tooltip.style.left = p.x+"px"; tooltip.style.top = p.y+"px";
+    tooltip.innerHTML = "<b>"+n.name+"</b><br><span class='tt-tag' style='color:"+(kind==="hub"?"var(--rose)":"var(--violet)")+"'>"+(kind==="hub"?"activity tile":"home tile")+"</span> · quadkey "+n.qk+"<br><span style='color:var(--ink-faint)'>illustrative weight "+n.weight.toFixed(2)+"</span>";
+    tooltip.classList.add("show");
+  }
+  function hideTooltip(){ tooltip.classList.remove("show"); }
+
+  document.getElementById("mapFrame").addEventListener("dblclick", function(){
+    if(map) map.flyTo({center:[19.045,47.4979], zoom:11.3, duration:900});
+  });
+
+  /* ---------------- main loop ---------------- */
+  var last = performance.now();
+  function tick(now){
+    var dt = Math.min(0.12, (now-last)/1000); last = now;
+    if(playing){
+      simHour += dt*speed*(3/WINDOW_SECONDS);
+      if(simHour>=10){ simHour=7; replayFromScratch(false); }
+      scrubber.value = ((simHour-7)/3)*180;
+    }
+    renderClock();
+
+    var features = [];
+    AGENTS.forEach(function(a){
+      if(a.status==="pending" && a.depHour<=simHour){
+        a.status="active";
+        obsMode[a.mode]++; obsAct[a.activity]++; spawned++;
+        pushFeed(a);
+      }
+      if(a.status==="active"){
+        var t = (simHour-a.depHour)/a.durationHr;
+        if(t>=1){ a.status="done"; return; }
+        var pos = pointAtT(a.path,t);
+        features.push({ type:"Feature", properties:{mode:a.mode}, geometry:{type:"Point", coordinates:pos} });
+      }
+    });
+    updateStats();
+    if(map && map.getSource("agents")){
+      map.getSource("agents").setData({type:"FeatureCollection", features:features});
+    }
+    requestAnimationFrame(tick);
+  }
+})();
+</script>

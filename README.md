@@ -5,6 +5,10 @@ Maps built for the 30 Day Mapping Challenge, using Mapbox GL JS and CARTO.
 ## Maps
 
 - [a-very-balkan-roadtrip](a-very-balkan-roadtrip/index.html)
+- [bivariate-map-of-north-america](bivariate-map-of-north-america/index.html)
+- [civilizations-major-inventions-map](civilizations-major-inventions-map/index.html)
+- [matsim-population-randomness-map](matsim-population-randomness-map/index.html)
+- [pacific-hurricane-timelapse](pacific-hurricane-timelapse/index.html)
 - [ports-of-aid](ports-of-aid/index.html)
 - [river-that-runs-dry](river-that-runs-dry/index.html)
 - [the-canopy-line](the-canopy-line/index.html)

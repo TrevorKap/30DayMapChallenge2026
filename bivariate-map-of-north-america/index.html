@@ -1,0 +1,419 @@
+<meta charset="utf-8">
+<title>The Climate Grid</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,500&family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F7F4EC;
+    --panel:#EFE9D9;
+    --ink:#1B2A33;
+    --ink-soft:#5B6A66;
+    --ink-faint:#8B968F;
+    --line:rgba(27,42,51,0.14);
+    --ocean-tint:rgba(27,42,51,0.035);
+    --coast:rgba(27,42,51,0.55);
+    --border-line:rgba(27,42,51,0.28);
+    --panel-border:rgba(27,42,51,0.12);
+    --shadow:0 18px 40px -20px rgba(27,42,51,0.35);
+    --ramp-temp:#B5592A;
+    --ramp-precip:#3E7A70;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0B2733;
+      --panel:#0F3140;
+      --ink:#EDE9DD;
+      --ink-soft:#9FB2AE;
+      --ink-faint:#66807C;
+      --line:rgba(237,233,221,0.14);
+      --ocean-tint:rgba(0,0,0,0.15);
+      --coast:rgba(237,233,221,0.5);
+      --border-line:rgba(237,233,221,0.3);
+      --panel-border:rgba(237,233,221,0.14);
+      --shadow:0 18px 40px -20px rgba(0,0,0,0.6);
+      --ramp-temp:#E3915A;
+      --ramp-precip:#5FAFA3;
+    }
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"Source Sans 3", ui-sans-serif, system-ui, -apple-system, sans-serif;
+    font-size:16px;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.01ms !important; transition-duration:0.01ms !important;}
+  }
+
+  a{color:inherit;}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 clamp(18px,4vw,48px);}
+
+  header{padding-top:clamp(32px,6vw,64px);}
+  h1{
+    font-family:"Source Serif 4", Georgia, serif;
+    font-weight:600;
+    font-size:clamp(1.9rem,3.8vw,2.9rem);
+    line-height:1.02;
+    letter-spacing:-0.01em;
+    margin:0 0 10px;
+    text-wrap:balance;
+  }
+  h1 em{font-style:italic; font-weight:500; color:var(--ramp-temp);}
+  .dek{
+    max-width:64ch;
+    font-size:clamp(0.92rem,1.2vw,1.03rem);
+    color:var(--ink-soft);
+    margin:0;
+  }
+  .dek strong{color:var(--ink); font-weight:600;}
+
+  section.map-section{margin:clamp(28px,5vw,48px) 0 0;}
+  .map-frame{
+    position:relative;
+    border-radius:18px;
+    border:1px solid var(--panel-border);
+    background:var(--bg);
+    box-shadow:var(--shadow);
+    overflow:hidden;
+  }
+  .map-frame canvas, .map-frame svg{
+    display:block;
+    width:100%;
+    height:auto;
+  }
+  .map-frame svg{position:absolute; inset:0; pointer-events:none;}
+  #borders{fill:none; stroke:var(--border-line); stroke-width:0.6; stroke-linejoin:round;}
+  #coastline{fill:none; stroke:var(--coast); stroke-width:0.9; stroke-linejoin:round;}
+  #graticule{fill:none; stroke:var(--line); stroke-width:0.4;}
+
+  .loading{
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--bg);
+    font-family:"IBM Plex Mono", ui-monospace, monospace;
+    font-size:0.8rem;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+    z-index:10;
+    transition:opacity 300ms ease;
+  }
+  .loading.hidden{opacity:0; pointer-events:none;}
+
+  .legend{
+    position:absolute;
+    left:18px;
+    bottom:18px;
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    border-radius:12px;
+    padding:14px 16px 12px;
+    box-shadow:var(--shadow);
+    z-index:5;
+  }
+  .legend-title{
+    font-family:"IBM Plex Mono", ui-monospace, monospace;
+    font-size:0.62rem;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+    margin:0 0 10px;
+  }
+  .legend-body{display:flex; align-items:flex-end; gap:6px;}
+  .legend-y-label{
+    writing-mode:vertical-rl;
+    transform:rotate(180deg);
+    font-family:"IBM Plex Mono", ui-monospace, monospace;
+    font-size:0.6rem;
+    color:var(--ink-faint);
+    letter-spacing:0.04em;
+    white-space:nowrap;
+    padding-bottom:2px;
+  }
+  .legend-grid{
+    display:grid;
+    grid-template-columns:repeat(3,16px);
+    grid-template-rows:repeat(3,16px);
+    gap:2px;
+  }
+  .legend-grid div{border-radius:2px;}
+  .legend-x-label{
+    font-family:"IBM Plex Mono", ui-monospace, monospace;
+    font-size:0.6rem;
+    color:var(--ink-faint);
+    letter-spacing:0.04em;
+    text-align:center;
+    margin-top:6px;
+  }
+
+  .credit{
+    position:absolute;
+    right:20px;
+    bottom:16px;
+    font-family:"Source Serif 4", Georgia, serif;
+    font-style:italic;
+    font-weight:500;
+    font-size:0.92rem;
+    color:var(--ink);
+    opacity:0.22;
+    pointer-events:none;
+    user-select:none;
+    z-index:5;
+  }
+
+  .note{
+    margin:22px 0 0;
+    padding:16px 20px;
+    border-left:3px solid var(--ramp-precip);
+    background:var(--panel);
+    border-radius:0 10px 10px 0;
+  }
+  .note-label{
+    font-family:"IBM Plex Mono", ui-monospace, monospace;
+    font-size:0.68rem;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+    margin:0 0 8px;
+  }
+  .note p:not(.note-label){
+    margin:0;
+    font-size:0.9rem;
+    color:var(--ink-soft);
+    max-width:74ch;
+    line-height:1.6;
+  }
+
+  footer{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:clamp(28px,5vw,56px);
+    margin:clamp(48px,7vw,80px) 0 clamp(40px,6vw,64px);
+    padding-top:clamp(24px,4vw,36px);
+    border-top:1px solid var(--line);
+  }
+  footer h3{
+    font-family:"Source Serif 4", Georgia, serif;
+    font-weight:600;
+    font-size:1.15rem;
+    margin:0 0 10px;
+  }
+  footer p{
+    margin:0 0 12px;
+    font-size:0.88rem;
+    color:var(--ink-soft);
+    line-height:1.65;
+  }
+  footer a{
+    color:var(--ramp-precip);
+    text-decoration:underline;
+    text-decoration-color:var(--panel-border);
+    text-underline-offset:3px;
+  }
+  footer a:hover{text-decoration-color:currentColor;}
+  @media (max-width:720px){
+    footer{grid-template-columns:1fr;}
+  }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>The Climate <em>Grid</em></h1>
+    <p class="dek">Two variables, one surface: <strong>temperature</strong> and <strong>precipitation</strong>, each split into thirds and crossed into a nine-cell palette. Where the color runs dark and saturated, a place is both hot <em>and</em> wet, or cold <em>and</em> dry &mdash; the blend tells the story a single-hue map can't.</p>
+  </header>
+
+  <section class="map-section">
+    <div class="map-frame" id="mapFrame">
+      <canvas id="raster" width="1080" height="840"></canvas>
+      <svg id="overlay" viewBox="0 0 1080 840"></svg>
+      <div class="legend">
+        <p class="legend-title">Bivariate key</p>
+        <div class="legend-body">
+          <div class="legend-y-label">wetter &uarr;</div>
+          <div class="legend-grid" id="legendGrid"></div>
+        </div>
+        <p class="legend-x-label">colder &rarr; warmer</p>
+      </div>
+      <div class="credit">North America</div>
+      <div class="loading" id="loading">Rendering climate grid&hellip;</div>
+    </div>
+  </section>
+
+  <div class="note">
+    <p class="note-label">Reading the map</p>
+    <p>Every cell on land is classified twice &mdash; once by its 30&#8209;year average temperature, once by its average annual rainfall &mdash; each split into terciles (driest/coldest third, middle third, wettest/hottest third) across the whole grid. The two class numbers pick one of nine colors from a blended palette: a warm rust ramp for temperature crossed with a cool teal ramp for precipitation, combined with a multiplicative blend so double-high cells (hot &amp; wet) read dark and saturated while double-low cells (cold &amp; dry) stay pale. The technique follows <a href="https://fil.github.io/pangea/plot/bivariate-map" target="_blank" rel="noopener">Philippe Rivi&egrave;re's bivariate-map notebook</a> for Observable Plot &mdash; quantile classification, a barycentric-style raster, and a blended two-ramp legend &mdash; reimplemented here in plain Canvas + D3 for a static page.</p>
+  </div>
+
+  <footer>
+    <div>
+      <h3>Where this comes from</h3>
+      <p>Climate normals are 20&#8209;year averages (2001&ndash;2020) of 2&#8209;meter air temperature and corrected total precipitation, from NASA's <a href="https://power.larc.nasa.gov/" target="_blank" rel="noopener">POWER</a> project (MERRA&#8209;2 reanalysis), sampled on its native 0.5&deg;&times;0.625&deg; grid across a box from 5&deg;N&ndash;72&deg;N and 170&deg;W&ndash;50&deg;W &mdash; roughly 26,000 grid cells, fetched tile by tile from the public POWER Climatology API. Coastlines and country borders are Natural Earth 1:50m via <a href="https://github.com/topojson/world-atlas" target="_blank" rel="noopener">world-atlas</a>.</p>
+    </div>
+    <div>
+      <h3>How it's drawn</h3>
+      <p>A North America Albers equal-area conic projection (standard parallels 20&deg;N/60&deg;N) frames the grid. Every pixel inside the map is inverse-projected back to a longitude/latitude, bilinearly sampled from the temperature and precipitation grids, classified, and colored &mdash; then the whole raster is clipped to the land outline in a single canvas pass.</p>
+      <p style="margin-top:20px;">Part of a 30&#8209;day mapping project &mdash; day theme: <strong>bivariate map</strong>.</p>
+    </div>
+  </footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+<script>
+(async function(){
+  const W = 1080, H = 840, PAD = 30;
+
+  const [manifest, tempBuf, precipBuf, world] = await Promise.all([
+    fetch('data/manifest.json').then(r => r.json()),
+    fetch('data/temp.f32').then(r => r.arrayBuffer()),
+    fetch('data/precip.f32').then(r => r.arrayBuffer()),
+    fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json').then(r => r.json())
+  ]);
+
+  const { nLon, nLat, lon0, lonStep, lat0, latStep } = manifest;
+  const tempGrid = new Float32Array(tempBuf);
+  const precipGrid = new Float32Array(precipBuf);
+  const lonMax = lon0 + (nLon - 1) * lonStep;
+  const latMax = lat0 + (nLat - 1) * latStep;
+
+  // ---- geometry: densified bbox for framing, country mesh for borders/clip ----
+  function rectRing(lo0, lo1, la0, la1, step){
+    const ring = [];
+    for (let lo = lo0; lo < lo1; lo += step) ring.push([lo, la0]);
+    for (let la = la0; la < la1; la += step) ring.push([lo1, la]);
+    for (let lo = lo1; lo > lo0; lo -= step) ring.push([lo, la1]);
+    for (let la = la1; la > la0; la -= step) ring.push([lo0, la]);
+    ring.push(ring[0]);
+    return { type: "Polygon", coordinates: [ring] };
+  }
+  const frameBox = rectRing(lon0, lonMax, lat0, latMax, 2);
+
+  // restrict to North American (incl. Central America/Caribbean/Greenland) countries so the
+  // conic projection isn't asked to place far-side (Asia/Europe) geometry, which folds back
+  // into the visible frame as spurious wraparound shapes under a regionally-fit conic
+  const naIds = new Set([840, 124, 484, 320, 84, 340, 222, 558, 188, 591, 192, 388, 332, 214, 44, 780, 308, 662, 670, 28, 212, 659, 52, 304, 60].map(String));
+  const countryGeoms = world.objects.countries.geometries.filter(g => naIds.has(String(g.id)));
+  const naCollection = { type: "GeometryCollection", geometries: countryGeoms };
+  const land = topojson.merge(world, countryGeoms);
+  const borders = topojson.mesh(world, naCollection, (a, b) => a !== b);
+
+  const projection = d3.geoConicEqualArea()
+    .parallels([20, 60])
+    .rotate([96, 0])
+    .fitExtent([[PAD, PAD], [W - PAD, H - PAD]], land);
+  projection.clipExtent([[0, 0], [W, H]]);
+  const path = d3.geoPath(projection);
+
+  // ---- bivariate classification ----
+  const N = 3;
+  function quantileBreaks(arr, n){
+    const sorted = Float32Array.from(arr).sort();
+    const breaks = [];
+    for (let i = 1; i < n; i++){
+      breaks.push(sorted[Math.min(Math.floor(sorted.length * i / n), sorted.length - 1)]);
+    }
+    return breaks;
+  }
+  const tempBreaks = quantileBreaks(tempGrid, N);
+  const precipBreaks = quantileBreaks(precipGrid, N);
+  function classify(v, breaks){
+    for (let i = 0; i < breaks.length; i++) if (v <= breaks[i]) return i;
+    return breaks.length;
+  }
+
+  function mixblend(aHex, bHex){
+    const a = d3.rgb(aHex), b = d3.rgb(bHex);
+    const l = Math.min(250, b.r + b.g + b.b);
+    return {
+      r: Math.max(0, Math.min(255, a.r * b.r / l)),
+      g: Math.max(0, Math.min(255, a.g * b.g / l)),
+      b: Math.max(0, Math.min(255, a.b * b.b / l))
+    };
+  }
+  const precipRamp = ["#EAE6D8", "#8FB6AC", "#3E7A70"];
+  const tempRamp = ["#EAE6D8", "#E3A468", "#B5592A"];
+  const palette = []; // index = precipClass * N + tempClass
+  for (const p of precipRamp) for (const t of tempRamp) palette.push(mixblend(p, t));
+
+  // legend swatches, wet row on top
+  const legendGrid = document.getElementById('legendGrid');
+  for (let pi = N - 1; pi >= 0; pi--){
+    for (let ti = 0; ti < N; ti++){
+      const c = palette[pi * N + ti];
+      const div = document.createElement('div');
+      div.style.background = `rgb(${c.r | 0},${c.g | 0},${c.b | 0})`;
+      legendGrid.appendChild(div);
+    }
+  }
+
+  // ---- raster ----
+  function bilinear(grid, fx, fy){
+    const x0 = Math.floor(fx), y0 = Math.floor(fy);
+    const x1 = Math.min(x0 + 1, nLon - 1), y1 = Math.min(y0 + 1, nLat - 1);
+    const tx = fx - x0, ty = fy - y0;
+    const v00 = grid[y0 * nLon + x0], v10 = grid[y0 * nLon + x1];
+    const v01 = grid[y1 * nLon + x0], v11 = grid[y1 * nLon + x1];
+    const top = v00 + (v10 - v00) * tx;
+    const bot = v01 + (v11 - v01) * tx;
+    return top + (bot - top) * ty;
+  }
+
+  const off = document.createElement('canvas');
+  off.width = W; off.height = H;
+  const octx = off.getContext('2d');
+  const img = octx.createImageData(W, H);
+
+  for (let y = 0; y < H; y++){
+    for (let x = 0; x < W; x++){
+      const idx4 = (y * W + x) * 4;
+      const inv = projection.invert([x + 0.5, y + 0.5]);
+      if (!inv){ img.data[idx4 + 3] = 0; continue; }
+      const [lon, lat] = inv;
+      const fx = (lon - lon0) / lonStep;
+      const fy = (lat - lat0) / latStep;
+      if (fx < 0 || fx > nLon - 1 || fy < 0 || fy > nLat - 1){ img.data[idx4 + 3] = 0; continue; }
+      const t = bilinear(tempGrid, fx, fy);
+      const p = bilinear(precipGrid, fx, fy);
+      const c = palette[classify(p, precipBreaks) * N + classify(t, tempBreaks)];
+      img.data[idx4] = c.r; img.data[idx4 + 1] = c.g; img.data[idx4 + 2] = c.b; img.data[idx4 + 3] = 255;
+    }
+  }
+  octx.putImageData(img, 0, 0);
+
+  const canvas = document.getElementById('raster');
+  const ctx = canvas.getContext('2d');
+  ctx.save();
+  ctx.beginPath();
+  path.context(ctx)(land);
+  ctx.clip();
+  ctx.drawImage(off, 0, 0);
+  ctx.restore();
+  path.context(null);
+
+  // ---- overlay: coastline + borders ----
+  const svg = document.getElementById('overlay');
+  const ns = 'http://www.w3.org/2000/svg';
+  const gGrat = document.createElementNS(ns, 'path');
+  gGrat.setAttribute('id', 'graticule');
+  gGrat.setAttribute('d', path(d3.geoGraticule().extent([[lon0, lat0], [lonMax, latMax]]).step([10, 10])()));
+  svg.appendChild(gGrat);
+
+  const coastPath = document.createElementNS(ns, 'path');
+  coastPath.setAttribute('id', 'coastline');
+  coastPath.setAttribute('d', path(land));
+  svg.appendChild(coastPath);
+
+  const borderPath = document.createElementNS(ns, 'path');
+  borderPath.setAttribute('id', 'borders');
+  borderPath.setAttribute('d', path(borders));
+  svg.appendChild(borderPath);
+
+  document.getElementById('loading').classList.add('hidden');
+})();
+</script>
