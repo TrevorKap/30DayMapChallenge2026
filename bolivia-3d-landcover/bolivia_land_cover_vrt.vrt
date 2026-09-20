@@ -1,0 +1,56 @@
+<VRTDataset rasterXSize="26787" rasterYSize="29757">
+  <SRS dataAxisToSRSAxisMapping="2,1">GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AXIS["Latitude",NORTH],AXIS["Longitude",EAST],AUTHORITY["EPSG","4326"]]</SRS>
+  <GeoTransform> -6.9661857761567873e+01,  4.5613491327025491e-04,  0.0000000000000000e+00, -9.6773245411633955e+00,  0.0000000000000000e+00, -4.5613491327025512e-04</GeoTransform>
+  <VRTRasterBand dataType="Float32" band="1">
+    <NoDataValue>nan</NoDataValue>
+    <ColorInterp>Gray</ColorInterp>
+    <ComplexSource>
+      <SourceFilename relativeToVRT="1">19K_20220101-20230101.tif_bolivia.tif</SourceFilename>
+      <SourceBand>1</SourceBand>
+      <SourceProperties RasterXSize="8299" RasterYSize="15318" DataType="Float32" BlockXSize="8299" BlockYSize="1" />
+      <SrcRect xOff="0" yOff="0" xSize="8299" ySize="15318" />
+      <DstRect xOff="0" yOff="13815.612673078" xSize="8315.06051061807" ySize="15347.6439211529" />
+      <NODATA>nan</NODATA>
+    </ComplexSource>
+    <ComplexSource>
+      <SourceFilename relativeToVRT="1">19L_20220101-20230101.tif_bolivia.tif</SourceFilename>
+      <SourceBand>1</SourceBand>
+      <SourceProperties RasterXSize="8199" RasterYSize="13944" DataType="Float32" BlockXSize="8199" BlockYSize="1" />
+      <SrcRect xOff="0" yOff="0" xSize="8199" ySize="13944" />
+      <DstRect xOff="60.8089645881744" yOff="21.781647817226" xSize="8164.50944348989" ySize="13885.3420758657" />
+      <NODATA>nan</NODATA>
+    </ComplexSource>
+    <ComplexSource>
+      <SourceFilename relativeToVRT="1">20K_20220101-20230101.tif_bolivia.tif</SourceFilename>
+      <SourceBand>1</SourceBand>
+      <SourceProperties RasterXSize="13550" RasterYSize="15110" DataType="Float32" BlockXSize="13550" BlockYSize="1" />
+      <SrcRect xOff="0" yOff="0" xSize="13550" ySize="15110" />
+      <DstRect xOff="7742.01299155644" yOff="13815.612673078" xSize="13726.5922209428" ySize="15306.9231334646" />
+      <NODATA>nan</NODATA>
+    </ComplexSource>
+    <ComplexSource>
+      <SourceFilename relativeToVRT="1">20L_20220101-20230101.tif_bolivia.tif</SourceFilename>
+      <SourceBand>1</SourceBand>
+      <SourceProperties RasterXSize="13548" RasterYSize="13906" DataType="Float32" BlockXSize="13548" BlockYSize="1" />
+      <SrcRect xOff="0" yOff="0" xSize="13548" ySize="13906" />
+      <DstRect xOff="7830.76643831583" yOff="0" xSize="13549.1039202704" ySize="13907.1330908828" />
+      <NODATA>nan</NODATA>
+    </ComplexSource>
+    <ComplexSource>
+      <SourceFilename relativeToVRT="1">21K_20220101-20230101.tif_bolivia.tif</SourceFilename>
+      <SourceBand>1</SourceBand>
+      <SourceProperties RasterXSize="5907" RasterYSize="16011" DataType="Float32" BlockXSize="5907" BlockYSize="1" />
+      <SrcRect xOff="0" yOff="0" xSize="5907" ySize="16010.5626490708" />
+      <DstRect xOff="20881.2940545845" yOff="13815.6183835203" xSize="5881.47607754499" ySize="15941.3816164797" />
+      <NODATA>nan</NODATA>
+    </ComplexSource>
+    <ComplexSource>
+      <SourceFilename relativeToVRT="1">21L_20220101-20230101.tif_bolivia.tif</SourceFilename>
+      <SourceBand>1</SourceBand>
+      <SourceProperties RasterXSize="5840" RasterYSize="13786" DataType="Float32" BlockXSize="5840" BlockYSize="1" />
+      <SrcRect xOff="0" yOff="0" xSize="5840" ySize="13786" />
+      <DstRect xOff="20984.7693998147" yOff="209.898820597205" xSize="5801.91319955311" ySize="13696.0916727807" />
+      <NODATA>nan</NODATA>
+    </ComplexSource>
+  </VRTRasterBand>
+</VRTDataset>

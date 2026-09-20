@@ -1,0 +1,90 @@
+{
+ "bbox": [
+  -90.2,
+  29.85,
+  -89.85,
+  30.09
+ ],
+ "weights": {
+  "elev": 0.4,
+  "sink": 0.15,
+  "water": 0.25,
+  "imperv": 0.2
+ },
+ "ramp": [
+  "#EAE4CC",
+  "#D8BE78",
+  "#C98A45",
+  "#A8482F",
+  "#5A1730"
+ ],
+ "landmarks": {
+  "Lakeview": [
+   -90.108,
+   30.005
+  ],
+  "Gentilly": [
+   -90.045,
+   30.0
+  ],
+  "Lower Ninth Ward": [
+   -90.01,
+   29.965
+  ],
+  "New Orleans East": [
+   -89.96,
+   30.02
+  ],
+  "Mid-City": [
+   -90.095,
+   29.975
+  ],
+  "French Quarter": [
+   -90.0645,
+   29.9584
+  ],
+  "Garden District": [
+   -90.085,
+   29.929
+  ],
+  "Uptown": [
+   -90.12,
+   29.93
+  ]
+ },
+ "check": {
+  "Lakeview": {
+   "elev_m": -1.59,
+   "pct": 82
+  },
+  "Gentilly": {
+   "elev_m": -0.37,
+   "pct": 72
+  },
+  "Lower Ninth Ward": {
+   "elev_m": -0.63,
+   "pct": 79
+  },
+  "New Orleans East": {
+   "elev_m": 0.43,
+   "pct": 52
+  },
+  "Mid-City": {
+   "elev_m": -0.47,
+   "pct": 62
+  },
+  "French Quarter": {
+   "elev_m": 1.76,
+   "pct": 23
+  },
+  "Garden District": {
+   "elev_m": 1.31,
+   "pct": 19
+  },
+  "Uptown": {
+   "elev_m": 1.56,
+   "pct": 12
+  }
+ },
+ "land_share": 0.721
+}

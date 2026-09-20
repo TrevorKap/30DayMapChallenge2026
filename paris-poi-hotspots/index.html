@@ -1,0 +1,312 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Paris Hot Spots</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,500&family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js"></script>
+<style>
+  :root{
+    /* 2 neutrals + 3 category colors */
+    --bg:#F5F3EC; --panel:#E9E8DF; --ink:#14233A; --ink-soft:#4C5C70; --ink-faint:#8592A0;
+    --line:rgba(20,35,58,0.14); --panel-border:rgba(20,35,58,0.13);
+    --shadow:0 18px 40px -20px rgba(20,35,58,0.4);
+    --culture:#2F7C86; --nightlife:#8E2F3B; --books:#B98526;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--bg);color:var(--ink);font-family:"Source Sans 3",ui-sans-serif,system-ui,sans-serif;font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;}
+  a{color:inherit;}
+  .wrap{max-width:1320px;margin:0 auto;padding:0 clamp(18px,4vw,44px) clamp(48px,8vw,80px);}
+  header.hero{padding:clamp(28px,5vw,52px) 0 clamp(8px,2vw,16px);}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:0.16em;text-transform:uppercase;color:var(--nightlife);margin:0 0 10px;}
+  .eyebrow::before{content:"◆ ";color:var(--culture);}
+  h1{font-family:"Source Serif 4",Georgia,serif;font-weight:600;font-size:clamp(2rem,4vw,3rem);line-height:1.03;letter-spacing:-0.01em;margin:0 0 14px;text-wrap:balance;}
+  h1 em{font-style:italic;font-weight:500;color:var(--nightlife);}
+  .dek{max-width:80ch;font-size:clamp(0.94rem,1.2vw,1.03rem);color:var(--ink-soft);margin:0;}
+  .dek strong{color:var(--ink);font-weight:600;}
+
+  .layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:clamp(14px,2.6vw,24px);align-items:start;margin:clamp(22px,4vw,36px) 0 0;}
+  @media (max-width:920px){.layout{grid-template-columns:1fr;}}
+  .map-frame{position:relative;border-radius:16px;border:1px solid var(--panel-border);background:var(--panel);box-shadow:var(--shadow);overflow:hidden;aspect-ratio:4/5;}
+  @media (min-width:640px){.map-frame{aspect-ratio:11/10;}}
+  #map{position:absolute;inset:0;width:100%;height:100%;}
+  .mapboxgl-ctrl-logo{filter:invert(0.15) opacity(0.55);}
+  .mapboxgl-ctrl-attrib{font-size:10px;}
+  .mapboxgl-popup-content{font-family:"IBM Plex Mono",monospace;font-size:11px;background:var(--ink);color:var(--bg);padding:8px 11px;border-radius:8px;line-height:1.5;}
+  .mapboxgl-popup-tip{border-top-color:var(--ink)!important;border-bottom-color:var(--ink)!important;}
+  .mapboxgl-popup-content b{font-family:"Source Serif 4",serif;font-size:13px;font-weight:600;display:block;}
+
+  .setup-banner{position:absolute;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;background:rgba(245,243,236,0.97);padding:32px;text-align:center;}
+  .setup-banner[hidden]{display:none;}
+  .setup-banner .box{max-width:480px;}
+  .setup-banner h3{font-family:"Source Serif 4";font-size:18px;margin:0 0 10px;}
+  .setup-banner p{font-size:13px;color:var(--ink-soft);margin:0 0 8px;}
+  .setup-banner code{background:rgba(20,35,58,0.08);padding:2px 6px;border-radius:5px;font-family:"IBM Plex Mono";font-size:12px;color:var(--nightlife);}
+
+  .chip{position:absolute;background:rgba(233,232,223,0.92);backdrop-filter:blur(6px);border:1px solid var(--panel-border);border-radius:12px;padding:12px 14px;box-shadow:0 14px 30px -18px rgba(20,35,58,0.4);z-index:5;}
+  .chip-title{top:14px;left:14px;max-width:230px;}
+  .chip-title .name{font-family:"Source Serif 4";font-weight:600;font-size:14.5px;letter-spacing:0.01em;}
+  .chip-title .sub{font-family:"IBM Plex Mono";font-size:10px;color:var(--ink-faint);letter-spacing:0.06em;text-transform:uppercase;margin-top:3px;}
+  .chip-legend{left:14px;bottom:26px;}
+  .chip-legend h4{margin:0 0 8px;font-family:"IBM Plex Mono";font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-faint);font-weight:500;}
+  .lg{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--ink-soft);padding:1.5px 0;}
+  .lg i{display:block;width:14px;height:10px;border-radius:2px;border:1.5px solid;}
+  .lg i.dot{width:7px;height:7px;border-radius:50%;border:0;background:var(--ink-faint);margin:0 3.5px;opacity:.6;}
+
+  .panel{background:var(--panel);border:1px solid var(--panel-border);border-radius:16px;padding:16px 18px;box-shadow:var(--shadow);}
+  .block{padding:4px 0 14px;}
+  .block h3{font-family:"IBM Plex Mono";font-size:10.5px;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-faint);margin:0 0 10px;font-weight:500;}
+  .cats{display:flex;flex-direction:column;gap:6px;}
+  .cat{display:grid;grid-template-columns:14px 1fr auto;align-items:center;gap:10px;text-align:left;font:inherit;font-size:13px;color:var(--ink);background:rgba(245,243,236,0.6);border:1px solid var(--panel-border);border-radius:9px;padding:8px 10px;cursor:pointer;}
+  .cat i{width:14px;height:14px;border-radius:3px;background:var(--c);}
+  .cat small{display:block;font-family:"IBM Plex Mono";font-size:10px;color:var(--ink-faint);letter-spacing:0.02em;}
+  .cat b{font-family:"IBM Plex Mono";font-size:12px;color:var(--ink-soft);font-weight:500;}
+  .cat.off{opacity:.45;}
+  .cat.off i{background:transparent;border:1.5px solid var(--c);}
+  .toggle{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-soft);cursor:pointer;margin-top:10px;}
+  .rank{max-height:300px;overflow:auto;margin:0 -6px;padding:0 6px;}
+  .row{display:grid;grid-template-columns:10px 1fr auto;gap:9px;align-items:baseline;width:100%;text-align:left;font:inherit;font-size:12.5px;color:var(--ink);background:transparent;border:0;border-top:1px solid var(--line);padding:6px 2px;cursor:pointer;}
+  .row:hover{background:rgba(20,35,58,0.05);}
+  .row i{width:8px;height:8px;border-radius:2px;background:var(--c);}
+  .row span small{font-family:"IBM Plex Mono";font-size:10px;color:var(--ink-faint);margin-left:6px;}
+  .row b{font-family:"IBM Plex Mono";font-size:12px;color:var(--ink-soft);font-weight:500;}
+  .stat-line{display:flex;justify-content:space-between;align-items:baseline;padding:7px 0;border-top:1px solid var(--line);font-size:12.5px;}
+  .stat-line b{font-family:"IBM Plex Mono";font-size:15px;color:var(--nightlife);}
+
+  .note{margin:22px 0 0;padding:16px 20px;border-left:3px solid var(--nightlife);background:var(--panel);border-radius:0 10px 10px 0;}
+  .note-label{font-family:"IBM Plex Mono";font-size:0.7rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-faint);margin:0 0 8px;}
+  .note p{margin:0 0 10px;font-size:0.9rem;color:var(--ink-soft);max-width:86ch;line-height:1.62;}
+  .note p:last-child{margin-bottom:0;}
+  .note a{color:var(--nightlife);text-decoration:underline;text-decoration-color:var(--panel-border);text-underline-offset:3px;}
+</style>
+
+<div class="wrap">
+  <header class="hero">
+    <p class="eyebrow">Paris · Points of Interest</p>
+    <h1>Where Paris <em>clusters</em> its culture, its nights and its books</h1>
+    <p class="dek">Every museum, gallery, theatre and cinema; every bar, pub and club; every bookshop and antiques dealer in OpenStreetMap, sorted by <strong>density-based clustering (DBSCAN)</strong>. A place only counts as a hot spot if venues sit within a couple of minutes' walk of each other, so isolated addresses drop out. <strong>Toggle an interest, hover a hot spot,</strong> or pick one from the ranking.</p>
+  </header>
+
+  <div class="layout">
+    <div class="map-frame" id="mapFrame">
+      <div id="map"></div>
+      <div class="setup-banner" id="setupBanner" hidden>
+        <div class="box">
+          <h3>Add a Mapbox token to see the map</h3>
+          <p>This page reads a token from <code>.env</code> next to it. Put <code>MAPBOX_TOKEN=pk.…</code> in that file and reload over <code>http://</code> (<code>python serve.py</code>).</p>
+          <p id="setupDetail" style="color:var(--nightlife)"></p>
+        </div>
+      </div>
+      <div class="chip chip-title">
+        <div class="name">PARIS HOT SPOTS</div>
+        <div class="sub">DBSCAN · 130 m radius</div>
+      </div>
+      <div class="chip chip-legend">
+        <h4>Legend</h4>
+        <div class="lg"><i style="border-color:var(--ink);background:rgba(20,35,58,.12)"></i>Hot spot (cluster hull)</div>
+        <div class="lg"><i class="dot" style="background:var(--ink)"></i>Venue in a hot spot</div>
+        <div class="lg"><i class="dot"></i>Venue outside any hot spot</div>
+      </div>
+    </div>
+
+    <aside class="panel">
+      <div class="block">
+        <h3>Interest</h3>
+        <div class="cats" id="cats"></div>
+        <label class="toggle"><input type="checkbox" id="noise" checked> Show venues outside hot spots</label>
+      </div>
+      <div class="block">
+        <h3>Hot spots, ranked by venues</h3>
+        <div class="rank" id="rank"></div>
+      </div>
+      <div class="block" style="padding-bottom:0">
+        <div class="stat-line"><span>Venues in the selection</span><b id="statN">—</b></div>
+        <div class="stat-line"><span>Sitting inside a hot spot</span><b id="statHot">—</b></div>
+        <div class="stat-line"><span>Hot spots found</span><b id="statDense">—</b></div>
+      </div>
+    </aside>
+  </div>
+
+  <footer class="note">
+    <p class="note-label">Method &amp; sources</p>
+    <p>Follows Milan Janosov's <a href="https://milanjanosov.substack.com/p/identifying-topical-hot-spots-in" target="_blank" rel="noopener">"Identifying topical hot spots in urban areas"</a>: collect OpenStreetMap points of interest for a few categories, then let scikit-learn's DBSCAN find the dense pockets. His post is paywalled, so the categories and parameters here are my own choices in the same recipe. Culture = museums, galleries, theatres, cinemas, arts centres; Nightlife = bars, pubs, nightclubs; Books = bookshops and antiques shops. All were pulled from the Overpass API inside the Paris commune boundary (nodes plus building/area centroids, de-duplicated by position and name).</p>
+    <p>DBSCAN ran on haversine distance with ε = 130 m for every interest and a minimum of 8 (culture), 12 (nightlife) or 6 (books) venues within ε for a venue to seed a cluster. I picked these from a grid sweep: above ~150 m the chain-linking behaviour of DBSCAN fuses the whole Right Bank into one blob, and much below 100 m only a handful of clusters survive. The number of hot spots is an output, not an input. Each hull is the convex hull of the cluster's venues, padded by 65 m, so long thin streets such as a single bar row still get a visible area; convex hulls overstate the footprint of crescent-shaped clusters. Hot-spot names are the nearest OSM <em>quarter / suburb / neighbourhood</em> label to the cluster centre, so two hot spots can share a name.</p>
+    <p>OSM coverage is uneven: bars and shops that are tagged poorly or not at all won't appear, and a venue counted once per OSM object is not a measure of its size or footfall. Sources: <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors, ODbL 1.0</a> (via Overpass API) · basemap and rendering by <a href="https://www.mapbox.com" target="_blank" rel="noopener">Mapbox GL JS</a>. Data pulled 2026-09-19.</p>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var CATS = {
+    culture:   {label:"Culture",   sub:"museums · galleries · theatres · cinemas", color:"#2F7C86", text:"#1F5A62"},
+    nightlife: {label:"Nightlife", sub:"bars · pubs · nightclubs",                  color:"#8E2F3B", text:"#6E2029"},
+    books:     {label:"Books",     sub:"bookshops · antiques",                      color:"#B98526", text:"#7D5814"}
+  };
+  var ORDER = ["culture","nightlife","books"];
+  var active = {culture:true, nightlife:true, books:true};
+  var map, pts = [], hulls = [], popup = null;
+
+  function showSetupBanner(msg){
+    document.getElementById("setupBanner").hidden = false;
+    document.getElementById("setupDetail").textContent = msg || "";
+  }
+  function catMatch(key){ var m = ["match", ["get","cat"]]; ORDER.forEach(function(c){ m.push(c, CATS[c][key]); }); m.push("#8592A0"); return m; }
+  function activeCats(){ return ORDER.filter(function(c){ return active[c]; }); }
+  function fmt(n){ return n.toLocaleString("en-US"); }
+
+  function muteBasemap(){
+    map.getStyle().layers.forEach(function(l){
+      try{
+        var id = l.id.toLowerCase();
+        if(l.type === "background") map.setPaintProperty(l.id, "background-color", "#EAEDEA");
+        else if(l.type === "fill" && id.indexOf("water") !== -1){ map.setPaintProperty(l.id, "fill-color", "#D8E2E8"); map.setPaintProperty(l.id, "fill-opacity", 0.7); }
+        else if(l.type === "fill" && /landuse|landcover|park/.test(id)){ map.setPaintProperty(l.id, "fill-color", "#DCE3D6"); map.setPaintProperty(l.id, "fill-opacity", 0.35); }
+        else if(l.type === "fill" && id.indexOf("building") !== -1){ map.setPaintProperty(l.id, "fill-color", "#D8D6CC"); map.setPaintProperty(l.id, "fill-opacity", 0.32); }
+        else if(l.type === "fill-extrusion") map.setPaintProperty(l.id, "fill-extrusion-opacity", 0.15);
+        else if(l.type === "line" && id.indexOf("road") !== -1){
+          map.setPaintProperty(l.id, "line-color", "#A7A9A2");
+          map.setPaintProperty(l.id, "line-opacity", /motorway|trunk|primary/.test(id) && id.indexOf("case") === -1 ? 0.4 : 0.24);
+        }
+        else if(l.type === "line" && /admin|boundary/.test(id)){ map.setPaintProperty(l.id, "line-color", "#8592A0"); map.setPaintProperty(l.id, "line-opacity", 0.35); }
+        else if(l.type === "symbol" && /poi|transit/.test(id)) map.setLayoutProperty(l.id, "visibility", "none");
+        else if(l.type === "symbol"){
+          map.setPaintProperty(l.id, "text-color", "#33465D");
+          map.setPaintProperty(l.id, "text-halo-color", "#F5F3EC");
+          map.setPaintProperty(l.id, "text-halo-width", 1.4);
+        }
+      }catch(e){ /* paint props vary by layer */ }
+    });
+  }
+
+  function applyFilters(){
+    var on = ["in", ["get","cat"], ["literal", activeCats()]];
+    var noise = document.getElementById("noise").checked;
+    map.setFilter("hull-fill", on); map.setFilter("hull-line", on); map.setFilter("hull-label", on);
+    map.setFilter("pts-hot", ["all", on, ["==", ["get","hot"], 1]]);
+    map.setFilter("pts-noise", noise ? ["all", on, ["==", ["get","hot"], 0]] : ["==", ["get","hot"], -1]);
+    renderPanel();
+  }
+
+  function renderPanel(){
+    var cats = activeCats();
+    var hs = hulls.filter(function(h){ return active[h.properties.cat]; })
+                  .sort(function(a,b){ return b.properties.n - a.properties.n; });
+    var n = 0, hot = 0;
+    pts.forEach(function(p){ if(active[p.properties.cat]){ n++; hot += p.properties.hot; } });
+    document.getElementById("statN").textContent = fmt(n);
+    document.getElementById("statHot").textContent = n ? Math.round(100 * hot / n) + "%" : "—";
+    document.getElementById("statDense").textContent = hs.length;
+
+    var el = document.getElementById("rank"); el.innerHTML = "";
+    hs.forEach(function(h){
+      var b = document.createElement("button"); b.className = "row"; b.style.setProperty("--c", CATS[h.properties.cat].color);
+      b.innerHTML = "<i></i><span></span><b>" + h.properties.n + "</b>";
+      b.children[1].textContent = h.properties.near;
+      var s = document.createElement("small"); s.textContent = CATS[h.properties.cat].label.toLowerCase(); b.children[1].appendChild(s);
+      b.addEventListener("click", function(){ focusHull(h); });
+      el.appendChild(b);
+    });
+    if(!hs.length) el.textContent = "Select an interest.";
+  }
+
+  function bounds(h){
+    var b = new mapboxgl.LngLatBounds();
+    h.geometry.coordinates[0].forEach(function(c){ b.extend(c); });
+    return b;
+  }
+  function showPopup(h){
+    var p = h.properties;
+    if(popup) popup.remove();
+    var el = document.createElement("div"), t = document.createElement("b");
+    t.textContent = p.near; el.appendChild(t); el.appendChild(document.createTextNode(CATS[p.cat].label + " · " + p.n + " venues"));
+    popup = new mapboxgl.Popup({closeButton:false, offset:8, maxWidth:"220px"}).setLngLat([p.lon, p.lat]).setDOMContent(el).addTo(map);
+  }
+  function focusHull(h){
+    map.fitBounds(bounds(h), {padding:90, maxZoom:16, duration:900});
+    showPopup(h);
+  }
+
+  function initMap(token){
+    mapboxgl.accessToken = token;
+    map = new mapboxgl.Map({container:"map", style:"mapbox://styles/mapbox/light-v11", center:[2.3488, 48.8580], zoom:11.7, attributionControl:true});
+    map.addControl(new mapboxgl.NavigationControl({showCompass:false}), "top-right");
+    map.dragRotate.disable(); map.touchZoomRotate.disableRotation();
+
+    var didLoad = false;
+    map.on("load", function(){
+      didLoad = true;
+      document.getElementById("setupBanner").hidden = true;
+      muteBasemap();
+      Promise.all([fetch("./data/points.geojson").then(function(r){ return r.json(); }), fetch("./data/hotspots.geojson").then(function(r){ return r.json(); })]).then(function(d){
+        pts = d[0].features; hulls = d[1].features;
+        map.addSource("pts", {type:"geojson", data:d[0]});
+        map.addSource("hulls", {type:"geojson", data:d[1]});
+
+        // venues outside any hot spot: faint context that only appears once zoomed in
+        map.addLayer({id:"pts-noise", type:"circle", source:"pts", paint:{
+          "circle-color":"#8592A0",
+          "circle-radius":["interpolate",["linear"],["zoom"], 10,0.5, 13,1.4, 16,3.2],
+          "circle-opacity":["interpolate",["linear"],["zoom"], 10.5,0, 12.5,0.28, 15,0.5]
+        }});
+        map.addLayer({id:"hull-fill", type:"fill", source:"hulls", paint:{"fill-color":catMatch("color"), "fill-opacity":0.2}});
+        map.addLayer({id:"hull-line", type:"line", source:"hulls", layout:{"line-join":"round"}, paint:{
+          "line-color":catMatch("color"), "line-opacity":0.85,
+          "line-width":["interpolate",["linear"],["zoom"], 10,0.8, 14,1.6, 17,2.4]
+        }});
+        map.addLayer({id:"pts-hot", type:"circle", source:"pts", paint:{
+          "circle-color":catMatch("color"),
+          "circle-radius":["interpolate",["linear"],["zoom"], 10,0.9, 13,2.2, 16,5],
+          "circle-stroke-color":"#F5F3EC", "circle-stroke-width":["interpolate",["linear"],["zoom"], 12,0, 15,1],
+          "circle-opacity":0.9
+        }});
+        map.addLayer({id:"hull-label", type:"symbol", source:"hulls", layout:{
+          "text-field":["concat", ["get","near"], "  ", ["to-string",["get","n"]]],
+          "text-font":["DIN Pro Medium","Arial Unicode MS Regular"],
+          "text-transform":"uppercase", "text-letter-spacing":0.08,
+          "text-size":["interpolate",["linear"],["zoom"], 10,8.5, 14,11],
+          "text-max-width":9, "symbol-sort-key":["*",-1,["get","n"]],
+          "text-padding":3
+        }, paint:{"text-color":catMatch("text"), "text-halo-color":"#F5F3EC", "text-halo-width":1.6}});
+
+        var tip = document.getElementById("cats");
+        ORDER.forEach(function(c){
+          var tot = 0, nh = hulls.filter(function(h){ return h.properties.cat === c; }).length;
+          pts.forEach(function(p){ if(p.properties.cat === c) tot++; });
+          var b = document.createElement("button"); b.className = "cat"; b.style.setProperty("--c", CATS[c].color);
+          b.innerHTML = "<i></i><span>" + CATS[c].label + "<small>" + CATS[c].sub + "</small></span><b>" + nh + " spots</b>";
+          b.title = fmt(tot) + " venues";
+          b.addEventListener("click", function(){ active[c] = !active[c]; b.classList.toggle("off", !active[c]); applyFilters(); });
+          tip.appendChild(b);
+        });
+        document.getElementById("noise").addEventListener("change", applyFilters);
+        applyFilters();
+
+        map.on("mousemove", "hull-fill", function(e){ map.getCanvas().style.cursor = "pointer"; showPopup(e.features[0]); });
+        map.on("mouseleave", "hull-fill", function(){ map.getCanvas().style.cursor = ""; if(popup){ popup.remove(); popup = null; } });
+        map.on("click", "hull-fill", function(e){ map.fitBounds(bounds(e.features[0]), {padding:90, maxZoom:16, duration:900}); });
+      });
+    });
+    map.on("error", function(e){
+      if(e && e.error && /access token|unauthorized|401|403|forbidden/i.test(e.error.message || "")) showSetupBanner("Mapbox rejected this token or style: " + e.error.message);
+    });
+    setTimeout(function(){ if(!didLoad) showSetupBanner("The basemap didn't finish loading in time — check your connection and token, then reload."); }, 15000);
+    window.addEventListener("resize", function(){ map.resize(); });
+  }
+
+  fetch("./.env", {cache:"no-store"}).then(function(r){
+    if(!r.ok) throw new Error("could not read .env (" + r.status + ")");
+    return r.text();
+  }).then(function(text){
+    var m = /^\s*MAPBOX_TOKEN\s*=\s*["']?([^"'\r\n]+)/m.exec(text);
+    if(!m || m[1].indexOf("YOUR_TOKEN_HERE") !== -1){ showSetupBanner("Found .env but MAPBOX_TOKEN is missing or still the placeholder."); return; }
+    initMap(m[1].trim());
+  }).catch(function(err){
+    showSetupBanner("Serve this folder over http:// so the page can read .env — e.g. `python serve.py`. (" + err.message + ")");
+  });
+})();
+</script>

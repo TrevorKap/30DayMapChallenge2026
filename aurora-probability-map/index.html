@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Northern Lights Odds</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+<style>
+  :root{
+    --bg:#06080D; --panel:rgba(10,14,22,0.82); --panel-border:rgba(226,238,240,0.13);
+    --ink:#E8F1F0; --ink-soft:#9DB2B4; --ink-faint:#5F7275;
+    --land-line:#2A3A44; --storm:#B7A6FF;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;overflow:hidden;}
+  body{
+    background:radial-gradient(ellipse 900px 520px at 6% -6%, rgba(47,214,138,0.10), transparent 60%),
+               radial-gradient(ellipse 900px 560px at 98% 2%, rgba(112,86,220,0.13), transparent 60%), var(--bg);
+    color:var(--ink); font:15px/1.5 "Inter", system-ui, sans-serif; -webkit-font-smoothing:antialiased;
+  }
+  #frame{position:fixed; inset:0;}
+  #field,#ov{position:absolute; inset:0; width:100%; height:100%;}
+  #ov .sphere{fill:none; stroke:rgba(226,238,240,0.16);}
+  #ov .grat{fill:none; stroke:rgba(226,238,240,0.07); stroke-width:.5;}
+  #ov .coast{fill:none; stroke:var(--land-line); stroke-width:.6; stroke-linejoin:round;}
+  #ov .storm{fill:none; stroke:var(--storm); stroke-width:1; stroke-dasharray:4 4; opacity:.75;}
+  #ov .lbl{font:600 9.5px "IBM Plex Mono",monospace; letter-spacing:.06em; stroke:#06080D; stroke-width:3px; stroke-linejoin:round; paint-order:stroke fill; pointer-events:none;}
+  #ov .storm-lbl{fill:var(--storm);}
+  #ov .city-dot{fill:#fff; stroke:#06080D; stroke-width:1.2;}
+  #ov .city{fill:var(--ink); font-size:10px; font-weight:500; letter-spacing:.02em; font-family:"Inter",sans-serif;}
+  #ov .city b{font:600 10px "IBM Plex Mono",monospace;}
+  #ov .cross{fill:none; stroke:#fff; stroke-width:1.2; pointer-events:none;}
+  #ov .hit{fill:transparent; cursor:crosshair;}
+
+  .panel{position:fixed; background:var(--panel); border:1px solid var(--panel-border); border-radius:14px; padding:14px 16px; backdrop-filter:blur(10px); z-index:2;}
+  .kicker{font:500 10.5px "IBM Plex Mono",monospace; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-faint);}
+  h1{font:700 1.75rem/1.05 "Space Grotesk",sans-serif; margin:6px 0 8px; letter-spacing:-.01em;
+     background:linear-gradient(90deg,#7DF0B2,#C9FF9C 55%,#B7A6FF); -webkit-background-clip:text; background-clip:text; color:transparent;}
+  .dek{margin:0; font-size:.82rem; line-height:1.45; color:var(--ink-soft);} .dek strong{color:var(--ink); font-weight:600;}
+  #hero{top:16px; left:16px; width:340px;}
+  details{margin-top:10px; font-size:11.5px; color:var(--ink-faint);} summary{cursor:pointer; font:500 10.5px "IBM Plex Mono",monospace; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-soft);}
+  details p{margin:8px 0 0;} details a{color:var(--ink-soft);}
+  #ctl{left:16px; bottom:16px; width:340px;}
+  .seg{display:flex; gap:4px; background:rgba(255,255,255,0.05); border-radius:9px; padding:3px;}
+  .seg button{flex:1; font:500 11.5px "Inter"; color:var(--ink-soft); background:none; border:0; border-radius:7px; padding:7px 6px; cursor:pointer;}
+  .seg button.on{background:rgba(125,240,178,0.16); color:#C9FF9C;}
+  #yrsRow{margin-top:12px;} #yrsRow.off{opacity:.35; pointer-events:none;}
+  .row{display:flex; justify-content:space-between; align-items:baseline; font:500 10.5px "IBM Plex Mono",monospace; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-faint);}
+  .row output{color:var(--ink); font-size:12px;}
+  input[type=range]{width:100%; accent-color:#5FE39B; margin:8px 0 0;}
+  #legend{right:16px; bottom:16px; width:300px;}
+  #bar{height:10px; border-radius:5px; margin:8px 0 4px; border:1px solid var(--panel-border);}
+  #ticks{position:relative; height:14px; font:400 10px "IBM Plex Mono",monospace; color:var(--ink-soft);}
+  #ticks span{position:absolute; transform:translateX(-50%);} #ticks span:first-child{transform:none;} #ticks span:last-child{transform:translateX(-100%);}
+  .key{display:flex; gap:8px; align-items:center; margin-top:9px; font-size:11px; color:var(--ink-soft);}
+  .key i{width:18px; border-top:1.5px dashed var(--storm); flex:none;}
+  #read{right:16px; top:16px; width:250px;}
+  #read .big{font:700 2.1rem/1 "Space Grotesk",sans-serif; margin:6px 0 2px;}
+  #read .sub{font-size:11.5px; color:var(--ink-soft);} #read dl{margin:10px 0 0; display:grid; grid-template-columns:auto 1fr; gap:3px 12px; font-size:11.5px;}
+  #read dt{color:var(--ink-faint);} #read dd{margin:0; text-align:right; font-family:"IBM Plex Mono",monospace; font-size:11px;}
+  @media (max-width:820px){
+    #hero{width:auto; right:12px; left:12px; top:10px;} #ctl{width:auto; left:12px; right:12px; bottom:12px;} #read,.key{display:none;} #legend{left:12px; right:12px; top:92px; bottom:auto; width:auto; padding:10px 14px;} h1{font-size:1.4rem;}
+    #hero details, #hero .dek{display:none;}
+  }
+</style>
+</head>
+<body>
+<div id="frame"><canvas id="field"></canvas><svg id="ov"></svg></div>
+
+<section class="panel" id="hero">
+  <div class="kicker">30 Day Mapping Challenge · Aurora</div>
+  <h1>Northern Lights Odds</h1>
+  <p class="dek">Chance of seeing the aurora borealis <strong>at least once</strong> before <strong id="untilTxt">Sep 2031</strong>, from the same stretch of eight past solar cycles, replayed against today's sky.</p>
+  <details><summary>How this was made</summary>
+    <p>Solar Cycle 25 peaked in Oct 2024, so the next five years are cycle years +2 to +7, the declining phase, when coronal-hole streams and late CMEs still throw big storms. I replayed those same years of cycles 17–24 (<b id="nyr">40</b> analog years) against the real 3-hourly Kp record (GFZ Potsdam, CC BY 4.0).</p>
+    <p>A cell counts as "aurora-capable" in a 3-hour slot if Kp was high enough that the auroral oval's equatorward edge (66.5° − 2.07·Kp geomagnetic latitude; Starkov 1994) sat within 3° of you (faint glow), on top of you (clear display) or 3° poleward of you (overhead), it was within 4 h of magnetic midnight, and the sun was below −12°. Geomagnetic latitude uses a centred dipole (pole 80.7°N, 72.7°W). Multi-year odds assume independent years: 1−(1−p)ⁿ.</p>
+    <p><b>Not included:</b> cloud cover, light pollution, moonlight, and cycle-25's own strength. Storms at Kp ≥ 5 were <span id="kp5"></span> of slots in the analog years, and Kp ≥ 7 just <span id="kp7"></span>. 0% means none happened in the analogs, not impossible.</p>
+  </details>
+</section>
+
+<section class="panel" id="read">
+  <div class="kicker" id="rTitle">Point the cursor at the map</div>
+  <div class="big" id="rBig">–</div><div class="sub" id="rSub">chance by the chosen date</div>
+  <dl><dt>Aurora nights / yr</dt><dd id="rN">–</dd><dt>Needs at least</dt><dd id="rK">–</dd><dt>Geomag. latitude</dt><dd id="rM">–</dd></dl>
+</section>
+
+<section class="panel" id="ctl">
+  <div class="seg"><button id="mP" class="on">Chance of a sighting</button><button id="mN">Aurora nights / year</button></div>
+  <div class="row" style="margin-top:12px"><span>How good a show</span></div>
+  <div class="seg" style="margin-top:6px"><button data-l="0">Faint glow</button><button data-l="1" class="on">Clear display</button><button data-l="2">Overhead</button></div>
+  <p class="dek" id="lvlNote" style="margin-top:8px;font-size:.74rem"></p>
+  <div id="yrsRow"><div class="row"><span>Window</span><output id="yrsOut">5 years</output></div>
+    <input id="yrs" type="range" min="1" max="5" step="1" value="5" aria-label="Years ahead"></div>
+</section>
+
+<section class="panel" id="legend">
+  <div class="kicker" id="lTitle">Chance of at least one sighting</div>
+  <div id="bar"></div><div id="ticks"></div>
+  <div class="key"><i></i><span>Dashed: how far south this show reaches in a G1 / G3 / G5 storm</span></div>
+</section>
+
+<script>
+const NOW = new Date(2026, 8, 19);
+const CITIES = [ // name, lat, lon, label side
+  ["Fairbanks",64.84,-147.72,"r"],["Anchorage",61.22,-149.9,"r"],["Yellowknife",62.45,-114.37,"r"],["Winnipeg",49.9,-97.14,"l"],
+  ["Calgary",51.05,-114.07,"l"],["Seattle",47.6,-122.33,"l"],["Chicago",41.88,-87.63,"l"],["New York",40.71,-74.0,"l"],["Toronto",43.65,-79.38,"r"],
+  ["Denver",39.74,-104.99,"l"],["Reykjavik",64.15,-21.94,"l"],["Edinburgh",55.95,-3.19,"l"],["London",51.5,-0.12,"r"],["Berlin",52.52,13.4,"r"],
+  ["Tromsø",69.65,18.96,"r"],["Oslo",59.91,10.75,"l"],["Helsinki",60.17,24.94,"r"],["Moscow",55.75,37.62,"r"],["Kyiv",50.45,30.52,"r"],
+  ["Murmansk",68.97,33.08,"r"],["Novosibirsk",55.03,82.92,"r"],["Sapporo",43.06,141.35,"r"],["Petropavlovsk",53.04,158.65,"r"]
+];
+const NARROW = new Set(["Fairbanks","Yellowknife","Reykjavik","London","Moscow","Chicago"]);
+const STOPS = ["#1A1550","#3A2E9A","#2A7FC0","#22B8A0","#4FE39A"];      // indigo → blue → teal → aurora green
+const ramp = d3.interpolateRgbBasis(STOPS);
+const $ = id => document.getElementById(id);
+let D, P, N, mode = "p", yrs = 5, lvl = 1;
+
+function sample(arr, lat, lon){            // bilinear on the 1° grid
+  const y = Math.min(Math.max(lat - D.lat0, 0), D.nlat - 1.001), yi = y | 0, fy = y - yi;
+  let x = ((lon - D.lon0) % 360 + 360) % 360, xi = x | 0, fx = x - xi, x2 = (xi + 1) % D.nlon;
+  const g = (a, b) => arr[a * D.nlon + b];
+  return (g(yi,xi)*(1-fx) + g(yi,x2)*fx) * (1-fy) + (g(yi+1,xi)*(1-fx) + g(yi+1,x2)*fx) * fy;
+}
+const chance = p1 => 1 - Math.pow(1 - p1, yrs);
+const norm = (lat, lon) => mode === "p" ? chance(sample(P, lat, lon) / 1000) : Math.min(Math.sqrt(sample(N, lat, lon) / 1500), 1);
+const pole = [-72.7, 80.7], rad = Math.PI / 180;
+const mlat = (lat, lon) => Math.asin(Math.sin(lat*rad)*Math.sin(pole[1]*rad) + Math.cos(lat*rad)*Math.cos(pole[1]*rad)*Math.cos((lon-pole[0])*rad)) / rad;
+const kNeed = (lat, lon) => (66.5 - D.levels[lvl] - mlat(lat, lon)) / 2.07;
+const mlatOfKp = k => 66.5 - D.levels[lvl] - 2.07 * k;
+
+let narrow, ctr, proj, ctx, off, offCtx, ow, oh, W, H, R, lonlat, land, borders;
+
+function layout(){
+  narrow = $("frame").clientWidth < 820;
+  W = $("frame").clientWidth; H = $("frame").clientHeight;
+  if (W < 50 || H < 50) return;
+  const dpr = devicePixelRatio || 1, cv = $("field");
+  cv.width = W * dpr; cv.height = H * dpr; ctx = cv.getContext("2d"); ctx.scale(dpr, dpr);
+  const cx = narrow ? W/2 : W/2 + 20, top = 180, bot = H - 240;
+  const cy = narrow ? (top + bot) / 2 : H/2;
+  R = narrow ? Math.min(W*0.4, (bot - top)/2 - 4) : Math.min(W*0.5 - 20, H*0.5 - 14);
+  const clip = 58;
+  proj = d3.geoAzimuthalEquidistant().rotate([0, -90, 20]).clipAngle(clip).scale(R / (clip * rad)).translate([cx, cy]).precision(0.2);
+  ow = Math.ceil(W / 2); oh = Math.ceil(H / 2);
+  off = document.createElement("canvas"); off.width = ow; off.height = oh; offCtx = off.getContext("2d");
+  lonlat = new Float32Array(ow * oh * 2).fill(NaN);
+  for (let y = 0; y < oh; y++) for (let x = 0; x < ow; x++){
+    const px = (x + .5) * 2, py = (y + .5) * 2;
+    if (Math.hypot(px - cx, py - cy) > R) continue;
+    const ll = proj.invert([px, py]); if (!ll) continue;
+    const i = (y * ow + x) * 2; lonlat[i] = ll[0]; lonlat[i+1] = ll[1];
+  }
+  ctr = [cx, cy]; drawOverlay(...ctr); paint();
+}
+
+function paint(){
+  if (!ctx) return;
+  const img = offCtx.createImageData(ow, oh), a = img.data;
+  for (let i = 0, j = 0; i < lonlat.length; i += 2, j += 4){
+    if (isNaN(lonlat[i])) continue;
+    const v = norm(lonlat[i+1], lonlat[i]); if (v < 0.004) continue;
+    const c = d3.rgb(ramp(v)); a[j] = c.r; a[j+1] = c.g; a[j+2] = c.b; a[j+3] = 255 * Math.min(1, 0.35 + v * 1.1);
+  }
+  offCtx.putImageData(img, 0, 0);
+  ctx.clearRect(0, 0, W, H); ctx.imageSmoothingQuality = "high";
+  const path = d3.geoPath(proj, ctx);
+  ctx.save(); ctx.globalAlpha = 0.33; ctx.drawImage(off, 0, 0, W, H); ctx.restore();          // ocean: dimmed
+  ctx.save(); ctx.beginPath(); path(land); ctx.clip(); ctx.drawImage(off, 0, 0, W, H); ctx.restore(); // land: full strength
+  cityLabels();
+}
+
+function drawOverlay(cx, cy){
+  const svg = d3.select("#ov").attr("viewBox", `0 0 ${W} ${H}`); svg.selectAll("*").remove();
+  const path = d3.geoPath(proj);
+  svg.append("path").attr("class","grat").attr("d", path(d3.geoGraticule().step([30, 10]).extent([[-180, 30], [180, 90]])()));
+  svg.append("path").attr("class","coast").attr("d", path(borders));
+  svg.append("circle").attr("class","sphere").attr("cx", cx).attr("cy", cy).attr("r", R);
+  [[5,"G1 · KP 5"],[7,"G3 · KP 7"],[9,"G5 · KP 9"]].forEach(([k, t], i) => {
+    const ring = d3.geoCircle().center(pole).radius(90 - mlatOfKp(k)).precision(1)();
+    svg.append("path").attr("class","storm").attr("d", path(ring));
+    let best, bd = 1e9;                                   // label where the ring crosses the lower-left of the frame
+    ring.coordinates[0].forEach(c => { const p = proj(c); if (!p) return; const d = Math.hypot(p[0] - (cx - R*.8), p[1] - (cy - R*.5)); if (d < bd){ bd = d; best = p; } });
+    if (best) svg.append("text").attr("class","lbl storm-lbl").attr("x", best[0]).attr("y", best[1] - 4 - i * 4).attr("text-anchor","middle").text(t);
+  });
+  svg.append("g").attr("id","cities");
+  svg.append("path").attr("class","cross").attr("id","cross");
+  svg.append("circle").attr("class","hit").attr("cx", cx).attr("cy", cy).attr("r", R)
+    .on("pointermove", e => probe(...d3.pointer(e))).on("pointerleave", () => { $("cross").removeAttribute("d"); });
+}
+
+function cityLabels(){
+  const g = d3.select("#cities"); g.selectAll("*").remove();
+  CITIES.forEach(([n, la, lo, side]) => {
+    if (narrow && !NARROW.has(n)) return;
+    const p = proj([lo, la]); if (!p) return;
+    const v = norm(la, lo), nights = Math.round(sample(N, la, lo) / 10);
+    g.append("circle").attr("class","city-dot").attr("cx", p[0]).attr("cy", p[1]).attr("r", 2.4);
+    const tx = g.append("text").attr("class","lbl city").attr("x", p[0] + (side === "r" ? 6 : -6)).attr("y", p[1] + 3.5).attr("text-anchor", side === "r" ? "start" : "end");
+    tx.append("tspan").text(n + " "); tx.append("tspan").attr("font-weight",700).attr("fill", mode === "p" ? d3.color(ramp(Math.max(v, .35))).brighter(.6) : "#fff").text(mode === "p" ? Math.round(v * 100) + "%" : nights);
+    const bb = tx.node().getBBox();                                   // keep labels inside the frame
+    if (bb.x + bb.width > W - 6) tx.attr("x", p[0] - 6).attr("text-anchor", "end");
+    else if (bb.x < 6) tx.attr("x", p[0] + 6).attr("text-anchor", "start");
+  });
+}
+
+function probe(x, y){
+  const ll = proj.invert([x, y]); if (!ll) return;
+  const [lon, lat] = ll, p1 = sample(P, lat, lon) / 1000, n = sample(N, lat, lon) / 10, k = kNeed(lat, lon);
+  const c = chance(p1);
+  $("rTitle").textContent = `${Math.abs(lat).toFixed(1)}°N · ${Math.abs(lon).toFixed(1)}°${lon < 0 ? "W" : "E"}`;
+  $("rBig").textContent = Math.round(c * 100) + "%"; $("rBig").style.color = ramp(Math.max(c, .4));
+  $("rSub").textContent = `chance of ≥1 sighting by ${untilTxt()}`;
+  $("rN").textContent = n < 1 ? n.toFixed(1) : Math.round(n);
+  $("rK").textContent = k < 0.1 ? "any activity" : k > 9 ? "beyond Kp 9" : `Kp ${k.toFixed(1)}` + (k >= 5 ? ` (G${Math.floor(k) - 4})` : "");
+  $("rM").textContent = mlat(lat, lon).toFixed(1) + "°";
+  d3.select("#cross").attr("d", `M${x-7},${y}h14M${x},${y-7}v14`);
+}
+
+const LVL_NOTE = ["A faint green glow low on the northern horizon, from a dark site.", "Green arcs and rays well up in the northern sky.", "You're under the oval itself: curtains and corona overhead."];
+function setLevel(i){
+  lvl = i; P = D.p[i]; N = D.n[i]; $("lvlNote").textContent = LVL_NOTE[i];
+  document.querySelectorAll("[data-l]").forEach(b => b.classList.toggle("on", +b.dataset.l === i));
+  if (ctr){ drawOverlay(...ctr); paint(); }
+}
+document.querySelectorAll("[data-l]").forEach(b => b.onclick = () => setLevel(+b.dataset.l));
+const untilTxt = () => new Date(NOW.getFullYear() + yrs, 8).toLocaleString("en", {month:"short", year:"numeric"});
+function setMode(m){
+  mode = m; $("mP").classList.toggle("on", m === "p"); $("mN").classList.toggle("on", m === "n"); $("yrsRow").classList.toggle("off", m === "n");
+  const p = m === "p";
+  $("lTitle").textContent = p ? "Chance of at least one sighting" : "Aurora-capable nights per year";
+  $("bar").style.background = `linear-gradient(90deg, ${STOPS.join(",")})`;
+  const ticks = p ? [0, .25, .5, .75, 1].map(v => [v, Math.round(v * 100) + "%"]) : [0, 1, 10, 50, 100, 150].map(v => [Math.sqrt(v / 150), v === 150 ? "150+" : v]);
+  $("ticks").innerHTML = ticks.map(([pos, t]) => `<span style="left:${pos*100}%">${t}</span>`).join("");
+  paint();
+}
+function setYrs(){ yrs = +$("yrs").value; $("yrsOut").textContent = yrs + (yrs > 1 ? " years" : " year"); $("untilTxt").textContent = untilTxt(); if (mode === "p") paint(); }
+
+$("mP").onclick = () => setMode("p"); $("mN").onclick = () => setMode("n"); $("yrs").oninput = setYrs;
+let rt;
+
+Promise.all([d3.json("data.json"), d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json")]).then(([d, w]) => {
+  D = d; setLevel(lvl); $("nyr").textContent = d.years;
+  $("kp5").textContent = (d.kp5 * 100).toFixed(1) + "%"; $("kp7").textContent = (d.kp7 * 100).toFixed(1) + "%";
+  land = topojson.feature(w, w.objects.land); borders = topojson.mesh(w, w.objects.countries, (a, b) => a !== b);
+  const coast = topojson.mesh(w, w.objects.land); borders = {type: "GeometryCollection", geometries: [coast, borders]};
+  setYrs(); setMode("p");
+  new ResizeObserver(() => { clearTimeout(rt); rt = setTimeout(layout, 120); }).observe($("frame"));
+});
+</script>
+</body>
+</html>

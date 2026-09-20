@@ -1,0 +1,68 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Road Network Silhouettes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{ --bg:#cfe8f5; --ink:#0a0a0a; }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);}
+  body{
+    font-family:"IBM Plex Mono", ui-monospace, monospace;
+    color:var(--ink);
+    padding:32px clamp(16px,4vw,48px) 64px;
+  }
+  h1{
+    font-size:15px;
+    font-weight:600;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    margin:0 0 24px;
+  }
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+    gap:20px;
+  }
+  a.card{
+    display:block;
+    text-decoration:none;
+    color:var(--ink);
+    border:1px solid rgba(10,10,10,0.35);
+    background:rgba(255,255,255,0.15);
+  }
+  a.card iframe{
+    display:block;
+    width:100%;
+    aspect-ratio:1/1;
+    border:0;
+    pointer-events:none;
+  }
+  a.card .label{
+    padding:8px 10px;
+    font-size:12px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    border-top:1px solid rgba(10,10,10,0.35);
+  }
+</style>
+</head>
+<body>
+<h1>Road Network Silhouettes</h1>
+<div class="grid">
+  <a class="card" href="new-york-city.html"><iframe src="new-york-city.html"></iframe><div class="label">New York City</div></a>
+  <a class="card" href="chicago.html"><iframe src="chicago.html"></iframe><div class="label">Chicago</div></a>
+  <a class="card" href="london.html"><iframe src="london.html"></iframe><div class="label">London</div></a>
+  <a class="card" href="paris.html"><iframe src="paris.html"></iframe><div class="label">Paris</div></a>
+  <a class="card" href="istanbul.html"><iframe src="istanbul.html"></iframe><div class="label">Istanbul</div></a>
+  <a class="card" href="vatican.html"><iframe src="vatican.html"></iframe><div class="label">Vatican City</div></a>
+  <a class="card" href="hong-kong.html"><iframe src="hong-kong.html"></iframe><div class="label">Hong Kong</div></a>
+  <a class="card" href="dakar.html"><iframe src="dakar.html"></iframe><div class="label">Dakar</div></a>
+  <a class="card" href="dubai.html"><iframe src="dubai.html"></iframe><div class="label">Dubai</div></a>
+  <a class="card" href="singapore.html"><iframe src="singapore.html"></iframe><div class="label">Singapore</div></a>
+</div>
+</body>
+</html>

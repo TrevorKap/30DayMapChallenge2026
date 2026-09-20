@@ -253,11 +253,11 @@
   <footer>
     <div>
       <h3>Where this comes from</h3>
-      <p>Climate normals are 20&#8209;year averages (2001&ndash;2020) of 2&#8209;meter air temperature and corrected total precipitation, from NASA's <a href="https://power.larc.nasa.gov/" target="_blank" rel="noopener">POWER</a> project (MERRA&#8209;2 reanalysis), sampled on its native 0.5&deg;&times;0.625&deg; grid across a box from 5&deg;N&ndash;72&deg;N and 170&deg;W&ndash;50&deg;W &mdash; roughly 26,000 grid cells, fetched tile by tile from the public POWER Climatology API. Coastlines and country borders are Natural Earth 1:50m via <a href="https://github.com/topojson/world-atlas" target="_blank" rel="noopener">world-atlas</a>.</p>
+      <p>Climate normals are 20&#8209;year averages (2001&ndash;2020) of 2&#8209;meter air temperature and corrected total precipitation, from NASA's <a href="https://power.larc.nasa.gov/" target="_blank" rel="noopener">POWER</a> project (MERRA&#8209;2 reanalysis), sampled on its native 0.5&deg;&times;0.625&deg; grid across a box from 5&deg;N&ndash;84&deg;N and 170&deg;W&ndash;10&deg;W (extended east and north to cover Greenland) &mdash; roughly 41,000 grid cells, fetched tile by tile from the public POWER Climatology API. Coastlines and country borders are Natural Earth 1:50m via <a href="https://github.com/topojson/world-atlas" target="_blank" rel="noopener">world-atlas</a>.</p>
     </div>
     <div>
       <h3>How it's drawn</h3>
-      <p>A North America Albers equal-area conic projection (standard parallels 20&deg;N/60&deg;N) frames the grid. Every pixel inside the map is inverse-projected back to a longitude/latitude, bilinearly sampled from the temperature and precipitation grids, classified, and colored &mdash; then the whole raster is clipped to the land outline in a single canvas pass.</p>
+      <p>A Lambert conformal conic projection (standard parallels 20&deg;N/60&deg;N, central meridian 96&deg;W) frames the grid &mdash; the same "North America" preset used by USGS, NOAA, and Esri (EPSG:102009). Every pixel inside the map is inverse-projected back to a longitude/latitude, bilinearly sampled from the temperature and precipitation grids, classified, and colored &mdash; then the whole raster is clipped to the land outline in a single canvas pass.</p>
       <p style="margin-top:20px;">Part of a 30&#8209;day mapping project &mdash; day theme: <strong>bivariate map</strong>.</p>
     </div>
   </footer>
@@ -303,7 +303,9 @@
   const land = topojson.merge(world, countryGeoms);
   const borders = topojson.mesh(world, naCollection, (a, b) => a !== b);
 
-  const projection = d3.geoConicEqualArea()
+  // Lambert Conformal Conic, standard parallels 20N/60N, central meridian 96W —
+  // the "North America" projection preset used by USGS/NOAA/ESRI (EPSG:102009)
+  const projection = d3.geoConicConformal()
     .parallels([20, 60])
     .rotate([96, 0])
     .fitExtent([[PAD, PAD], [W - PAD, H - PAD]], land);
@@ -336,8 +338,8 @@
       b: Math.max(0, Math.min(255, a.b * b.b / l))
     };
   }
-  const precipRamp = ["#EAE6D8", "#8FB6AC", "#3E7A70"];
-  const tempRamp = ["#EAE6D8", "#E3A468", "#B5592A"];
+  const precipRamp = ["#FFFFFF", "#2FA8A0", "#0A4A43"];
+  const tempRamp = ["#FFFFFF", "#F07D24", "#C2280F"];
   const palette = []; // index = precipClass * N + tempClass
   for (const p of precipRamp) for (const t of tempRamp) palette.push(mixblend(p, t));
 

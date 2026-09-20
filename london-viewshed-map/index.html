@@ -1,0 +1,454 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Line of Sight: London</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,500&family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js"></script>
+<style>
+  :root{
+    --bg:#F5F3EC;
+    --panel:#E9E8DF;
+    --ink:#14233A;
+    --ink-soft:#4C5C70;
+    --ink-faint:#8592A0;
+    --line:rgba(20,35,58,0.14);
+    --panel-border:rgba(20,35,58,0.13);
+    --shadow:0 18px 40px -20px rgba(20,35,58,0.4);
+    --seen:#C0552F;      /* visible from the viewpoint */
+    --seen-deep:#3C2452; /* seen from every selected viewpoint */
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{ background:var(--bg); color:var(--ink); font-family:"Source Sans 3", ui-sans-serif, system-ui, sans-serif; font-size:16px; line-height:1.55; -webkit-font-smoothing:antialiased; }
+  @media (prefers-reduced-motion: reduce){ *{animation-duration:0.01ms !important; transition-duration:0.01ms !important;} }
+  a{color:inherit;}
+  .wrap{max-width:1320px;margin:0 auto;padding:0 clamp(18px,4vw,44px) clamp(48px,8vw,80px);}
+
+  header.hero{padding:clamp(28px,5vw,52px) 0 clamp(8px,2vw,16px);}
+  .eyebrow{ font-family:"IBM Plex Mono", ui-monospace, monospace; font-size:12px; letter-spacing:0.16em; text-transform:uppercase; color:var(--seen); margin:0 0 10px; }
+  .eyebrow::before{ content:"◆ "; color:var(--ink-soft); }
+  h1{ font-family:"Source Serif 4", Georgia, serif; font-weight:600; font-size:clamp(2rem,4vw,3rem); line-height:1.03; letter-spacing:-0.01em; margin:0 0 14px; text-wrap:balance; }
+  h1 em{ font-style:italic; font-weight:500; color:var(--seen); }
+  .dek{ max-width:82ch; font-size:clamp(0.94rem,1.2vw,1.03rem); color:var(--ink-soft); margin:0; }
+  .dek strong{color:var(--ink); font-weight:600;}
+  .dek .swatch{display:inline-block;width:9px;height:9px;border-radius:50%;margin:0 2px -1px 0;}
+
+  .layout{ display:grid; grid-template-columns:minmax(0,1fr) 340px; gap:clamp(14px,2.6vw,24px); align-items:start; margin:clamp(22px,4vw,36px) 0 0; }
+  @media (max-width:960px){ .layout{ grid-template-columns:1fr; } }
+
+  .map-frame{ position:relative; border-radius:16px; border:1px solid var(--panel-border); background:var(--panel); box-shadow:var(--shadow); overflow:hidden; aspect-ratio:4/5; }
+  @media (min-width:640px){ .map-frame{ aspect-ratio:11/10; } }
+  #map{ position:absolute; inset:0; width:100%; height:100%; }
+  .mapboxgl-ctrl-logo{ filter:invert(0.15) opacity(0.55); }
+  .mapboxgl-ctrl-attrib{ font-size:10px; }
+
+  .setup-banner{ position:absolute; inset:0; z-index:30; display:flex; align-items:center; justify-content:center; background:rgba(245,243,236,0.97); padding:32px; text-align:center; }
+  .setup-banner[hidden]{ display:none; }
+  .setup-banner .box{ max-width:480px; }
+  .setup-banner h3{ font-family:"Source Serif 4"; font-size:18px; margin:0 0 10px; }
+  .setup-banner p{ font-size:13px; color:var(--ink-soft); margin:0 0 8px; }
+  .setup-banner code{ background:rgba(20,35,58,0.08); padding:2px 6px; border-radius:5px; font-family:"IBM Plex Mono"; font-size:12px; color:var(--seen); }
+
+  .data-loading{ position:absolute; left:14px; bottom:14px; z-index:6; background:rgba(233,232,223,0.92); backdrop-filter:blur(6px); border:1px solid var(--panel-border); border-radius:12px; padding:10px 14px; font-family:"IBM Plex Mono", monospace; font-size:10.5px; color:var(--ink-soft); display:flex; align-items:center; gap:9px; }
+  .data-loading[hidden]{ display:none; }
+  .data-loading .spin{ width:11px; height:11px; border-radius:50%; flex:none; border:2px solid rgba(20,35,58,0.18); border-top-color:var(--seen); animation:spin 0.8s linear infinite; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  .chip{ position:absolute; background:rgba(233,232,223,0.92); backdrop-filter:blur(6px); border:1px solid var(--panel-border); border-radius:12px; padding:12px 14px; box-shadow:0 14px 30px -18px rgba(20,35,58,0.4); z-index:5; }
+  .chip-title{ top:14px; left:14px; max-width:250px; }
+  .chip-title .name{ font-family:"Source Serif 4"; font-weight:600; font-size:14.5px; letter-spacing:0.01em; }
+  .chip-title .sub{ font-family:"IBM Plex Mono"; font-size:10px; color:var(--ink-soft); letter-spacing:0.06em; text-transform:uppercase; margin-top:3px; }
+  .chip-modes{ top:14px; right:56px; padding:8px; display:flex; flex-direction:column; gap:4px; }
+  .mode-btn{ font-family:"IBM Plex Mono", monospace; font-size:10.5px; letter-spacing:0.03em; background:transparent; border:1px solid transparent; border-radius:7px; padding:6px 10px; color:var(--ink-soft); cursor:pointer; text-align:left; white-space:nowrap; }
+  .mode-btn:hover{ background:rgba(20,35,58,0.06); color:var(--ink); }
+  .mode-btn.active{ background:var(--ink); color:var(--bg); }
+  .chip-legend{ left:14px; bottom:14px; min-width:210px; max-width:260px; }
+  .chip-legend h4{ margin:0 0 9px; font-family:"IBM Plex Mono"; font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink-soft); }
+  .leg-scale{ display:flex; gap:2px; margin-bottom:6px; }
+  .leg-scale i{ display:block; flex:1; height:10px; border-radius:2px; }
+  .leg-labels{ display:flex; justify-content:space-between; font-family:"IBM Plex Mono"; font-size:9.5px; color:var(--ink-soft); }
+  .leg-caption{ margin-top:8px; font-size:11px; color:var(--ink-soft); line-height:1.4; }
+  .leg-row{ display:flex; align-items:center; gap:8px; font-size:11.5px; color:var(--ink-soft); margin:5px 0 0; }
+  .leg-row i{ width:14px; height:10px; border-radius:2px; flex:none; }
+
+  .tooltip{ position:absolute; pointer-events:none; z-index:20; background:var(--panel); border:1px solid var(--panel-border); border-radius:10px; padding:9px 12px; font-size:12px; color:var(--ink-soft); box-shadow:0 14px 30px -16px rgba(20,35,58,0.4); opacity:0; transition:opacity 100ms ease; max-width:260px; }
+  .tooltip.show{ opacity:1; }
+  .tooltip b{ color:var(--ink); font-family:"Source Serif 4"; font-size:13.5px; display:block; margin-bottom:3px; }
+
+  aside.panel{ display:flex; flex-direction:column; gap:14px; }
+  .block{ background:var(--panel); border:1px solid var(--panel-border); border-radius:14px; padding:16px 16px 14px; }
+  .block h3{ margin:0 0 12px; font-family:"IBM Plex Mono"; font-size:10.5px; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-soft); }
+  .vp-group{ font-family:"IBM Plex Mono"; font-size:9.5px; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink-faint); margin:12px 0 3px; }
+  .vp-group:first-of-type{ margin-top:0; }
+  .vp{ display:grid; grid-template-columns:14px 1fr 54px; align-items:center; gap:4px 9px; width:100%; text-align:left; background:transparent; border:1px solid transparent; border-radius:8px; padding:5px 7px; cursor:pointer; color:var(--ink); font:inherit; font-size:13px; }
+  .vp:hover{ background:rgba(20,35,58,0.05); }
+  .vp.on{ background:rgba(192,85,47,0.10); border-color:rgba(192,85,47,0.35); }
+  .vp .dot{ width:10px; height:10px; border-radius:50%; border:2px solid var(--ink); background:var(--ink); }
+  .vp .dot.tower{ background:var(--bg); }
+  .vp .val{ font-family:"IBM Plex Mono"; font-size:11px; text-align:right; color:var(--ink); }
+  .vp .bars{ grid-column:2 / 4; position:relative; height:5px; border-radius:3px; background:rgba(20,35,58,0.07); overflow:hidden; }
+  .vp .bars i{ position:absolute; left:0; top:0; bottom:0; border-radius:3px; }
+  .vp .bars .bare{ background:rgba(20,35,58,0.16); }
+  .vp .bars .built{ background:var(--seen); }
+  .vp-hint{ font-size:11px; color:var(--ink-soft); margin:10px 0 0; line-height:1.4; }
+
+  .stat-line{ display:flex; justify-content:space-between; align-items:baseline; gap:12px; padding:7px 0; border-top:1px solid var(--line); font-size:12.5px; color:var(--ink-soft); }
+  .stat-line:first-of-type{ border-top:none; padding-top:0; }
+  .stat-line b{ font-family:"IBM Plex Mono"; font-size:15px; color:var(--seen); white-space:nowrap; }
+  .sel-name{ font-family:"Source Serif 4"; font-weight:600; font-size:17px; margin:0 0 2px; }
+  .sel-sub{ font-family:"IBM Plex Mono"; font-size:10px; color:var(--ink-soft); letter-spacing:0.06em; text-transform:uppercase; margin:0 0 10px; }
+
+  .hist{ display:flex; align-items:flex-end; gap:4px; height:90px; margin:4px 0 6px; }
+  .hist .hbar{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:5px; }
+  .hist .hbar i{ display:block; width:100%; border-radius:3px 3px 0 0; }
+  .hist .hbar span{ font-family:"IBM Plex Mono"; font-size:9px; color:var(--ink-faint); }
+  .hist-caption{ font-size:11px; color:var(--ink-soft); margin-top:2px; }
+
+  .note{ margin:22px 0 0; padding:16px 20px; border-left:3px solid var(--seen); background:var(--panel); border-radius:0 10px 10px 0; }
+  .note-label{ font-family:"IBM Plex Mono"; font-size:0.7rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--ink-soft); margin:0 0 8px; }
+  .note p{ margin:0 0 10px; font-size:0.9rem; color:var(--ink-soft); max-width:86ch; line-height:1.62; }
+  .note p:last-child{ margin-bottom:0; }
+  .note a{ color:var(--seen); text-decoration:underline; text-decoration-color:var(--panel-border); text-underline-offset:3px; }
+</style>
+
+<div class="wrap">
+  <header class="hero">
+    <p class="eyebrow">London · Viewshed Analysis</p>
+    <h1>Line of sight: how much of London can <em>you actually see</em>?</h1>
+    <p class="dek" id="dek"></p>
+  </header>
+
+  <div class="layout">
+    <div class="map-frame" id="mapFrame">
+      <div id="map"></div>
+      <div class="setup-banner" id="setupBanner" hidden>
+        <div class="box">
+          <h3>Add a Mapbox token to see the map</h3>
+          <p>This page reads a token from <code>.env</code> next to it (never hardcoded in the HTML). Put <code>MAPBOX_TOKEN=pk.…</code> in that file and reload over <code>http://</code> (<code>python serve.py</code> from the project root).</p>
+          <p id="setupDetail" style="color:var(--seen)"></p>
+        </div>
+      </div>
+      <div class="chip chip-title">
+        <div class="name">LINE OF SIGHT · LONDON</div>
+        <div class="sub" id="titleSub">11 vantage points · 20 m grid</div>
+      </div>
+      <div class="chip chip-modes" id="modeChip"></div>
+      <div class="chip chip-legend" id="legendChip"></div>
+      <div class="data-loading" id="dataLoading"><span class="spin"></span>Loading viewshed rasters…</div>
+      <div class="tooltip" id="tooltip"></div>
+    </div>
+
+    <aside class="panel">
+      <div class="block">
+        <h3>Vantage points</h3>
+        <div id="vpList"></div>
+        <p class="vp-hint">Click one to solo it, shift-click to add more, or pick “All”. Bars: <span style="color:var(--seen)">■</span> visible area with buildings &amp; trees, <span style="color:rgba(20,35,58,.3)">■</span> bare earth only.</p>
+      </div>
+      <div class="block" id="selBlock"></div>
+      <div class="block">
+        <h3>How many of the 11 see each place?</h3>
+        <div class="hist" id="histRows"></div>
+        <p class="hist-caption" id="histCaption"></p>
+      </div>
+    </aside>
+  </div>
+
+  <footer class="note">
+    <p class="note-label">Method &amp; sources</p>
+    <p>Each viewshed is a true line-of-sight calculation over a surface model of London: from an eye point (1.7 m above the ground on hills, at gallery height on towers), rays are cast in every direction across the 42 × 36 km study area, and a 20 m cell counts as visible only if the top of a 10 m structure standing in it (about three storeys) sits at least as high in the observer's field of view as everything between it and the observer. Earth curvature and standard atmospheric refraction (k = 0.13) are applied, which matters beyond about 10 km. Cells within 30–80 m of a viewpoint are cleared so a tower does not block its own view.</p>
+    <p><b>Buildings &amp; trees</b> mode uses the Environment Agency's LiDAR Composite Digital Surface Model (2 m, last return): every roof, treetop and gasometer that was there when the aircraft flew over. Each 20 m analysis cell keeps the <i>median</i> height of its hundred 2 m pixels: a cell counts as solid where more than half of it is, so a lone tree in a park does not become a wall (a 90th-percentile version blocked nearly everything from open hilltops, because trees are porous and rays pass between them). <b>Bare earth</b> mode uses the matching Digital Terrain Model, the ground with everything removed, tested against the same 10 m target. The gap between the two is what the built city takes away.</p>
+    <p>Caveats worth knowing: the 10 m target is a modelling choice. Asking whether bare ground is visible would show almost nothing from a hilltop over a roofscape, since at a grazing angle only the highest crest along each ray is ever seen; asking about a three-storey roofline is closer to what “can I see that part of London?” means. Change the target and every area moves, but the ranking of viewpoints and the built-versus-bare gap hold. The surface model includes tree canopy, so leafy hilltops read as more closed than the maintained sightlines their viewing indicators protect. Results are limited to the study area, so views running past its edges are clipped. “Visible” does not mean a person on the pavement there is in view. Hill viewpoints are snapped to the highest bare-earth cell within 200 m of the named spot, and tower heights are the operators' published gallery levels (Canary Wharf has no public gallery; its eye point is the top floor).</p>
+    <p>Sources: <a href="https://environment.data.gov.uk/dataset/9ba4d5ac-d596-445a-9056-dae3ddec0178" target="_blank" rel="noopener">Environment Agency LIDAR Composite DSM and DTM, 2 m</a> (Open Government Licence v3.0, via the EA WCS service) · viewpoint heights from operator-published gallery levels · basemap and rendering by <a href="https://www.mapbox.com" target="_blank" rel="noopener">Mapbox GL JS</a> · reprojection with PROJ (British National Grid to Web Mercator). Data pulled <span id="builtAt"></span>.</p>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var M = null, map, masks = {}, mode = "built";
+  var sel = {};              // viewpoint index -> true
+  var lastClicked = -1;
+  var paintTimer = null, blobUrl = null;
+  var POP = new Uint8Array(1 << 12);
+  for(var i=1;i<POP.length;i++) POP[i] = POP[i>>1] + (i&1);
+  // count ramp: pale amber -> rust -> plum (perceptually ordered, muted)
+  var RAMP = [[243,223,169],[226,166,74],[192,85,47],[142,47,59],[60,36,82]];
+  var SEEN = [192,85,47];
+  var VEIL = [20,35,58,34];
+
+  function $(id){ return document.getElementById(id); }
+  function showSetupBanner(msg){ $("setupDetail").textContent = msg||""; $("setupBanner").hidden = false; }
+  function parseEnv(text){
+    var out={};
+    text.split(/\r?\n/).forEach(function(line){
+      line=line.trim(); if(!line||line[0]==="#") return;
+      var idx=line.indexOf("="); if(idx===-1) return;
+      out[line.slice(0,idx).trim()] = line.slice(idx+1).trim().replace(/^["']|["']$/g,"");
+    });
+    return out;
+  }
+  function ramp(t){
+    var x = t*(RAMP.length-1), i = Math.min(RAMP.length-2, Math.floor(x)), f = x-i;
+    return [0,1,2].map(function(k){ return Math.round(RAMP[i][k] + (RAMP[i+1][k]-RAMP[i][k])*f); });
+  }
+  function selMask(){ var m=0; Object.keys(sel).forEach(function(k){ m |= 1<<(+k); }); return m; }
+  function selCount(){ return Object.keys(sel).length; }
+
+  /* ---------- data ---------- */
+  function loadMask(url){
+    return fetch(url).then(function(r){ return r.blob(); })
+      .then(function(b){ return createImageBitmap(b, {colorSpaceConversion:"none", premultiplyAlpha:"none"}); })
+      .then(function(bmp){
+        var c = document.createElement("canvas"); c.width = bmp.width; c.height = bmp.height;
+        var ctx = c.getContext("2d", {willReadFrequently:true}); ctx.drawImage(bmp,0,0);
+        var d = ctx.getImageData(0,0,c.width,c.height).data, n = c.width*c.height;
+        var out = new Uint16Array(n);           // bits 0-10 viewpoints, bit 15 = inside study area
+        for(var i=0,j=0;i<n;i++,j+=4) out[i] = d[j] | ((d[j+1]&15)<<8) | ((d[j+1]&128)<<8);
+        return out;
+      });
+  }
+
+  Promise.all([
+    fetch("./data/manifest.json",{cache:"no-store"}).then(function(r){ return r.json(); }),
+    loadMask("./data/vis_built.png"), loadMask("./data/vis_bare.png")
+  ]).then(function(res){
+    M = res[0]; masks.built = res[1]; masks.bare = res[2];
+    $("dataLoading").hidden = true;
+    $("builtAt").textContent = M.built_at;
+    buildStatic();
+    setSelection([INITIAL], true);
+    if(map && map.loaded()) mapReady();
+  }).catch(function(e){ showSetupBanner("Could not load data/manifest.json or the viewshed PNGs: "+e.message); });
+
+  var INITIAL = 0;
+
+  /* ---------- map ---------- */
+  fetch("./.env",{cache:"no-store"}).then(function(r){ if(!r.ok) throw new Error("could not read .env ("+r.status+")"); return r.text(); })
+    .then(function(t){
+      var token = parseEnv(t).MAPBOX_TOKEN;
+      if(!token || token.indexOf("YOUR_TOKEN_HERE")!==-1){ showSetupBanner("Found .env but MAPBOX_TOKEN is still the placeholder."); return; }
+      initMap(token);
+    }).catch(function(err){ showSetupBanner("Serve this file over http:// so it can read .env — e.g. `python serve.py` in the project root. ("+err.message+")"); });
+
+  var mapLoaded = false;
+  function initMap(token){
+    mapboxgl.accessToken = token;
+    map = new mapboxgl.Map({ container:"map", style:"mapbox://styles/mapbox/light-v11", center:[-0.105,51.515], zoom:10.6, attributionControl:true });
+    map.addControl(new mapboxgl.NavigationControl({showCompass:false}), "top-right");
+    map.dragRotate.disable(); map.touchZoomRotate.disableRotation();
+    map.on("load", function(){ mapLoaded = true; $("setupBanner").hidden = true; muteBasemap(); if(M) mapReady(); });
+    map.on("error", function(e){ if(e && e.error && /access token|unauthorized|401|403|forbidden/i.test(e.error.message||"")) showSetupBanner("Mapbox rejected this token or style: "+e.error.message); });
+    var ro = new ResizeObserver(function(){ var r=$("map").getBoundingClientRect(); if(r.width>50 && r.height>50) map.resize(); });
+    ro.observe($("map"));
+  }
+
+  /* Basemap stays strictly background: muted tones, non-essential layers <= 0.4 opacity. */
+  function muteBasemap(){
+    map.getStyle().layers.forEach(function(l){
+      try{
+        var id = l.id.toLowerCase();
+        if(l.type==="background") map.setPaintProperty(l.id,"background-color","#EAEDEA");
+        else if(l.type==="fill" && id.indexOf("water")!==-1){ map.setPaintProperty(l.id,"fill-color","#D8E2E8"); map.setPaintProperty(l.id,"fill-opacity",0.7); }
+        else if(l.type==="fill" && /landuse|landcover|park/.test(id)){ map.setPaintProperty(l.id,"fill-color","#DCE3D6"); map.setPaintProperty(l.id,"fill-opacity",0.35); }
+        else if(l.type==="fill" && id.indexOf("building")!==-1){ map.setPaintProperty(l.id,"fill-color","#D8D6CC"); map.setPaintProperty(l.id,"fill-opacity",0.32); }
+        else if(l.type==="fill-extrusion") map.setPaintProperty(l.id,"fill-extrusion-opacity",0.15);
+        else if(l.type==="line" && id.indexOf("road")!==-1){
+          map.setPaintProperty(l.id,"line-color","#A7A9A2");
+          map.setPaintProperty(l.id,"line-opacity", (/motorway|trunk|primary/.test(id) && id.indexOf("case")===-1) ? 0.4 : 0.24);
+        }
+        else if(l.type==="line" && /admin|boundary/.test(id)){ map.setPaintProperty(l.id,"line-color","#8592A0"); map.setPaintProperty(l.id,"line-opacity",0.35); }
+        else if(l.type==="symbol" && /poi|transit/.test(id)) map.setLayoutProperty(l.id,"visibility","none");
+        else if(l.type==="symbol"){ map.setPaintProperty(l.id,"text-color","#33465D"); map.setPaintProperty(l.id,"text-halo-color","#F5F3EC"); map.setPaintProperty(l.id,"text-halo-width",1.4); }
+      }catch(e){}
+    });
+  }
+
+  var mapIsReady = false, canvas = document.createElement("canvas");
+  function mapReady(){
+    if(mapIsReady) return; mapIsReady = true;
+    var firstSymbol = map.getStyle().layers.filter(function(l){ return l.type==="symbol"; })[0];
+    var before = firstSymbol && firstSymbol.id;
+    map.addSource("dem",{type:"raster-dem",url:"mapbox://mapbox.mapbox-terrain-dem-v1",tileSize:512});
+    map.addLayer({id:"relief",type:"hillshade",source:"dem",paint:{"hillshade-exaggeration":0.3,"hillshade-shadow-color":"#6B7A86","hillshade-highlight-color":"#FFFFFF","hillshade-accent-color":"#8592A0"}}, before);
+    map.addSource("vis",{type:"image",url:"data:image/gif;base64,R0lGODlhAQABAAAAACw=",coordinates:M.img.corners});
+    map.addLayer({id:"vis",type:"raster",source:"vis",paint:{"raster-resampling":"nearest","raster-fade-duration":0,"raster-opacity":["interpolate",["linear"],["zoom"],10,0.92,14,0.7,16,0.5]}}, before);
+    map.addSource("vps",{type:"geojson",data:vpGeo()});
+    map.addLayer({id:"vp-ring",type:"circle",source:"vps",filter:["==",["get","sel"],1],paint:{"circle-radius":["interpolate",["linear"],["zoom"],9,9,14,15],"circle-color":"rgba(0,0,0,0)","circle-stroke-color":"#14233A","circle-stroke-width":1.5}});
+    map.addLayer({id:"vp-dot",type:"circle",source:"vps",paint:{
+      "circle-radius":["interpolate",["linear"],["zoom"],9,4,14,7],
+      "circle-color":["case",["==",["get","kind"],"hill"],"#14233A","#F5F3EC"],
+      "circle-stroke-color":["case",["==",["get","kind"],"hill"],"#F5F3EC","#14233A"],
+      "circle-stroke-width":2}});
+    map.addLayer({id:"vp-label",type:"symbol",source:"vps",layout:{
+      "text-field":["get","name"],"text-font":["DIN Pro Medium","Arial Unicode MS Regular"],"text-size":["interpolate",["linear"],["zoom"],9,9,13,12],
+      "text-transform":"uppercase","text-letter-spacing":0.08,"text-anchor":"top","text-offset":[0,1],"text-optional":true},
+      paint:{"text-color":"#14233A","text-halo-color":"#F5F3EC","text-halo-width":1.6}});
+    map.on("click","vp-dot",function(e){ var f=e.features[0]; if(f) pick(f.properties.idx, e.originalEvent.shiftKey); });
+    map.on("mouseenter","vp-dot",function(){ map.getCanvas().style.cursor="pointer"; });
+    map.on("mouseleave","vp-dot",function(){ map.getCanvas().style.cursor=""; });
+    map.on("mousemove",hover);
+    map.on("mouseout",function(){ $("tooltip").classList.remove("show"); });
+    repaint();
+  }
+
+  function vpGeo(){
+    return {type:"FeatureCollection",features:M.viewpoints.map(function(v,i){
+      return {type:"Feature",properties:{idx:i,name:v.name,kind:v.kind,sel:sel[i]?1:0},geometry:{type:"Point",coordinates:[v.lon,v.lat]}};
+    })};
+  }
+
+  /* ---------- painting ---------- */
+  function repaint(){
+    if(!M || !mapIsReady) return;
+    clearTimeout(paintTimer);
+    paintTimer = setTimeout(doPaint, 0);
+  }
+  function doPaint(){
+    var im = M.img, w = im.w, h = im.h, m = masks[mode], sm = selMask(), n = selCount();
+    canvas.width = w; canvas.height = h;
+    var ctx = canvas.getContext("2d"), id = ctx.createImageData(w,h), d = id.data;
+    var lut = [];   // per-count colour
+    for(var c=1;c<=n;c++){ var col = n===1 ? SEEN : ramp((c-1)/Math.max(1,n-1)); lut[c] = [col[0],col[1],col[2], n===1 ? 210 : 225]; }
+    for(var i=0,j=0;i<m.length;i++,j+=4){
+      var v = m[i];
+      if(!(v & 0x8000)) continue;
+      var k = POP[v & sm];
+      var c4 = k ? lut[k] : VEIL;
+      d[j]=c4[0]; d[j+1]=c4[1]; d[j+2]=c4[2]; d[j+3]=c4[3];
+    }
+    ctx.putImageData(id,0,0);
+    canvas.toBlob(function(b){
+      var old = blobUrl; blobUrl = URL.createObjectURL(b);
+      map.getSource("vis").updateImage({url:blobUrl, coordinates:M.img.corners});
+      if(old) setTimeout(function(){ URL.revokeObjectURL(old); }, 2000);
+    });
+    map.getSource("vps").setData(vpGeo());
+  }
+
+  /* ---------- interaction ---------- */
+  function pick(i, add){
+    if(add && selCount()>0){ if(sel[i] && selCount()>1) delete sel[i]; else sel[i]=true; }
+    else { sel = {}; sel[i] = true; }
+    afterSelect();
+  }
+  function setSelection(list, silent){ sel = {}; list.forEach(function(i){ sel[i]=true; }); afterSelect(silent); }
+  function afterSelect(){ buildList(); buildSelBlock(); buildLegend(); buildHist(); repaint(); }
+
+  function setMode(m){
+    mode = m;
+    document.querySelectorAll(".mode-btn").forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-mode")===m); });
+    buildList(); buildSelBlock(); buildLegend(); buildHist(); repaint();
+  }
+
+  function hover(e){
+    var tip = $("tooltip");
+    if(!M){ return; }
+    var im = M.img, R = 6378137;
+    var x = e.lngLat.lng*Math.PI/180*R, y = Math.log(Math.tan(Math.PI/4 + e.lngLat.lat*Math.PI/360))*R;
+    var col = Math.floor((x-im.x0)/im.px), row = Math.floor((im.y1-y)/im.px);
+    if(col<0||row<0||col>=im.w||row>=im.h){ tip.classList.remove("show"); return; }
+    var v = masks[mode][row*im.w+col];
+    if(!(v & 0x8000)){ tip.classList.remove("show"); return; }
+    var names = M.viewpoints.filter(function(_,i){ return v & (1<<i); }).map(function(p){ return p.name; });
+    tip.innerHTML = names.length
+      ? "<b>Seen from "+names.length+" of "+M.viewpoints.length+"</b>"+names.join(" · ")
+      : "<b>Out of sight</b>None of the 11 vantage points can see a 10 m structure here";
+    tip.style.left = Math.min(e.point.x+14, $("map").clientWidth-270)+"px";
+    tip.style.top = (e.point.y+14)+"px";
+    tip.classList.add("show");
+  }
+
+  /* ---------- panels ---------- */
+  var kmPerPx = 1;
+  function countMask(sm){ var m = masks[mode], c = 0; for(var i=0;i<m.length;i++){ var v=m[i]; if((v&0x8000) && (v&sm)) c++; } return c; }
+
+  function buildStatic(){
+    kmPerPx = M.domain_km2 / M.display_cells;
+    $("modeChip").innerHTML =
+      '<button class="mode-btn active" data-mode="built">Buildings &amp; trees</button>' +
+      '<button class="mode-btn" data-mode="bare">Bare earth only</button>';
+    $("modeChip").querySelectorAll(".mode-btn").forEach(function(btn){ btn.addEventListener("click", function(){ setMode(btn.getAttribute("data-mode")); }); });
+    $("titleSub").textContent = M.viewpoints.length+" vantage points · "+M.domain_km2.toLocaleString()+" km² studied";
+    buildDek();
+  }
+
+  function buildList(){
+    var maxKm = Math.max.apply(null, M.viewpoints.map(function(v){ return v.bare.km2; }));
+    var html = '<button class="vp'+(selCount()===M.viewpoints.length?" on":"")+'" data-all="1"><span class="dot" style="background:var(--seen);border-color:var(--seen)"></span><span><b>All '+M.viewpoints.length+'</b> combined</span><span class="val"></span></button>';
+    ["hill","tower"].forEach(function(kind){
+      html += '<div class="vp-group">'+(kind==="hill"?"Hills &amp; parks · eye 1.7 m":"Towers &amp; wheels · gallery height")+'</div>';
+      M.viewpoints.forEach(function(v,i){
+        if(v.kind!==kind) return;
+        html += '<button class="vp'+(sel[i]?" on":"")+'" data-i="'+i+'"><span class="dot '+kind+'"></span><span>'+v.name+'</span><span class="val">'+Math.round(v[mode].km2)+' km²</span>' +
+          '<span class="bars"><i class="bare" style="width:'+(v.bare.km2/maxKm*100)+'%"></i><i class="built" style="width:'+(v.built.km2/maxKm*100)+'%"></i></span></button>';
+      });
+    });
+    var el = $("vpList"); el.innerHTML = html;
+    el.querySelectorAll(".vp").forEach(function(b){
+      b.addEventListener("click", function(ev){
+        if(b.getAttribute("data-all")) setSelection(M.viewpoints.map(function(_,i){ return i; }));
+        else pick(+b.getAttribute("data-i"), ev.shiftKey);
+      });
+    });
+  }
+
+  function pct(x){ return Math.round(x*100)+"%"; }
+  function buildSelBlock(){
+    var idx = Object.keys(sel).map(Number), sm = selMask();
+    var km = countMask(sm)*kmPerPx;
+    var domain = M.domain_km2, h = "";
+    if(idx.length===1){
+      var v = M.viewpoints[idx[0]];
+      h += '<p class="sel-name">'+v.name+'</p><p class="sel-sub">'+v.ground_m.toFixed(0)+' m ground · eye '+(v.ground_m+v.eye_above_ground_m).toFixed(0)+' m above sea level</p>';
+      h += '<div class="stat-line"><span>Area in line of sight</span><b>'+Math.round(v[mode].km2).toLocaleString()+' km²</b></div>';
+      h += '<div class="stat-line"><span>Share of the study area</span><b>'+pct(v[mode].km2/domain)+'</b></div>';
+      h += '<div class="stat-line"><span>Farthest visible cell</span><b>'+v[mode].far_km.toFixed(1)+' km</b></div>';
+      h += '<div class="stat-line"><span>Lost to buildings &amp; trees</span><b>'+pct(1 - v.built.km2/v.bare.km2)+'</b></div>';
+    } else {
+      var n = idx.length;
+      h += '<p class="sel-name">'+(n===M.viewpoints.length?"All "+n+" vantage points":n+" vantage points")+'</p><p class="sel-sub">'+idx.map(function(i){ return M.viewpoints[i].name; }).join(" · ")+'</p>';
+      h += '<div class="stat-line"><span>Seen from at least one</span><b>'+Math.round(km).toLocaleString()+' km²</b></div>';
+      h += '<div class="stat-line"><span>Share of the study area</span><b>'+pct(km/domain)+'</b></div>';
+      h += '<div class="stat-line"><span>Seen from every one</span><b>'+Math.round(allKm(sm)).toLocaleString()+' km²</b></div>';
+    }
+    $("selBlock").innerHTML = h;
+  }
+  function allKm(sm){ var m = masks[mode], c = 0; for(var i=0;i<m.length;i++){ var v=m[i]; if((v&0x8000) && (v&sm)===sm) c++; } return c*kmPerPx; }
+
+  function buildLegend(){
+    var n = selCount(), el = $("legendChip"), what = mode==="built" ? "with every building and tree in the way" : "terrain only, buildings and trees removed";
+    if(n===1){
+      el.innerHTML = '<h4>Line of sight</h4>' +
+        '<div class="leg-row"><i style="background:rgb('+SEEN+')"></i>Visible from the eye point</div>' +
+        '<div class="leg-row"><i style="background:rgba(20,35,58,.22)"></i>Hidden from view</div>' +
+        '<div class="leg-caption">Could you see the top of a 10 m structure standing here? Analysed '+what+'.</div>';
+    } else {
+      var stops = []; for(var c=1;c<=n;c++){ var col = ramp((c-1)/Math.max(1,n-1)); stops.push('<i style="background:rgb('+col+')"></i>'); }
+      el.innerHTML = '<h4>Vantage points in sight</h4><div class="leg-scale">'+stops.join("")+'</div>' +
+        '<div class="leg-labels"><span>1</span><span>'+n+'</span></div>' +
+        '<div class="leg-caption">Number of selected vantage points that can see each cell. Grey veil = seen by none.</div>';
+    }
+  }
+
+  function buildHist(){
+    var hist = M.exposure_hist[mode], total = hist.reduce(function(a,b){ return a+b; },0), maxV = Math.max.apply(null,hist);
+    var n = M.viewpoints.length;
+    $("histRows").innerHTML = hist.map(function(v,k){
+      var col = k===0 ? "rgba(20,35,58,.22)" : "rgb("+ramp((k-1)/(n-1))+")";
+      return '<div class="hbar"><i style="height:'+Math.max(3,Math.round(v/maxV*80))+'px;background:'+col+'"></i><span>'+k+'</span></div>';
+    }).join("");
+    $("histCaption").textContent = pct(hist[0]/total)+" of the study area is seen from none of them; "+pct(hist.slice(Math.ceil(n/2)).reduce(function(a,b){ return a+b; },0)/total)+" from at least "+Math.ceil(n/2)+".";
+  }
+
+  function buildDek(){
+    var vp = M.viewpoints, lost = function(v){ return 1 - v.built.km2/v.bare.km2; };
+    var hills = vp.filter(function(v){ return v.kind==="hill"; });
+    var top = vp.slice().sort(function(a,b){ return b.built.km2 - a.built.km2; })[0];
+    var lo = Math.round(Math.min.apply(null,hills.map(lost))*100), hi = Math.round(Math.max.apply(null,hills.map(lost))*100);
+    $("dek").innerHTML = "Eleven vantage points, two versions of London. Ray by ray, this map asks which parts of a "+M.domain_km2.toLocaleString()+" km² stretch of the city each one can actually see: first with only the <strong>bare earth</strong>, then with <strong>every roof and treetop in the way</strong>. The hills that give London its famous views lose "+lo+"–"+hi+"% of their reach to the built city, while "+top.name+", standing above the roofline, still sees "+Math.round(top.built.km2/M.domain_km2*100)+"% of the whole study area. <span class=\"swatch\" style=\"background:var(--seen)\"></span>Pick a viewpoint, shift-click to combine several, and hover any spot to see who can see it.";
+  }
+})();
+</script>

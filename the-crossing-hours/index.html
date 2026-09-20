@@ -1,5 +1,5 @@
 <meta charset="utf-8">
-<title>The Crossing Hours</title>
+<title>Twin Cities of the Border</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -15,22 +15,16 @@
     --ink-soft:#9FB6B0;
     --ink-faint:#5B6E69;
     --line:rgba(234,242,239,0.08);
-    --teal:#2FD9C4;
-    --teal-soft:rgba(47,217,196,0.16);
-    --gold:#FF6A3D;
-    --gold-soft:rgba(255,106,61,0.16);
-    --coral:#FF5C72;
-    --coral-soft:rgba(255,92,114,0.14);
     --usbound:#4C8DFF;
     --mxbound:#22C55E;
-    --shadow:0 30px 70px -30px rgba(0,0,0,0.85), 0 0 60px -20px rgba(47,217,196,0.15);
+    --shadow:0 30px 70px -30px rgba(0,0,0,0.85), 0 0 60px -20px rgba(76,141,255,0.15);
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
   body{
     background:
-      radial-gradient(ellipse 900px 500px at 10% -8%, rgba(47,217,196,0.10), transparent 60%),
-      radial-gradient(ellipse 900px 550px at 95% 0%, rgba(255,106,61,0.08), transparent 60%),
+      radial-gradient(ellipse 900px 500px at 10% -8%, rgba(76,141,255,0.10), transparent 60%),
+      radial-gradient(ellipse 900px 550px at 95% 0%, rgba(34,197,94,0.08), transparent 60%),
       var(--bg);
     color:var(--ink);
     font-family:"Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
@@ -46,9 +40,9 @@
   .eyebrow{
     font-family:"IBM Plex Mono", ui-monospace, monospace;
     font-size:12px; letter-spacing:0.18em; text-transform:uppercase;
-    color:var(--teal); margin:0 0 10px;
+    color:var(--usbound); margin:0 0 10px;
   }
-  .eyebrow::before{ content:"◆ "; color:var(--gold); }
+  .eyebrow::before{ content:"◆ "; color:var(--mxbound); }
   h1{
     font-family:"Space Grotesk", ui-sans-serif, system-ui, sans-serif;
     font-weight:700;
@@ -91,7 +85,7 @@
   .setup-banner .box{ max-width:480px; }
   .setup-banner h3{ font-family:"Space Grotesk"; font-size:18px; margin:0 0 10px; color:var(--ink); }
   .setup-banner p{ font-size:13px; color:var(--ink-soft); margin:0 0 8px; }
-  .setup-banner code{ background:rgba(255,255,255,0.08); padding:2px 6px; border-radius:5px; font-family:"IBM Plex Mono"; font-size:12px; color:var(--gold); }
+  .setup-banner code{ background:rgba(255,255,255,0.08); padding:2px 6px; border-radius:5px; font-family:"IBM Plex Mono"; font-size:12px; color:var(--usbound); }
 
   .chip{
     position:absolute;
@@ -107,18 +101,11 @@
   .chip-title .name{ font-family:"Space Grotesk"; font-weight:700; font-size:14px; letter-spacing:0.02em; }
   .chip-title .sub{ font-family:"IBM Plex Mono"; font-size:10.5px; color:var(--ink-faint); letter-spacing:0.08em; text-transform:uppercase; margin-top:3px; }
 
-  .chip-clock{ top:14px; right:14px; text-align:right; min-width:150px; }
-  .chip-clock .time{ font-family:"IBM Plex Mono"; font-size:24px; font-weight:600; letter-spacing:0.02em; color:var(--ink); }
-  .chip-clock .time span{ font-size:13px; color:var(--ink-faint); margin-left:3px;}
-  .chip-clock .period{ font-family:"IBM Plex Mono"; font-size:10.5px; letter-spacing:0.1em; text-transform:uppercase; margin-top:2px; }
-  .chip-clock .period.day{ color:var(--gold); }
-  .chip-clock .period.night{ color:var(--teal); }
-
-  .chip-legend{ bottom:14px; left:14px; min-width:206px; }
+  .chip-legend{ top:14px; right:14px; min-width:220px; }
   .chip-legend h4{ margin:0 0 8px; font-family:"IBM Plex Mono"; font-size:10.5px; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-faint); }
   .leg-row{ display:flex; align-items:center; gap:8px; font-size:12px; color:var(--ink-soft); margin:5px 0; }
   .leg-swatch{ width:10px; height:10px; border-radius:50%; flex:none; }
-  .leg-ring{ width:12px; height:12px; border-radius:50%; border:1.5px dashed var(--ink-faint); flex:none; }
+  .leg-split{ width:10px; height:10px; border-radius:50%; flex:none; background:conic-gradient(var(--usbound) 0% 55%, var(--mxbound) 55% 100%); }
 
   .tooltip{
     position:absolute; pointer-events:none; z-index:20;
@@ -130,7 +117,6 @@
   }
   .tooltip.show{ opacity:1; }
   .tooltip b{ color:var(--ink); font-family:"Space Grotesk"; font-size:13px; }
-  .tooltip .tt-tag{ font-family:"IBM Plex Mono"; font-size:10px; letter-spacing:0.06em; text-transform:uppercase; }
 
   /* ---- side panel ---- */
   aside.panel{ display:flex; flex-direction:column; gap:14px; }
@@ -145,59 +131,17 @@
     letter-spacing:0.14em; text-transform:uppercase; color:var(--ink-faint);
   }
 
-  .transport{ display:flex; align-items:center; gap:10px; }
-  .playbtn{
-    width:36px; height:36px; border-radius:50%; flex:none;
-    background:var(--teal-soft); border:1px solid rgba(47,217,196,0.4);
-    color:var(--teal); cursor:pointer; display:flex; align-items:center; justify-content:center;
-    font-size:14px;
-  }
-  .playbtn:hover{ background:rgba(47,217,196,0.28); }
-  .speedrow{ display:flex; gap:6px; }
-  .speedbtn{
-    font-family:"IBM Plex Mono"; font-size:11px; padding:5px 8px; border-radius:7px;
-    background:transparent; border:1px solid var(--panel-border); color:var(--ink-faint); cursor:pointer;
-  }
-  .speedbtn.active{ color:var(--gold); border-color:rgba(255,106,61,0.5); background:var(--gold-soft); }
-
-  input[type=range]{
-    -webkit-appearance:none; width:100%; height:6px; border-radius:4px; margin:12px 0 4px;
-    background:linear-gradient(90deg,
-      rgba(47,217,196,0.10) 0%, rgba(47,217,196,0.10) 29%,
-      rgba(255,106,61,0.32) 29%, rgba(255,106,61,0.32) 42%,
-      rgba(47,217,196,0.10) 42%, rgba(47,217,196,0.10) 66%,
-      rgba(255,92,114,0.30) 66%, rgba(255,92,114,0.30) 79%,
-      rgba(47,217,196,0.10) 79%, rgba(47,217,196,0.10) 100%);
-    outline:none; cursor:pointer;
-  }
-  input[type=range]::-webkit-slider-thumb{
-    -webkit-appearance:none; width:14px; height:14px; border-radius:50%;
-    background:var(--ink); border:2px solid var(--gold); cursor:pointer;
-    box-shadow:0 0 10px rgba(255,106,61,0.7);
-  }
-  .ticks{ display:flex; justify-content:space-between; font-family:"IBM Plex Mono"; font-size:9.5px; color:var(--ink-faint); }
-
-  .stat{ margin:10px 0; }
-  .stat-top{ display:flex; justify-content:space-between; align-items:baseline; font-size:12.5px; margin-bottom:5px; }
-  .stat-top .lbl{ color:var(--ink-soft); }
-  .stat-top .val{ font-family:"IBM Plex Mono"; font-weight:600; color:var(--ink); }
-  .bar{ height:6px; border-radius:4px; background:rgba(255,255,255,0.06); overflow:hidden; }
-  .bar > i{ display:block; height:100%; border-radius:4px; transition:width 220ms linear; }
-  .bar.teal > i{ background:var(--teal); box-shadow:0 0 8px rgba(47,217,196,0.6); }
-  .bar.gold > i{ background:var(--gold); box-shadow:0 0 8px rgba(255,106,61,0.6); }
-  .bar.ink > i{ background:var(--ink-soft); }
-
-  .rank{ max-height:392px; overflow-y:auto; padding-right:2px; }
+  .rank{ max-height:560px; overflow-y:auto; padding-right:2px; }
   .rank::-webkit-scrollbar{ width:6px; }
   .rank::-webkit-scrollbar-thumb{ background:rgba(255,255,255,0.12); border-radius:4px; }
   .rank-row{ display:flex; align-items:center; gap:9px; padding:6px 4px; border-radius:8px; cursor:pointer; }
   .rank-row:hover, .rank-row.hl{ background:rgba(255,255,255,0.05); }
-  .rank-dot{ width:8px; height:8px; border-radius:50%; flex:none; }
+  .rank-dot{ width:10px; height:10px; border-radius:50%; flex:none; }
   .rank-name{ flex:1; min-width:0; }
   .rank-name .n{ font-size:12.5px; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .rank-name .s{ font-size:10.5px; color:var(--ink-faint); }
   .rank-bar{ width:56px; height:5px; border-radius:3px; background:rgba(255,255,255,0.06); overflow:hidden; flex:none; }
-  .rank-bar > i{ display:block; height:100%; border-radius:3px; }
+  .rank-bar > i{ display:block; height:100%; border-radius:3px; background:linear-gradient(90deg, var(--usbound), var(--mxbound)); }
 
   footer.note{
     margin-top:clamp(22px,4vw,34px); padding-top:16px; border-top:1px solid var(--line);
@@ -206,27 +150,21 @@
   footer.note a{ color:var(--ink-soft); }
   footer.note p{ margin:0 0 8px; }
 
-  /* HTML marker pieces (placed via mapboxgl.Marker) */
-  .m-halo{ width:34px; height:34px; border-radius:50%; pointer-events:none; opacity:0.16; }
-  .m-core{ border-radius:50%; cursor:pointer; transform-box:fill-box; }
-  .m-core.commuter{ background:var(--teal); }
-  .m-core.commercial{ background:var(--gold); }
-  .m-core.closed{ background:var(--coral); }
-  @keyframes pulse{ 0%,100%{ opacity:0.6; transform:scale(0.92);} 50%{ opacity:1; transform:scale(1.16);} }
-  .m-core.pulse{ animation:pulse 2.6s ease-in-out infinite; }
-  .m-ring{ border-radius:50%; border:1.5px dashed; pointer-events:none; }
+  /* City labels (placed via mapboxgl.Marker) — the cities themselves are real
+     geographic polygons on the map (see buildCityPolygons), not HTML markers,
+     so there is nothing here for Mapbox to reposition/animate on load. */
   .m-pill{
     font-family:"IBM Plex Mono"; font-size:9.5px; letter-spacing:0.04em; color:var(--ink);
-    background:rgba(9,13,15,0.85); border-radius:9px; padding:4px 8px; white-space:nowrap;
-    pointer-events:none;
+    background:rgba(9,13,15,0.85); border:1px solid var(--panel-border); border-radius:9px; padding:4px 8px; white-space:nowrap;
+    cursor:pointer;
   }
 </style>
 
 <div class="wrap">
   <header class="hero">
-    <p class="eyebrow">US–Mexico Border · 24-Hour Flow Model</p>
-    <h1>The Crossing Hours</h1>
-    <p class="dek">Nineteen real US–Mexico land crossings, each its own official CBP port of entry in federal crossing data — including the two metros where CBP tracks bridges separately, El Paso vs. Ysleta and Calexico vs. Calexico East. Marker size and color reflect each port's real 2024 crossing volume<sup>1</sup>: <span class="swatch" style="background:var(--teal)"></span><strong>teal</strong> ports run heavier on personal vehicles and pedestrians, <span class="swatch" style="background:var(--gold)"></span><strong>orange</strong> ports run heavier on commercial trucking. Every dot stands for roughly <strong>400 modeled crossings</strong> and follows the real highway network between two interior cities; <span class="swatch" style="background:var(--usbound)"></span><strong>blue</strong> dots are northbound, entering the US, <span class="swatch" style="background:var(--mxbound)"></span><strong>green</strong> dots are southbound, entering Mexico. Watch the tide turn with the morning and evening rush, and the smaller ports go quiet overnight. Click a port to fly to its real road network.</p>
+    <p class="eyebrow">US–Mexico Border · Sister Cities</p>
+    <h1>Twin Cities of the Border</h1>
+    <p class="dek">Fifteen sister-city pairs along the US–Mexico border — the actual twin communities that grew up face-to-face across the line. Every city is drawn as its own real municipal boundary<sup>1</sup>, <span class="swatch" style="background:var(--usbound)"></span><strong>blue</strong> for the US side and <span class="swatch" style="background:var(--mxbound)"></span><strong>green</strong> for the Mexican side — the actual outline of the city, not a stand-in shape — so San Diego and Tijuana's real footprints visibly overlap, while Columbus and Puerto Palomas barely touch as two tiny towns. In-person cross-border commuting is overwhelmingly local, not long-distance, so each Mexican city's paired US twin shown here also doubles as its most likely destination for anyone who lives in Mexico and works in the US. Click a city to fly in and see the real road connecting the pair.</p>
   </header>
 
   <div class="layout">
@@ -236,72 +174,33 @@
         <div class="box">
           <h3>Add a Mapbox token to see the map</h3>
           <p>This page reads a token from <code>.env</code> next to it (never hardcoded in the HTML). Open <code>.env</code> in this project folder, replace the placeholder with your public token from <code>account.mapbox.com/access-tokens</code> (starts with <code>pk.</code>), save, and reload. If a token is already there, this is usually a network hiccup or the token/style being rejected — check the detail below.</p>
-          <p id="setupDetail" style="color:var(--coral)"></p>
+          <p id="setupDetail" style="color:var(--mxbound)"></p>
         </div>
       </div>
       <div class="chip chip-title">
-        <div class="name">THE CROSSING HOURS</div>
-        <div class="sub">Border flow · live model</div>
-      </div>
-      <div class="chip chip-clock">
-        <div class="time" id="clockTime">07:30<span>hrs</span></div>
-        <div class="period" id="clockPeriod">Morning Rush</div>
+        <div class="name">TWIN CITIES OF THE BORDER</div>
+        <div class="sub">Sister-city population map</div>
       </div>
       <div class="chip chip-legend">
         <h4>Legend</h4>
-        <div class="leg-row"><span class="leg-swatch" style="background:var(--teal)"></span>Commuter-dominant port</div>
-        <div class="leg-row"><span class="leg-swatch" style="background:var(--gold)"></span>Commercial/freight-dominant port</div>
-        <div class="leg-row"><span class="leg-ring"></span>High-volume port (top tier)</div>
-        <div class="leg-row"><span class="leg-swatch" style="background:var(--coral)"></span>Closed this hour</div>
-        <div class="leg-row"><span class="leg-swatch" style="background:var(--usbound)"></span>Northbound dot (entering US)</div>
-        <div class="leg-row"><span class="leg-swatch" style="background:var(--mxbound)"></span>Southbound dot (entering Mexico)</div>
-        <div class="leg-row"><span class="leg-swatch" style="background:var(--ink-soft);width:6px;height:6px"></span>1 dot ≈ 400 crossings</div>
+        <div class="leg-row"><span class="leg-swatch" style="background:var(--usbound)"></span>US city (real municipal boundary)</div>
+        <div class="leg-row"><span class="leg-swatch" style="background:var(--mxbound)"></span>Mexican city (real municipal boundary)</div>
+        <div class="leg-row" style="color:var(--ink-faint)">Shapes are the real outlines — overlap = integration</div>
       </div>
       <div class="tooltip" id="tooltip"></div>
     </div>
 
     <aside class="panel">
       <div class="block">
-        <h3>Playback</h3>
-        <div class="transport">
-          <button class="playbtn" id="playBtn">❚❚</button>
-          <div class="speedrow">
-            <button class="speedbtn" data-speed="0.5">0.5×</button>
-            <button class="speedbtn active" data-speed="1">1×</button>
-            <button class="speedbtn" data-speed="2">2×</button>
-            <button class="speedbtn" data-speed="4">4×</button>
-          </div>
-        </div>
-        <input type="range" id="scrubber" min="0" max="1439" value="450">
-        <div class="ticks"><span>12a</span><span>3</span><span>6</span><span>9</span><span>12p</span><span>15</span><span>18</span><span>21</span><span>12a</span></div>
-      </div>
-
-      <div class="block">
-        <h3>This hour, southern border</h3>
-        <div class="stat">
-          <div class="stat-top"><span class="lbl">Northbound flow</span><span class="val" id="nbVal">—</span></div>
-          <div class="bar teal"><i id="nbBar" style="width:0%"></i></div>
-        </div>
-        <div class="stat">
-          <div class="stat-top"><span class="lbl">Southbound flow</span><span class="val" id="sbVal">—</span></div>
-          <div class="bar gold"><i id="sbBar" style="width:0%"></i></div>
-        </div>
-        <div class="stat">
-          <div class="stat-top"><span class="lbl">Travelers on map</span><span class="val" id="activeVal">—</span></div>
-          <div class="bar ink"><i id="activeBar" style="width:0%"></i></div>
-        </div>
-      </div>
-
-      <div class="block">
-        <h3>Ports, by real 2024 volume</h3>
+        <h3>Twin cities, by combined population</h3>
         <div class="rank" id="rankList"></div>
       </div>
     </aside>
   </div>
 
   <footer class="note">
-    <p><sup>1</sup> Every port here is a real CBP land border crossing with its own record in the Bureau of Transportation Statistics' Border Crossing/Entry Data, queried directly from BTS's public dataset for calendar-year 2024: Personal Vehicle Passengers + Pedestrians (each port's "commuter" volume) and Trucks (its "commercial" volume). Where CBP itself reports a metro's bridges as separate ports — El Paso vs. Ysleta, and Calexico vs. Calexico East — they're kept separate here rather than merged into one node. A port is classified commercial-dominant when trucks make up at least 3.5% of its 2024 total; that includes Laredo, whose 7.7 million trucks in 2024 alone make it the single busiest commercial crossing on the border. Ports under roughly 15 million total 2024 crossings are modeled with reduced overnight hours; larger ports run around the clock in the model. Marker size scales with each port's real total 2024 volume. The road each dot follows is a real driving route from the Mapbox Directions API between the interior city on each side (e.g. Laredo↔San Antonio, Laredo↔Monterrey) — it follows the actual highway network, not a straight line; where a route request fails, that one port falls back to a straight line between the same two real endpoints. Hour-by-hour flow shapes, the north/south commute skew, and the fixed "1 dot ≈ 400 crossings" value remain a modeled simulation — CBP doesn't publish hour-level crossing counts — but every port's relative size, category, and total volume are real, sourced 2024 figures, not estimates.</p>
-    <p>Sources: <a href="https://data.bts.gov/d/keg4-3bc2" target="_blank" rel="noopener">Bureau of Transportation Statistics, Border Crossing/Entry Data (Socrata dataset, queried directly for this piece)</a> · <a href="https://www.bts.gov/newsroom/border-crossing-data-annual-release-2023-2024" target="_blank" rel="noopener">BTS, Border Crossing Data Annual Release 2023–2024</a></p>
+    <p><sup>1</sup> Every city's shape is its real administrative boundary, pulled from OpenStreetMap via the Overpass API: US cities are the official city boundary (admin_level 8); Mexican cities are the municipio boundary (admin_level 6, Mexico's closest equivalent to a US city+county unit — the same unit the population figures below use). Each boundary is simplified for file size (Douglas-Peucker, to roughly 20-90 points) and only its largest ring is kept, dropping small holes or exclaves. All thirty cities in this map resolved to a real OSM boundary; a population-scaled circle (radius √population/100 km) exists in the code only as a defensive fallback for the rare place OSM has no boundary relation for, and isn't currently used anywhere on the map. One matching hazard worth naming: OpenStreetMap tags US counties at the same admin_level (6) as Mexican municipios, so an early pass of this fetch briefly (and wrongly) matched four Mexican cities to their nearest US county across the line — Ciudad Juárez to El Paso County, for instance. Every match was re-verified against the relation's own tags and refetched with US entities explicitly excluded, so what's shown here are the real Mexican municipios. Population figures mix sourcing by necessity: San Diego, El Paso, McAllen, Brownsville and Laredo use U.S. Census Bureau metropolitan-statistical-area estimates, since those metros extend well past the border-adjacent core; smaller US border towns use city-proper population. Tijuana, Ciudad Juárez, Mexicali, Nuevo Laredo, Reynosa and Matamoros are themselves large, border-oriented cities, so metro-area estimates apply directly; smaller Mexican border towns use municipality population. The smallest pairs — Columbus–Puerto Palomas, Presidio–Ojinaga, Rio Grande City–Camargo, Progreso–Nuevo Progreso — rely on more approximate population figures where precise recent counts are harder to source; treat those as illustrative, not precise. There is no publicly published dataset of cross-border commute flows at the city-pair level — real academic estimates exist only patchily, mainly for San Diego–Tijuana, and vary by study and definition — so the "most likely US work city" claim reflects the well-documented reality in border-studies research that in-person cross-border commuting is overwhelmingly local, rather than a specific measured percentage. The road connecting each pair is a real driving route from the Mapbox Directions API, not a straight line.</p>
+    <p>Sources: <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors, ODbL 1.0 (city boundaries, via Overpass API)</a> · <a href="https://www.census.gov/programs-surveys/popest.html" target="_blank" rel="noopener">U.S. Census Bureau, Population and Housing Unit Estimates</a> · <a href="https://www.macrotrends.net/global-metrics/cities/21871/tijuana/population" target="_blank" rel="noopener">Macrotrends, Mexico metro-area population series (UN-based)</a></p>
   </footer>
 </div>
 
@@ -309,112 +208,133 @@
 (function(){
   "use strict";
 
-  /* ---------------- real crossing + anchor data (lon,lat) ---------------- */
-  /* commuterM = Personal Vehicle Passengers + Pedestrians, truckM = Trucks,
-     both in millions, both real calendar-year-2024 totals pulled directly from
-     BTS's Border Crossing/Entry Data (data.bts.gov, dataset keg4-3bc2) — not
-     estimates. cat/closes/sizeFactor are DERIVED below from these real numbers
-     by an explicit, disclosed rule rather than hand-picked per port. */
-  var CROSSINGS = [
-    {id:"sanysidro",    us:"San Ysidro, CA",      mx:"Tijuana, B.C.",           pt:[-117.0297,32.5422], usA:[-117.1611,32.7157,"San Diego"], mxA:[-117.0382,32.5283,"Tijuana"],       commuterM:82.81, truckM:0},
-    {id:"otaymesa",     us:"Otay Mesa, CA",       mx:"Mesa de Otay, B.C.",      pt:[-116.9358,32.5678], usA:[-117.1611,32.7157,"San Diego"], mxA:[-117.0382,32.5283,"Tijuana"],       commuterM:34.26, truckM:2.63},
-    {id:"calexico",     us:"Calexico, CA",        mx:"Mexicali, B.C.",          pt:[-115.4989,32.6789], usA:[-115.5631,32.7920,"El Centro"], mxA:[-115.4523,32.6245,"Mexicali"],      commuterM:30.88, truckM:0},
-    {id:"calexicoeast", us:"Calexico East, CA",   mx:"Mexicali (East), B.C.",   pt:[-115.3891,32.6650], usA:[-115.5631,32.7920,"El Centro"], mxA:[-115.4523,32.6245,"Mexicali"],      commuterM:13.95, truckM:1.16},
-    {id:"sanluis",      us:"San Luis, AZ",        mx:"San Luis Río Colorado, Son.", pt:[-114.7719,32.4859], usA:[-114.6277,32.6927,"Yuma"], mxA:[-114.7833,32.4551,"San Luis Río Colorado"], commuterM:21.69, truckM:0.12},
-    {id:"nogales",      us:"Nogales, AZ",         mx:"Nogales, Son.",           pt:[-110.9385,31.3398], usA:[-110.9747,32.2226,"Tucson"],    mxA:[-111.1197,30.5411,"Santa Ana"],     commuterM:26.77, truckM:1.07},
-    {id:"douglas",      us:"Douglas, AZ",         mx:"Agua Prieta, Son.",       pt:[-109.5453,31.3437], usA:[-109.9284,31.4481,"Bisbee"],    mxA:[-109.5453,31.3286,"Agua Prieta"],   commuterM:9.35,  truckM:0.07},
-    {id:"columbus",     us:"Columbus, NM",        mx:"Puerto Palomas, Chih.",   pt:[-107.6428,31.8267], usA:[-107.7586,32.2687,"Deming"],    mxA:[-107.6333,31.7833,"Puerto Palomas"], commuterM:2.92,  truckM:0.04},
-    {id:"santateresa",  us:"Santa Teresa, NM",    mx:"San Jerónimo, Chih.",     pt:[-106.6553,31.8225], usA:[-106.7637,32.3199,"Las Cruces"], mxA:[-106.6167,31.7333,"San Jerónimo"],  commuterM:4.08,  truckM:0.45},
-    {id:"elpaso",       us:"El Paso, TX",         mx:"Ciudad Juárez, Chih.",    pt:[-106.4869,31.7598], usA:[-106.7637,32.3199,"Las Cruces"], mxA:[-106.4245,31.6904,"Ciudad Juárez"], commuterM:46.04, truckM:0.40},
-    {id:"ysleta",       us:"Ysleta, TX",          mx:"Zaragoza, Chih.",         pt:[-106.3300,31.6944], usA:[-106.4850,31.7619,"El Paso"],   mxA:[-106.4245,31.6904,"Ciudad Juárez"], commuterM:20.55, truckM:1.70},
-    {id:"presidio",     us:"Presidio, TX",        mx:"Ojinaga, Chih.",          pt:[-104.3736,29.5608], usA:[-104.0227,30.3095,"Marfa"],     mxA:[-104.4092,29.5647,"Ojinaga"],       commuterM:4.18,  truckM:0.03},
-    {id:"delrio",       us:"Del Rio, TX",         mx:"Ciudad Acuña, Coah.",     pt:[-100.8961,29.3630], usA:[-99.7862,29.2097,"Uvalde"],     mxA:[-100.9420,29.3231,"Ciudad Acuña"],  commuterM:8.96,  truckM:0.22},
-    {id:"eaglepass",    us:"Eagle Pass, TX",      mx:"Piedras Negras, Coah.",   pt:[-100.4995,28.7091], usA:[-99.7862,29.2097,"Uvalde"],     mxA:[-100.5229,28.6994,"Piedras Negras"], commuterM:17.55, truckM:0.80},
-    {id:"laredo",       us:"Laredo, TX",          mx:"Nuevo Laredo, Tamps.",    pt:[-99.5075,27.5064],  usA:[-98.4936,29.4241,"San Antonio"], mxA:[-100.3161,25.6866,"Monterrey"],     commuterM:33.49, truckM:7.73},
-    {id:"riograndecity",us:"Rio Grande City, TX", mx:"Camargo, Tamps.",         pt:[-98.8203,26.3798],  usA:[-98.2300,26.2034,"McAllen"],    mxA:[-98.8064,26.2621,"Camargo"],        commuterM:2.83,  truckM:0.09},
-    {id:"hidalgo",      us:"Hidalgo–Pharr, TX",   mx:"Reynosa, Tamps.",         pt:[-98.2633,26.1004],  usA:[-98.2300,26.2034,"McAllen"],    mxA:[-100.3161,25.6866,"Monterrey"],     commuterM:29.85, truckM:1.85},
-    {id:"progreso",     us:"Progreso, TX",        mx:"Nuevo Progreso, Tamps.",  pt:[-97.9561,26.0909],  usA:[-97.9906,26.1596,"Weslaco"],    mxA:[-97.9522,26.0587,"Nuevo Progreso"], commuterM:10.28, truckM:0.17},
-    {id:"brownsville",  us:"Brownsville, TX",     mx:"Matamoros, Tamps.",       pt:[-97.4975,25.9018],  usA:[-97.6961,26.1906,"Harlingen"],  mxA:[-97.5044,25.8697,"Matamoros"],      commuterM:30.70, truckM:0.79}
+  /* ---------------- sister-city pair data (lon,lat) ---------------- */
+  /* usPop/mxPop are real population figures (see footer for sourcing by
+     pair size); pt is the actual border crossing point between the two
+     cities, usPt/mxPt are real city-center coordinates used to fetch a
+     real driving route between them. */
+  var PAIRS = [
+    {id:"sandiego_tijuana",      usCity:"San Diego, CA",       usPop:3269973, mxCity:"Tijuana, B.C.",           mxPop:2297000, pt:[-117.0297,32.5422], usPt:[-117.1611,32.7157], mxPt:[-117.0382,32.5283]},
+    {id:"calexico_mexicali",     usCity:"Calexico, CA",        usPop:40000,   mxCity:"Mexicali, B.C.",          mxPop:1215000, pt:[-115.4989,32.6789], usPt:[-115.4989,32.6789], mxPt:[-115.4523,32.6245]},
+    {id:"sanluis_sanluisrc",     usCity:"San Luis, AZ",        usPop:35257,   mxCity:"San Luis Río Colorado, Son.", mxPop:176685, pt:[-114.7719,32.4859], usPt:[-114.7719,32.4859], mxPt:[-114.7833,32.4551]},
+    {id:"nogales_nogales",       usCity:"Nogales, AZ",         usPop:19800,   mxCity:"Nogales, Son.",           mxPop:264782,  pt:[-110.9385,31.3398], usPt:[-110.9385,31.3398], mxPt:[-110.9559,31.3062]},
+    {id:"douglas_aguaprieta",    usCity:"Douglas, AZ",         usPop:16000,   mxCity:"Agua Prieta, Son.",       mxPop:91929,   pt:[-109.5453,31.3437], usPt:[-109.5453,31.3437], mxPt:[-109.5453,31.3286]},
+    {id:"columbus_palomas",      usCity:"Columbus, NM",        usPop:800,     mxCity:"Puerto Palomas, Chih.",   mxPop:5000,    pt:[-107.6428,31.8267], usPt:[-107.6428,31.8267], mxPt:[-107.6333,31.7833]},
+    {id:"elpaso_juarez",         usCity:"El Paso, TX",         usPop:868859,  mxCity:"Ciudad Juárez, Chih.",    mxPop:1626000, pt:[-106.4869,31.7598], usPt:[-106.4850,31.7619], mxPt:[-106.4245,31.6904]},
+    {id:"presidio_ojinaga",      usCity:"Presidio, TX",        usPop:3700,    mxCity:"Ojinaga, Chih.",          mxPop:24236,   pt:[-104.3736,29.5608], usPt:[-104.3736,29.5608], mxPt:[-104.4092,29.5647]},
+    {id:"delrio_acuna",          usCity:"Del Rio, TX",         usPop:34454,   mxCity:"Ciudad Acuña, Coah.",     mxPop:160225,  pt:[-100.8961,29.3630], usPt:[-100.8961,29.3630], mxPt:[-100.9420,29.3231]},
+    {id:"eaglepass_piedrasnegras",usCity:"Eagle Pass, TX",     usPop:28130,   mxCity:"Piedras Negras, Coah.",   mxPop:152806,  pt:[-100.4995,28.7091], usPt:[-100.4995,28.7091], mxPt:[-100.5229,28.6994]},
+    {id:"laredo_nuevolaredo",    usCity:"Laredo, TX",          usPop:262491,  mxCity:"Nuevo Laredo, Tamps.",    mxPop:481000,  pt:[-99.5075,27.5064],  usPt:[-99.5075,27.5064],  mxPt:[-99.5075,27.4864]},
+    {id:"riograndecity_camargo", usCity:"Rio Grande City, TX", usPop:14500,   mxCity:"Camargo, Tamps.",         mxPop:15000,   pt:[-98.8203,26.3798],  usPt:[-98.8203,26.3798],  mxPt:[-98.8064,26.2621]},
+    {id:"mcallen_reynosa",       usCity:"McAllen, TX",         usPop:870781,  mxCity:"Reynosa, Tamps.",         mxPop:983000,  pt:[-98.2633,26.1004],  usPt:[-98.2300,26.2034],  mxPt:[-98.2989,26.0806]},
+    {id:"progreso_nuevoprogreso",usCity:"Progreso, TX",        usPop:6000,    mxCity:"Nuevo Progreso, Tamps.",  mxPop:30000,   pt:[-97.9561,26.0909],  usPt:[-97.9561,26.0909],  mxPt:[-97.9522,26.0587]},
+    {id:"brownsville_matamoros", usCity:"Brownsville, TX",     usPop:423336,  mxCity:"Matamoros, Tamps.",       mxPop:604000,  pt:[-97.4975,25.9018],  usPt:[-97.4975,25.9018],  mxPt:[-97.5044,25.8697]}
   ];
 
-  /* ---------------- geo helpers (real great-circle math now that coords are real) ---------------- */
-  function toRad(d){ return d*Math.PI/180; }
-  function toDeg(r){ return r*180/Math.PI; }
-  function haversineKm(a,b){
-    var R=6371, dLat=toRad(b[1]-a[1]), dLon=toRad(b[0]-a[0]);
-    var lat1=toRad(a[1]), lat2=toRad(b[1]);
-    var h=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLon/2)*Math.sin(dLon/2);
-    return 2*R*Math.asin(Math.sqrt(h));
-  }
-  function bearingDeg(a,b){
-    var lat1=toRad(a[1]), lat2=toRad(b[1]), dLon=toRad(b[0]-a[0]);
-    var y=Math.sin(dLon)*Math.cos(lat2);
-    var x=Math.cos(lat1)*Math.sin(lat2)-Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLon);
-    return (toDeg(Math.atan2(y,x))+360)%360;
-  }
-  function destPoint(a,brngDeg,distKm){
-    var brng=toRad(brngDeg);
-    var dLat=(distKm/111.32)*Math.cos(brng);
-    var dLon=(distKm/(111.32*Math.cos(toRad(a[1]))))*Math.sin(brng);
-    return [a[0]+dLon, a[1]+dLat];
-  }
-  function lerp(a,b,f){ return [a[0]+(b[0]-a[0])*f, a[1]+(b[1]-a[1])*f]; }
-  function segLen(a,b){ return haversineKm(a,b); }
-  function pathLenKm(pts){ var s=0; for(var i=0;i<pts.length-1;i++) s+=segLen(pts[i],pts[i+1]); return s; }
-  // Precompute cumulative distance once per path so pointAtT (called every frame,
-  // per active traveler) doesn't re-sum haversine distances across the whole
-  // route each time — matters once real Directions routes (overview=full) can
-  // carry hundreds of points on the longer corridors (e.g. Laredo <-> San Antonio).
-  function buildPathIndex(pts){
-    var cum=[0];
-    for(var i=0;i<pts.length-1;i++){ cum.push(cum[i]+haversineKm(pts[i],pts[i+1])); }
-    return {pts:pts, cum:cum, total:cum[cum.length-1]};
-  }
-  function pointAtT(pathIdx,t){
-    var pts=pathIdx.pts, cum=pathIdx.cum, total=pathIdx.total;
-    if(total===0) return {pos:pts[0], bearing:0};
-    var target=Math.max(0,Math.min(1,t))*total;
-    var i=0;
-    while(i<cum.length-2 && cum[i+1]<target) i++;
-    var segStart=cum[i], segEnd=cum[i+1]===undefined?total:cum[i+1];
-    var L=segEnd-segStart;
-    var f=L===0?0:(target-segStart)/L;
-    return {pos:lerp(pts[i],pts[i+1],f), bearing:bearingDeg(pts[i],pts[i+1])};
-  }
-
-  /* per-crossing geometry: starts as a straight fallback path, upgraded to a real
-     driving route (following the actual highway network) once Directions resolves */
-  var LANE_OFFSET_KM = 0.12;
-  function offsetPath(c, sign){
-    // lane-offset copy of the path, perpendicular to local bearing, so NB/SB don't sit on one line
-    var out=[];
-    for(var i=0;i<c.path.length;i++){
-      var p=c.path[i];
-      var segBearing = i<c.path.length-1 ? bearingDeg(c.path[i],c.path[i+1]) : bearingDeg(c.path[i-1],c.path[i]);
-      out.push(destPoint(p, segBearing+90*sign, LANE_OFFSET_KM));
-    }
-    return out;
-  }
-  function finalizeCrossingGeometry(c){
-    c.lengthKm = pathLenKm(c.path);
-    c.pathN = buildPathIndex(offsetPath(c,1));
-    c.pathS = buildPathIndex(offsetPath(c,-1));
-  }
-  CROSSINGS.forEach(function(c){
-    c.totalM = c.commuterM + c.truckM;
-    // Derived, not hand-picked: a port is "commercial" when trucks are at
-    // least 3.5% of its real 2024 total; ports under ~15M total 2024
-    // crossings are modeled with reduced overnight hours.
-    c.cat = (c.truckM / c.totalM) >= 0.035 ? "commercial" : "commuter";
-    c.closes = c.totalM < 15;
-    c.sizeFactor = Math.pow(c.totalM, 0.55);
-    c.path = [c.mxA.slice(0,2), c.pt, c.usA.slice(0,2)]; // south -> north fallback, straight line
-    finalizeCrossingGeometry(c);
+  PAIRS.forEach(function(p){
+    p.combined = p.usPop + p.mxPop;
+    p.usShare = p.usPop / p.combined;
+    p.logVal = Math.log10(p.combined);
+    p.path = [p.mxPt, p.pt, p.usPt]; // straight-line fallback, upgraded by fetchRoute below
   });
-  var maxSizeFactor = Math.max.apply(null, CROSSINGS.map(function(c){ return c.sizeFactor; }));
+  var minLog = Math.min.apply(null, PAIRS.map(function(p){ return p.logVal; }));
+  var maxLog = Math.max.apply(null, PAIRS.map(function(p){ return p.logVal; }));
+  function sizeFor(p){ return (p.logVal - minLog) / (maxLog - minLog); }
+  var PAIRS_BY_ID = {};
+  PAIRS.forEach(function(p){ PAIRS_BY_ID[p.id] = p; });
 
-  function fetchRoute(c, token){
-    var coords = c.mxA[0]+","+c.mxA[1]+";"+c.usA[0]+","+c.usA[1];
+  /* Real city boundaries, fetched from OpenStreetMap (Overpass API) for this
+     piece: US cities are the official admin_level=8 city boundary, Mexican
+     cities are the admin_level=6 municipio (Mexico's closest equivalent to a
+     US city+county unit, and the same unit the population figures above use).
+     Each ring is simplified (Douglas-Peucker) to ~20-90 points and rounded to
+     ~6 significant digits. Only the largest ring per relation is kept (drops
+     small holes/exclaves) — see footer for the full methodology note. */
+  var BOUNDARIES = {
+    "sandiego_tijuana_us": [[-117.164,32.6933],[-117.133,32.676],[-117.119,32.5913],[-117.101,32.5765],[-117.101,32.5583],[-117.119,32.5582],[-117.119,32.5348],[-116.928,32.5511],[-116.936,32.5675],[-116.954,32.5676],[-116.952,32.5858],[-117,32.578],[-117.015,32.5911],[-117.084,32.5912],[-117.093,32.6046],[-117.119,32.6063],[-117.135,32.6786],[-117.065,32.6914],[-117.065,32.6624],[-117.021,32.6883],[-117.023,32.7185],[-117.049,32.7152],[-117.05,32.7334],[-117.064,32.7295],[-117.049,32.7436],[-117.053,32.7633],[-117.039,32.7689],[-117.051,32.7779],[-117.037,32.7915],[-117.006,32.7913],[-117.006,32.813],[-117.038,32.8341],[-117.005,32.8373],[-117.024,32.8458],[-116.984,32.8993],[-116.981,32.9419],[-117.067,32.9277],[-117.084,32.9619],[-117.067,32.9644],[-117.066,32.9933],[-117.023,33.0599],[-117.03,33.066],[-116.98,33.0696],[-116.951,33.0952],[-116.946,33.0801],[-116.914,33.0799],[-116.906,33.0914],[-116.964,33.0913],[-116.963,33.1057],[-117.007,33.1017],[-117.013,33.1142],[-117.045,33.0595],[-117.061,33.0683],[-117.091,33.058],[-117.118,33.0772],[-117.118,33.0562],[-117.133,33.0438],[-117.118,33.0438],[-117.114,33.0681],[-117.09,33.0493],[-117.1,32.998],[-117.125,33.0001],[-117.119,33.0221],[-117.152,33.0218],[-117.152,33.0074],[-117.17,33.0072],[-117.17,32.9702],[-117.2,32.974],[-117.197,32.985],[-117.256,32.9821],[-117.252,32.876],[-117.282,32.8326],[-117.256,32.7903],[-117.256,32.7163],[-117.31,32.7129],[-117.298,32.642],[-117.255,32.6155],[-117.2,32.6188],[-117.21,32.6387],[-117.174,32.6755],[-117.2,32.6754],[-117.193,32.6879],[-117.226,32.6959],[-117.194,32.7161],[-117.164,32.6933]],
+    "sandiego_tijuana_mx": [[-116.691,32.5711],[-117.124,32.5343],[-117.125,32.5096],[-117.123,32.4953],[-117.124,32.4916],[-117.123,32.4883],[-117.124,32.4853],[-117.122,32.4824],[-117.12,32.4761],[-117.12,32.4698],[-117.121,32.4691],[-117.118,32.4668],[-117.119,32.4655],[-117.113,32.4556],[-117.113,32.4505],[-117.109,32.4481],[-117.102,32.4385],[-117.096,32.4142],[-117.093,32.4138],[-117.092,32.4087],[-117.069,32.4123],[-117.067,32.4119],[-117.067,32.4168],[-117.063,32.4225],[-117.063,32.4263],[-117.053,32.4221],[-117.05,32.4159],[-117.047,32.4136],[-117.047,32.4157],[-117.042,32.4161],[-117.045,32.4123],[-117.038,32.4112],[-117.038,32.4145],[-117.025,32.4148],[-117.02,32.4165],[-117.02,32.4136],[-116.986,32.402],[-116.974,32.3748],[-116.963,32.3785],[-116.949,32.3659],[-116.949,32.3433],[-116.908,32.3343],[-116.949,32.3172],[-116.949,32.2984],[-116.822,32.2982],[-116.676,32.1852],[-116.534,32.2502],[-116.534,32.2602],[-116.532,32.2694],[-116.525,32.2753],[-116.524,32.2804],[-116.525,32.2829],[-116.529,32.2852],[-116.53,32.2882],[-116.55,32.2989],[-116.554,32.2953],[-116.572,32.2958],[-116.589,32.2977],[-116.592,32.3037],[-116.597,32.3029],[-116.603,32.3068],[-116.6,32.3174],[-116.609,32.322],[-116.599,32.3272],[-116.608,32.3419],[-116.611,32.3503],[-116.613,32.3528],[-116.615,32.36],[-116.615,32.3664],[-116.669,32.4112],[-116.668,32.4192],[-116.671,32.4257],[-116.67,32.4325],[-116.673,32.4472],[-116.676,32.4501],[-116.676,32.4552],[-116.682,32.4589],[-116.682,32.4632],[-116.685,32.467],[-116.686,32.4708],[-116.694,32.488],[-116.695,32.4934],[-116.694,32.4953],[-116.696,32.497],[-116.696,32.5023],[-116.699,32.5104],[-116.702,32.5125],[-116.696,32.5152],[-116.694,32.5208],[-116.691,32.5711]],
+    "calexico_mexicali_us": [[-115.534,32.6622],[-115.534,32.6631],[-115.529,32.6647],[-115.528,32.6719],[-115.525,32.6719],[-115.525,32.6747],[-115.521,32.6834],[-115.516,32.6857],[-115.508,32.6855],[-115.517,32.709],[-115.483,32.7086],[-115.483,32.7013],[-115.472,32.6993],[-115.465,32.6939],[-115.457,32.694],[-115.46,32.6907],[-115.456,32.6867],[-115.457,32.6867],[-115.457,32.6831],[-115.474,32.6832],[-115.474,32.6665],[-115.534,32.6622]],
+    "calexico_mexicali_mx": [[-114.817,32.4819],[-114.832,32.4814],[-114.849,32.4734],[-114.884,32.4923],[-114.9,32.4835],[-114.935,32.4819],[-114.939,32.4684],[-114.932,32.4397],[-114.948,32.4193],[-114.961,32.4117],[-114.954,32.3934],[-114.968,32.3907],[-114.962,32.3547],[-114.967,32.3388],[-115.036,32.2778],[-115.053,32.2452],[-114.975,32.178],[-114.99,32.1464],[-114.957,32.0386],[-114.967,31.9969],[-114.966,31.9215],[-114.947,31.9181],[-114.942,31.8907],[-114.911,31.8676],[-114.892,31.8726],[-114.874,31.865],[-114.843,31.8641],[-114.821,31.8234],[-114.806,31.8164],[-114.818,31.7592],[-114.817,31.7287],[-114.793,31.6834],[-114.784,31.6355],[-114.796,31.612],[-114.816,31.6096],[-114.822,31.5844],[-114.833,31.5785],[-114.858,31.5011],[-114.854,31.4597],[-114.858,31.4339],[-114.87,31.4229],[-114.868,31.4138],[-114.872,31.3993],[-114.88,31.3929],[-114.879,31.385],[-114.989,31.3629],[-115.031,31.448],[-115.054,31.4406],[-115.07,31.4772],[-115.075,31.5617],[-115.071,31.6775],[-115.056,31.7122],[-115.107,31.8049],[-115.174,31.8441],[-115.182,31.8572],[-115.187,31.8303],[-115.293,31.7911],[-115.312,31.8051],[-115.385,31.7732],[-115.537,31.6707],[-115.563,31.6471],[-115.605,31.6242],[-115.848,31.9901],[-115.874,32.3862],[-115.882,32.5933],[-115.879,32.6361],[-114.72,32.7187],[-114.746,32.6763],[-114.748,32.6639],[-114.762,32.6528],[-114.765,32.6431],[-114.786,32.6311],[-114.79,32.6212],[-114.803,32.6264],[-114.811,32.6223],[-114.811,32.6093],[-114.8,32.5868],[-114.81,32.575],[-114.813,32.5574],[-114.806,32.5526],[-114.791,32.5564],[-114.806,32.5375],[-114.803,32.5271],[-114.813,32.5234],[-114.808,32.507],[-114.818,32.4991],[-114.813,32.491],[-114.817,32.4819]],
+    "sanluis_sanluisrc_us": [[-114.752,32.4761],[-114.752,32.4819],[-114.761,32.4819],[-114.761,32.4787],[-114.814,32.494],[-114.814,32.4973],[-114.812,32.5001],[-114.813,32.5018],[-114.802,32.5132],[-114.804,32.5165],[-114.81,32.518],[-114.81,32.5214],[-114.812,32.5232],[-114.799,32.5232],[-114.798,32.5161],[-114.787,32.5161],[-114.787,32.5087],[-114.778,32.5088],[-114.778,32.516],[-114.77,32.5161],[-114.77,32.5234],[-114.786,32.5233],[-114.787,32.5306],[-114.783,32.5306],[-114.783,32.5343],[-114.77,32.5343],[-114.77,32.5307],[-114.761,32.5308],[-114.761,32.5234],[-114.757,32.5234],[-114.758,32.5198],[-114.753,32.5198],[-114.753,32.5162],[-114.748,32.5161],[-114.748,32.5204],[-114.745,32.5224],[-114.74,32.5221],[-114.74,32.52],[-114.723,32.5201],[-114.722,32.5084],[-114.735,32.5084],[-114.735,32.4947],[-114.722,32.4947],[-114.722,32.4875],[-114.72,32.4875],[-114.684,32.4877],[-114.683,32.5007],[-114.7,32.5007],[-114.7,32.5086],[-114.722,32.5084],[-114.722,32.5235],[-114.653,32.5236],[-114.649,32.52],[-114.648,32.495],[-114.631,32.495],[-114.631,32.4395],[-114.752,32.4761]],
+    "sanluis_sanluisrc_mx": [[-114.814,32.494],[-113.577,32.1152],[-113.607,32.0592],[-113.574,32.0576],[-113.543,32.0473],[-113.557,32.0203],[-113.59,32.0272],[-113.601,32.0039],[-113.61,32.0058],[-113.646,31.9036],[-113.715,31.8551],[-113.741,31.8521],[-113.688,31.7586],[-113.684,31.5834],[-113.736,31.6941],[-113.803,31.6808],[-113.849,31.991],[-113.998,31.7141],[-113.991,31.5308],[-114.006,31.5238],[-114.017,31.5325],[-114.02,31.53],[-114.023,31.4947],[-114.033,31.491],[-114.148,31.4942],[-114.199,31.5097],[-114.23,31.5294],[-114.279,31.5474],[-114.327,31.5832],[-114.328,31.5939],[-114.326,31.586],[-114.325,31.5912],[-114.334,31.5984],[-114.427,31.6435],[-114.448,31.649],[-114.45,31.6593],[-114.462,31.6688],[-114.493,31.6762],[-114.513,31.6915],[-114.506,31.69],[-114.509,31.6957],[-114.527,31.7021],[-114.554,31.7355],[-114.583,31.7522],[-114.619,31.7629],[-114.693,31.7631],[-114.723,31.7771],[-114.743,31.8052],[-114.76,31.8183],[-114.787,31.8231],[-114.806,31.8164],[-114.821,31.8234],[-114.843,31.8641],[-114.874,31.865],[-114.892,31.8726],[-114.911,31.8676],[-114.942,31.8907],[-114.947,31.9181],[-114.966,31.9215],[-114.967,31.9969],[-114.957,32.0386],[-114.99,32.1464],[-114.975,32.178],[-115.053,32.2452],[-115.036,32.2778],[-114.967,32.3388],[-114.962,32.3547],[-114.968,32.3907],[-114.954,32.3934],[-114.961,32.4117],[-114.948,32.4193],[-114.932,32.4397],[-114.939,32.4684],[-114.935,32.4818],[-114.907,32.4821],[-114.882,32.4922],[-114.848,32.4734],[-114.832,32.4814],[-114.816,32.4826],[-114.814,32.494]],
+    "nogales_nogales_us": [[-110.977,31.3919],[-110.962,31.392],[-110.951,31.392],[-110.943,31.3921],[-110.892,31.392],[-110.892,31.3331],[-110.914,31.333],[-110.932,31.3328],[-110.938,31.3328],[-110.94,31.3328],[-110.941,31.3327],[-110.941,31.3327],[-110.941,31.3327],[-110.942,31.3327],[-110.942,31.3327],[-110.942,31.3327],[-110.942,31.3327],[-110.942,31.3327],[-110.943,31.3327],[-110.943,31.3327],[-110.943,31.3327],[-110.945,31.3328],[-110.952,31.3327],[-110.954,31.3327],[-110.955,31.3327],[-110.965,31.3327],[-110.965,31.3327],[-110.965,31.3327],[-110.965,31.3327],[-110.965,31.3327],[-110.965,31.3327],[-110.965,31.3327],[-110.965,31.3327],[-110.965,31.3327],[-110.971,31.3326],[-110.977,31.3326],[-110.977,31.3326],[-110.977,31.3467],[-110.977,31.3503],[-110.977,31.3777],[-110.977,31.3777],[-110.977,31.3919]],
+    "nogales_nogales_mx": [[-111.161,31.3601],[-111.212,31.3765],[-111.214,31.3234],[-111.249,31.3229],[-111.285,31.314],[-111.295,31.3219],[-111.312,31.2989],[-111.317,31.2804],[-111.357,31.2795],[-111.353,31.2724],[-111.349,31.2586],[-111.344,31.2533],[-111.336,31.2568],[-111.336,31.2333],[-111.333,31.2333],[-111.318,31.1782],[-111.262,31.1908],[-111.254,31.156],[-111.265,31.1482],[-111.23,31.1106],[-111.243,31.0957],[-111.213,31.06],[-111.189,31.0706],[-111.174,31.0747],[-111.177,31.0829],[-111.173,31.0842],[-111.158,31.0594],[-111.138,31.0609],[-111.14,31.0669],[-111.138,31.0696],[-111.132,31.0709],[-111.124,31.0698],[-111.122,31.0666],[-111.121,31.0574],[-111.115,31.0543],[-111.116,31.0472],[-111.119,31.0411],[-111.127,31.0334],[-111.126,31.0278],[-111.123,31.0254],[-111.123,31.0233],[-111.125,31.0194],[-111.13,31.0184],[-111.132,31.0108],[-111.123,31.0108],[-111.122,31.0131],[-111.118,31.0127],[-111.116,31.011],[-111.087,31.0189],[-111.073,31.0161],[-111.067,31.02],[-111.069,31.0251],[-111.052,31.0275],[-111.004,31.0214],[-110.983,31.058],[-110.978,31.0445],[-110.967,31.038],[-110.862,31.0192],[-110.867,31.0497],[-110.857,31.0565],[-110.839,31.051],[-110.794,31.0591],[-110.777,31.0638],[-110.753,31.0354],[-110.735,31.0511],[-110.783,31.1741],[-110.651,31.2164],[-110.673,31.2614],[-110.676,31.2732],[-110.701,31.3222],[-110.701,31.3332],[-111.075,31.3324],[-111.161,31.3601]],
+    "douglas_aguaprieta_us": [[-109.545,31.3788],[-109.545,31.373],[-109.541,31.373],[-109.541,31.3766],[-109.543,31.3773],[-109.543,31.3788],[-109.528,31.3788],[-109.529,31.386],[-109.52,31.386],[-109.52,31.383],[-109.517,31.383],[-109.521,31.3774],[-109.545,31.3618],[-109.545,31.358],[-109.528,31.358],[-109.528,31.3534],[-109.519,31.3533],[-109.519,31.3569],[-109.517,31.3568],[-109.517,31.3534],[-109.512,31.3533],[-109.512,31.3497],[-109.495,31.3497],[-109.494,31.334],[-109.531,31.334],[-109.531,31.3353],[-109.532,31.3353],[-109.532,31.3383],[-109.537,31.3382],[-109.537,31.334],[-109.561,31.334],[-109.561,31.3358],[-109.563,31.3355],[-109.563,31.334],[-109.575,31.3352],[-109.576,31.3375],[-109.573,31.3385],[-109.573,31.3413],[-109.574,31.3406],[-109.574,31.3469],[-109.58,31.3454],[-109.58,31.3504],[-109.582,31.3508],[-109.582,31.3524],[-109.563,31.3505],[-109.568,31.3516],[-109.568,31.3532],[-109.563,31.3528],[-109.562,31.3543],[-109.562,31.3521],[-109.561,31.3516],[-109.561,31.3528],[-109.554,31.3535],[-109.554,31.3619],[-109.551,31.3619],[-109.551,31.3642],[-109.554,31.3641],[-109.554,31.3714],[-109.562,31.3716],[-109.562,31.3788],[-109.553,31.3787],[-109.551,31.3764],[-109.549,31.3764],[-109.549,31.3788],[-109.545,31.3788]],
+    "douglas_aguaprieta_mx": [[-108.756,31.3324],[-109.746,31.334],[-109.736,31.312],[-109.724,31.257],[-109.693,31.2757],[-109.663,31.1421],[-109.692,31.1291],[-109.684,31.0882],[-109.654,31.0956],[-109.638,31.0644],[-109.599,31.0691],[-109.561,31.0663],[-109.561,31.0517],[-109.539,31.0629],[-109.509,31.0498],[-109.507,31.0752],[-109.497,31.106],[-109.457,31.132],[-109.392,31.0923],[-109.39,31.0825],[-109.401,31.0332],[-109.399,31.0177],[-109.377,31.0138],[-109.401,30.8582],[-109.364,30.8412],[-109.354,30.7676],[-109.323,30.7139],[-109.327,30.7088],[-109.299,30.7111],[-109.313,30.7128],[-109.304,30.7286],[-109.308,30.7408],[-109.302,30.744],[-109.302,30.7359],[-109.295,30.7359],[-109.271,30.7851],[-109.254,30.8041],[-109.244,30.8046],[-109.239,30.8154],[-109.221,30.8237],[-109.203,30.8122],[-109.169,30.8135],[-109.152,30.8077],[-109.148,30.8155],[-109.139,30.8096],[-109.131,30.8138],[-109.124,30.8067],[-109.107,30.8057],[-109.103,30.8008],[-109.115,30.7907],[-109.102,30.7852],[-109.102,30.7263],[-109.067,30.7302],[-109.066,30.7981],[-109.054,30.7978],[-109.053,30.8884],[-108.931,30.8665],[-108.939,30.9076],[-108.802,30.9041],[-108.803,31.0048],[-108.684,31.006],[-108.684,31.0337],[-108.752,31.0338],[-108.73,31.0522],[-108.749,31.0689],[-108.768,31.0738],[-108.77,31.1026],[-108.833,31.1255],[-108.846,31.1356],[-108.835,31.1693],[-108.805,31.193],[-108.848,31.1951],[-108.861,31.2189],[-108.9,31.2025],[-108.906,31.2064],[-108.898,31.2252],[-108.88,31.2388],[-108.817,31.239],[-108.756,31.3324]],
+    "columbus_palomas_us": [[-107.64,31.7837],[-107.64,31.7914],[-107.636,31.7914],[-107.636,31.789],[-107.631,31.789],[-107.639,31.8212],[-107.642,31.8212],[-107.642,31.8253],[-107.646,31.8249],[-107.646,31.8266],[-107.65,31.8252],[-107.65,31.8284],[-107.655,31.8284],[-107.655,31.8358],[-107.659,31.8358],[-107.659,31.8383],[-107.663,31.8384],[-107.663,31.843],[-107.637,31.8428],[-107.637,31.8404],[-107.629,31.8402],[-107.629,31.8359],[-107.621,31.8359],[-107.621,31.8293],[-107.633,31.8287],[-107.633,31.8212],[-107.638,31.8212],[-107.629,31.7897],[-107.627,31.7858],[-107.621,31.7858],[-107.62,31.7837],[-107.64,31.7837]],
+    "columbus_palomas_mx": [[-108.209,31.7837],[-106.867,31.7838],[-106.863,31.7556],[-106.846,31.7414],[-106.831,31.6796],[-106.877,31.6224],[-106.8,31.6052],[-106.749,31.6034],[-106.75,31.5042],[-106.742,31.5033],[-106.75,31.4959],[-106.74,31.4793],[-106.709,31.4666],[-106.721,31.4547],[-106.689,31.432],[-106.742,31.4081],[-106.742,31.4003],[-106.848,31.4012],[-106.847,31.3718],[-106.952,31.3359],[-106.922,31.2369],[-106.882,31.2341],[-106.863,31.186],[-106.82,31.1407],[-106.827,31.1233],[-106.861,31.1459],[-106.895,31.1521],[-106.895,31.0854],[-107.045,31.0861],[-107.047,30.9541],[-107.074,30.9553],[-107.08,30.9121],[-107.092,30.9076],[-107.101,30.8865],[-107.086,30.872],[-107.099,30.8638],[-107.157,30.865],[-107.189,30.8011],[-107.205,30.8081],[-107.239,30.8052],[-107.263,30.7562],[-107.3,30.779],[-107.31,30.8121],[-107.324,30.8236],[-107.351,30.8172],[-107.351,30.8363],[-107.362,30.836],[-107.4,30.7584],[-107.526,30.7584],[-107.526,30.783],[-107.616,30.7196],[-107.635,30.7212],[-107.629,30.7645],[-107.682,30.7818],[-107.704,30.8059],[-107.695,30.8256],[-107.735,30.8281],[-107.766,30.8142],[-107.802,30.8593],[-107.929,30.8051],[-107.912,30.8447],[-107.984,30.8115],[-107.999,30.8568],[-107.972,30.8678],[-107.983,30.8788],[-107.979,30.8926],[-107.995,30.9281],[-108.01,30.9365],[-108.014,31.0383],[-108.112,31.0468],[-108.12,31.0904],[-108.098,31.1063],[-108.157,31.1709],[-108.173,31.1934],[-108.174,31.2126],[-108.209,31.2126],[-108.209,31.7837]],
+    "elpaso_juarez_us": [[-106.528,31.7839],[-106.51,31.7614],[-106.489,31.7482],[-106.473,31.7505],[-106.467,31.7596],[-106.452,31.7645],[-106.381,31.7321],[-106.372,31.7125],[-106.35,31.6967],[-106.334,31.6632],[-106.302,31.6223],[-106.292,31.6289],[-106.31,31.6524],[-106.31,31.6598],[-106.299,31.6649],[-106.282,31.6872],[-106.271,31.6903],[-106.279,31.6973],[-106.267,31.6974],[-106.265,31.7297],[-106.25,31.7275],[-106.25,31.7412],[-106.267,31.7406],[-106.267,31.7541],[-106.25,31.755],[-106.251,31.7693],[-106.234,31.7693],[-106.234,31.7621],[-106.216,31.762],[-106.216,31.7692],[-106.199,31.7692],[-106.199,31.7982],[-106.217,31.7982],[-106.217,31.809],[-106.212,31.8137],[-106.222,31.8122],[-106.224,31.803],[-106.224,31.812],[-106.224,31.8073],[-106.235,31.8095],[-106.241,31.8051],[-106.246,31.8091],[-106.247,31.8145],[-106.232,31.8114],[-106.234,31.8268],[-106.25,31.8251],[-106.251,31.7988],[-106.258,31.7983],[-106.259,31.8079],[-106.33,31.7986],[-106.331,31.8409],[-106.351,31.8393],[-106.378,31.8199],[-106.403,31.8195],[-106.403,31.8276],[-106.429,31.828],[-106.429,31.8356],[-106.323,32.0015],[-106.563,32.0007],[-106.563,31.9903],[-106.552,31.9904],[-106.552,31.9715],[-106.569,31.9699],[-106.572,31.9491],[-106.585,31.942],[-106.585,31.909],[-106.599,31.8986],[-106.597,31.886],[-106.631,31.8858],[-106.636,31.8663],[-106.615,31.8465],[-106.602,31.8443],[-106.603,31.8244],[-106.591,31.8239],[-106.577,31.8103],[-106.567,31.8133],[-106.547,31.8074],[-106.527,31.7904],[-106.528,31.7839]],
+    "elpaso_juarez_mx": [[-106.528,31.7839],[-106.51,31.7614],[-106.489,31.7482],[-106.473,31.7505],[-106.467,31.7596],[-106.452,31.7645],[-106.38,31.7311],[-106.372,31.7125],[-106.35,31.6967],[-106.334,31.6632],[-106.304,31.6239],[-106.281,31.5623],[-106.246,31.5417],[-106.237,31.5138],[-106.224,31.5002],[-106.22,31.4811],[-106.209,31.4685],[-106.181,31.4549],[-106.235,31.4102],[-106.26,31.4339],[-106.281,31.3712],[-106.27,31.3706],[-106.267,31.3227],[-106.255,31.3231],[-106.255,31.3176],[-106.266,31.3182],[-106.264,31.2731],[-106.28,31.272],[-106.28,31.254],[-106.272,31.2452],[-106.265,31.2546],[-106.264,31.1766],[-106.31,31.1537],[-106.367,31.1871],[-106.374,31.1547],[-106.397,31.159],[-106.391,31.1876],[-106.507,31.1873],[-106.501,31.1525],[-106.59,31.1514],[-106.607,31.1553],[-106.615,31.152],[-106.648,31.1729],[-106.659,31.1743],[-106.686,31.165],[-106.746,31.1603],[-106.746,31.1379],[-106.777,31.1251],[-106.821,31.12],[-106.827,31.1233],[-106.822,31.1456],[-106.836,31.1517],[-106.863,31.186],[-106.882,31.2341],[-106.922,31.2369],[-106.952,31.3359],[-106.847,31.3718],[-106.848,31.4012],[-106.742,31.4003],[-106.742,31.4081],[-106.705,31.4207],[-106.689,31.432],[-106.721,31.4547],[-106.709,31.4666],[-106.74,31.4793],[-106.75,31.4959],[-106.742,31.5033],[-106.75,31.5042],[-106.749,31.6034],[-106.8,31.6052],[-106.835,31.6176],[-106.877,31.6224],[-106.831,31.6796],[-106.836,31.6878],[-106.846,31.7414],[-106.858,31.7463],[-106.863,31.7556],[-106.861,31.7631],[-106.867,31.7838],[-106.528,31.7839]],
+    "presidio_ojinaga_us": [[-104.396,29.5636],[-104.394,29.5595],[-104.395,29.5563],[-104.389,29.5563],[-104.389,29.558],[-104.378,29.557],[-104.375,29.559],[-104.365,29.5588],[-104.366,29.5558],[-104.358,29.5558],[-104.358,29.5537],[-104.355,29.55],[-104.355,29.5486],[-104.349,29.5485],[-104.346,29.5468],[-104.34,29.5461],[-104.341,29.559],[-104.344,29.5589],[-104.344,29.5623],[-104.349,29.5623],[-104.349,29.559],[-104.358,29.5588],[-104.358,29.5716],[-104.376,29.5708],[-104.38,29.5679],[-104.387,29.5662],[-104.387,29.5636],[-104.396,29.5636]],
+    "presidio_ojinaga_mx": [[-104.685,28.7688],[-104.672,28.7353],[-104.617,28.7557],[-104.617,28.7265],[-104.516,28.7667],[-104.465,28.7532],[-104.418,28.6892],[-104.371,28.6849],[-104.42,28.6314],[-104.293,28.5835],[-104.243,28.635],[-104.219,28.7185],[-104.256,28.7166],[-104.242,28.7453],[-104.164,28.8269],[-104.175,28.9138],[-104.149,28.8875],[-104.119,28.9177],[-104.178,29.005],[-104.139,29.0099],[-104.14,29.067],[-104.176,29.0817],[-104.153,29.0941],[-104.247,29.1549],[-104.299,29.267],[-104.157,29.2606],[-104.119,29.295],[-103.979,29.2373],[-103.97,29.2967],[-104.165,29.393],[-104.214,29.4847],[-104.337,29.5197],[-104.513,29.6371],[-104.566,29.7714],[-104.68,29.9208],[-104.706,30.2349],[-104.859,30.3903],[-104.869,30.4726],[-105.026,30.5078],[-104.953,30.3829],[-104.876,30.381],[-104.939,30.2844],[-104.904,30.1732],[-104.877,30.1748],[-104.899,30.1373],[-104.863,30.0075],[-104.828,29.9951],[-104.885,29.9282],[-104.827,29.8835],[-104.843,29.7937],[-104.898,29.7659],[-104.797,29.7135],[-104.802,29.4928],[-104.691,29.3601],[-104.674,29.3869],[-104.543,29.295],[-104.6,29.2658],[-104.537,29.1941],[-104.613,29.1935],[-104.618,29.1403],[-104.767,29.0234],[-104.783,28.9641],[-104.819,28.9622],[-104.662,28.7765],[-104.685,28.7688]],
+    "delrio_acuna_us": [[-100.936,29.3804],[-100.929,29.3871],[-100.929,29.3917],[-100.928,29.3936],[-100.924,29.3952],[-100.926,29.3965],[-100.924,29.3986],[-100.929,29.3986],[-100.929,29.4025],[-100.927,29.4084],[-100.921,29.4119],[-100.921,29.4178],[-100.918,29.4174],[-100.919,29.4209],[-100.911,29.4216],[-100.913,29.4202],[-100.913,29.4169],[-100.911,29.413],[-100.906,29.4125],[-100.91,29.428],[-100.906,29.4284],[-100.903,29.4122],[-100.898,29.4113],[-100.9,29.3984],[-100.894,29.3974],[-100.892,29.4019],[-100.871,29.3992],[-100.866,29.3846],[-100.871,29.3801],[-100.877,29.3801],[-100.872,29.3747],[-100.87,29.3762],[-100.864,29.371],[-100.86,29.3709],[-100.86,29.3724],[-100.848,29.371],[-100.848,29.3747],[-100.847,29.3746],[-100.845,29.3743],[-100.847,29.3707],[-100.812,29.3698],[-100.812,29.3761],[-100.808,29.3747],[-100.809,29.3637],[-100.813,29.3629],[-100.824,29.3676],[-100.851,29.3667],[-100.862,29.3692],[-100.851,29.3623],[-100.851,29.3601],[-100.811,29.3629],[-100.811,29.351],[-100.805,29.351],[-100.802,29.3455],[-100.818,29.3252],[-100.859,29.3569],[-100.858,29.3587],[-100.861,29.3617],[-100.862,29.3675],[-100.869,29.3603],[-100.882,29.3515],[-100.882,29.3465],[-100.886,29.348],[-100.888,29.3455],[-100.887,29.3512],[-100.891,29.3512],[-100.894,29.3429],[-100.892,29.3414],[-100.896,29.3377],[-100.899,29.3399],[-100.902,29.3375],[-100.906,29.3408],[-100.903,29.3439],[-100.904,29.3455],[-100.899,29.3499],[-100.903,29.3494],[-100.915,29.3392],[-100.916,29.3334],[-100.927,29.3269],[-100.921,29.3333],[-100.923,29.3339],[-100.92,29.3362],[-100.92,29.3565],[-100.917,29.3584],[-100.916,29.3638],[-100.923,29.3657],[-100.927,29.3772],[-100.936,29.3804]],
+    "delrio_acuna_mx": [[-101.339,29.1829],[-101.043,29.1418],[-101.042,29.1602],[-101.005,29.1601],[-101.004,29.1887],[-100.952,29.1886],[-100.945,29.224],[-100.88,29.228],[-100.859,29.209],[-100.849,29.2392],[-100.886,29.3076],[-101.01,29.3687],[-101.06,29.4586],[-101.149,29.4754],[-101.177,29.516],[-101.257,29.5223],[-101.249,29.6234],[-101.28,29.6192],[-101.289,29.5721],[-101.307,29.5802],[-101.304,29.6531],[-101.361,29.6493],[-101.371,29.6988],[-101.416,29.7465],[-101.4,29.7704],[-101.448,29.7499],[-101.462,29.79],[-101.536,29.7581],[-101.545,29.8121],[-101.575,29.7698],[-101.645,29.7542],[-101.662,29.7711],[-101.805,29.7802],[-101.818,29.8117],[-101.824,29.7874],[-101.853,29.8079],[-101.929,29.7827],[-101.976,29.8159],[-101.988,29.7967],[-102.073,29.7864],[-102.143,29.8032],[-102.187,29.8485],[-102.223,29.8405],[-102.316,29.88],[-102.364,29.8456],[-102.388,29.7612],[-102.487,29.7866],[-102.518,29.7836],[-102.513,29.7655],[-102.548,29.7447],[-102.569,29.7715],[-102.631,29.7341],[-102.675,29.7439],[-102.694,29.6767],[-102.742,29.6331],[-102.74,29.5983],[-102.768,29.5952],[-102.771,29.5483],[-102.809,29.5229],[-102.801,29.4863],[-102.833,29.4105],[-102.813,29.3994],[-102.839,29.3589],[-102.884,29.3483],[-102.906,29.2616],[-102.642,29.1103],[-102.467,28.9701],[-102.405,29.0641],[-101.997,28.984],[-101.83,29.27],[-101.519,29.3718],[-101.462,29.2352],[-101.332,29.2776],[-101.339,29.1829]],
+    "eaglepass_piedrasnegras_us": [[-100.512,28.7066],[-100.508,28.7106],[-100.506,28.7173],[-100.507,28.7215],[-100.507,28.738],[-100.503,28.7407],[-100.501,28.7404],[-100.498,28.7433],[-100.496,28.7384],[-100.491,28.7392],[-100.481,28.7383],[-100.482,28.737],[-100.479,28.7335],[-100.479,28.7346],[-100.477,28.734],[-100.475,28.7359],[-100.472,28.733],[-100.473,28.7316],[-100.47,28.7317],[-100.47,28.7255],[-100.472,28.7255],[-100.472,28.7218],[-100.47,28.7218],[-100.467,28.7239],[-100.466,28.7261],[-100.46,28.7283],[-100.46,28.7322],[-100.443,28.7457],[-100.437,28.74],[-100.456,28.7254],[-100.457,28.7185],[-100.452,28.716],[-100.454,28.7098],[-100.45,28.7084],[-100.427,28.7089],[-100.427,28.7035],[-100.45,28.7035],[-100.454,28.6999],[-100.458,28.7027],[-100.458,28.705],[-100.459,28.7058],[-100.459,28.7074],[-100.464,28.7076],[-100.464,28.7064],[-100.462,28.7051],[-100.463,28.7039],[-100.461,28.7037],[-100.463,28.7018],[-100.463,28.6959],[-100.459,28.6929],[-100.462,28.6918],[-100.464,28.6925],[-100.466,28.6958],[-100.469,28.698],[-100.474,28.6981],[-100.473,28.6922],[-100.47,28.6889],[-100.473,28.6881],[-100.474,28.686],[-100.466,28.6806],[-100.464,28.6886],[-100.462,28.6887],[-100.46,28.6862],[-100.462,28.6851],[-100.46,28.6827],[-100.46,28.6804],[-100.454,28.6773],[-100.455,28.6754],[-100.447,28.669],[-100.454,28.6633],[-100.468,28.6758],[-100.465,28.6788],[-100.475,28.6863],[-100.477,28.6841],[-100.482,28.6898],[-100.49,28.6901],[-100.49,28.6917],[-100.507,28.6918],[-100.51,28.6951],[-100.512,28.7066]],
+    "eaglepass_piedrasnegras_mx": [[-100.616,28.9029],[-100.612,28.9005],[-100.607,28.9027],[-100.601,28.9013],[-100.604,28.89],[-100.603,28.8865],[-100.589,28.8874],[-100.59,28.8835],[-100.598,28.8803],[-100.599,28.875],[-100.597,28.873],[-100.59,28.8726],[-100.591,28.8632],[-100.573,28.8485],[-100.577,28.8353],[-100.574,28.8282],[-100.571,28.8259],[-100.561,28.8292],[-100.546,28.8254],[-100.546,28.8127],[-100.541,28.8079],[-100.536,28.806],[-100.533,28.8001],[-100.533,28.7895],[-100.538,28.7811],[-100.53,28.7701],[-100.534,28.7593],[-100.529,28.7557],[-100.521,28.7572],[-100.515,28.7518],[-100.515,28.7423],[-100.508,28.7407],[-100.507,28.7357],[-100.509,28.7294],[-100.507,28.7171],[-100.512,28.7066],[-100.51,28.691],[-100.5,28.662],[-100.496,28.6587],[-100.479,28.6555],[-100.474,28.6469],[-100.462,28.6411],[-100.454,28.6432],[-100.446,28.6419],[-100.449,28.617],[-100.448,28.61],[-100.46,28.6066],[-100.512,28.6356],[-100.548,28.6417],[-100.553,28.6418],[-100.557,28.6397],[-100.564,28.6411],[-100.564,28.6445],[-100.604,28.6515],[-100.614,28.6496],[-100.629,28.6543],[-100.634,28.6531],[-100.638,28.656],[-100.653,28.7487],[-100.677,28.7523],[-100.747,28.8462],[-100.766,28.8654],[-100.724,28.9112],[-100.687,28.9153],[-100.685,28.9248],[-100.702,28.929],[-100.705,28.9339],[-100.701,28.9381],[-100.671,28.9312],[-100.646,28.9402],[-100.639,28.928],[-100.63,28.9224],[-100.631,28.9167],[-100.641,28.9149],[-100.636,28.9106],[-100.633,28.9037],[-100.628,28.9031],[-100.625,28.9093],[-100.622,28.91],[-100.616,28.9073],[-100.616,28.9029]],
+    "laredo_nuevolaredo_us": [[-99.749,27.7031],[-99.7354,27.7173],[-99.7483,27.7444],[-99.7286,27.7132],[-99.6998,27.7272],[-99.7269,27.7109],[-99.7158,27.6963],[-99.6998,27.6885],[-99.6832,27.7081],[-99.6827,27.6956],[-99.6627,27.6876],[-99.6803,27.6794],[-99.6296,27.6633],[-99.635,27.655],[-99.6024,27.6577],[-99.6063,27.666],[-99.5814,27.6754],[-99.5648,27.6568],[-99.4936,27.6854],[-99.4747,27.7119],[-99.4484,27.7221],[-99.4567,27.6994],[-99.4793,27.6908],[-99.4566,27.6993],[-99.462,27.6852],[-99.4543,27.6999],[-99.4287,27.7021],[-99.4147,27.6832],[-99.4438,27.6721],[-99.4176,27.6652],[-99.4704,27.6623],[-99.486,27.6343],[-99.4848,27.6172],[-99.4759,27.6385],[-99.4444,27.6282],[-99.428,27.5938],[-99.4376,27.5873],[-99.4161,27.5755],[-99.4265,27.5552],[-99.4464,27.5499],[-99.4236,27.5313],[-99.4454,27.5027],[-99.4006,27.4971],[-99.3968,27.4859],[-99.3936,27.5002],[-99.3766,27.497],[-99.3907,27.4848],[-99.3543,27.4854],[-99.3543,27.498],[-99.3491,27.488],[-99.3312,27.4941],[-99.331,27.4842],[-99.404,27.4848],[-99.4023,27.4751],[-99.429,27.4747],[-99.4287,27.4585],[-99.4621,27.4735],[-99.4287,27.4581],[-99.4395,27.4376],[-99.4507,27.4426],[-99.4478,27.4106],[-99.4332,27.4014],[-99.476,27.3976],[-99.4607,27.367],[-99.5026,27.3665],[-99.4794,27.4837],[-99.5013,27.5001],[-99.5281,27.4982],[-99.5112,27.5652],[-99.5541,27.6278],[-99.5701,27.6314],[-99.5499,27.6405],[-99.5921,27.6353],[-99.583,27.6516],[-99.6182,27.6455],[-99.5857,27.6594],[-99.6203,27.6502],[-99.6761,27.66],[-99.6584,27.6652],[-99.726,27.7047],[-99.749,27.7031]],
+    "laredo_nuevolaredo_mx": [[-99.7281,27.6791],[-99.7213,27.6659],[-99.7054,27.6554],[-99.6992,27.6557],[-99.6964,27.6637],[-99.6903,27.669],[-99.6874,27.6619],[-99.6787,27.6588],[-99.6691,27.66],[-99.6639,27.6575],[-99.6581,27.6486],[-99.6665,27.6368],[-99.6561,27.6295],[-99.6488,27.6305],[-99.6382,27.6267],[-99.6283,27.6294],[-99.6228,27.6345],[-99.6274,27.6392],[-99.6245,27.6441],[-99.6206,27.6437],[-99.6162,27.6376],[-99.6034,27.6419],[-99.596,27.6397],[-99.5926,27.6352],[-99.5919,27.6279],[-99.5773,27.6185],[-99.577,27.6109],[-99.5835,27.6031],[-99.5784,27.6021],[-99.5613,27.6073],[-99.5548,27.6144],[-99.5406,27.6048],[-99.5293,27.5796],[-99.5156,27.5717],[-99.5118,27.5665],[-99.5114,27.5639],[-99.5151,27.5561],[-99.5192,27.5525],[-99.522,27.5438],[-99.5281,27.4982],[-99.5231,27.4965],[-99.502,27.5002],[-99.4932,27.4976],[-99.4823,27.4902],[-99.4787,27.4794],[-99.4821,27.476],[-99.4835,27.4667],[-99.4924,27.455],[-99.4954,27.4457],[-99.4959,27.4393],[-99.4876,27.4102],[-99.4929,27.3916],[-99.4921,27.3812],[-99.5033,27.3654],[-99.5074,27.3519],[-99.5042,27.3392],[-99.5178,27.3272],[-99.5245,27.324],[-99.5317,27.3239],[-99.5381,27.3168],[-99.5362,27.3121],[-99.5276,27.3047],[-99.5116,27.3041],[-99.5015,27.3062],[-99.4944,27.3036],[-99.4877,27.2948],[-99.4875,27.2905],[-99.4964,27.2713],[-99.6123,27.2783],[-99.6048,27.2892],[-99.6382,27.2918],[-99.6383,27.2879],[-99.7317,27.2944],[-99.7324,27.2877],[-99.7488,27.289],[-99.7586,27.3896],[-99.7604,27.437],[-99.9192,27.4915],[-99.9264,27.5492],[-99.7281,27.6791]],
+    "riograndecity_camargo_us": [[-98.8687,26.3917],[-98.8678,26.3978],[-98.8655,26.3976],[-98.8647,26.4024],[-98.8622,26.402],[-98.863,26.3978],[-98.8597,26.3974],[-98.8603,26.3926],[-98.8559,26.3916],[-98.8497,26.4242],[-98.8545,26.4352],[-98.847,26.4382],[-98.8453,26.4337],[-98.8479,26.4327],[-98.8412,26.4165],[-98.8438,26.4157],[-98.8477,26.4255],[-98.8506,26.4024],[-98.8467,26.4018],[-98.8449,26.4053],[-98.8378,26.4043],[-98.8383,26.3968],[-98.8315,26.3962],[-98.8292,26.3985],[-98.8306,26.396],[-98.8245,26.395],[-98.8235,26.395],[-98.8234,26.3965],[-98.8173,26.3953],[-98.817,26.3963],[-98.8124,26.3962],[-98.8099,26.3956],[-98.8109,26.3932],[-98.8072,26.3909],[-98.8012,26.39],[-98.7804,26.4001],[-98.7915,26.3995],[-98.7895,26.4082],[-98.778,26.4066],[-98.7792,26.4004],[-98.8007,26.39],[-98.7985,26.3904],[-98.7999,26.3794],[-98.7865,26.3769],[-98.7878,26.372],[-98.7867,26.3676],[-98.7847,26.3673],[-98.7861,26.3637],[-98.7809,26.3611],[-98.7803,26.3648],[-98.7775,26.3642],[-98.7777,26.3617],[-98.7743,26.3616],[-98.7733,26.3674],[-98.7823,26.3689],[-98.7797,26.3853],[-98.7702,26.3842],[-98.7741,26.3618],[-98.7719,26.3615],[-98.7726,26.357],[-98.7698,26.3557],[-98.7741,26.3323],[-98.7792,26.334],[-98.7756,26.3542],[-98.8022,26.366],[-98.8071,26.3699],[-98.8141,26.3668],[-98.8187,26.3708],[-98.8214,26.3716],[-98.8269,26.3705],[-98.8319,26.3648],[-98.8398,26.3603],[-98.8454,26.3592],[-98.848,26.3604],[-98.8519,26.365],[-98.8616,26.3666],[-98.8614,26.3699],[-98.8657,26.3703],[-98.8655,26.3721],[-98.8631,26.3718],[-98.8619,26.3783],[-98.8661,26.379],[-98.8648,26.3849],[-98.8609,26.3843],[-98.8576,26.389],[-98.861,26.3895],[-98.861,26.3907],[-98.8687,26.3917]],
+    "riograndecity_camargo_mx": [[-98.9479,26.3707],[-98.9359,26.3717],[-98.9356,26.385],[-98.9271,26.3945],[-98.9224,26.3788],[-98.901,26.3704],[-98.8965,26.3532],[-98.8606,26.3663],[-98.8438,26.3584],[-98.825,26.3707],[-98.8141,26.3658],[-98.8055,26.3681],[-98.7882,26.3378],[-98.7885,26.3301],[-98.7747,26.3249],[-98.7495,26.33],[-98.747,26.3185],[-98.736,26.3085],[-98.7411,26.3027],[-98.7548,26.308],[-98.7506,26.2957],[-98.7285,26.2991],[-98.7172,26.2863],[-98.7039,26.2878],[-98.701,26.2779],[-98.7173,26.2781],[-98.7199,26.2727],[-98.6839,26.2644],[-98.6778,26.2571],[-98.6795,26.2484],[-98.6866,26.2604],[-98.6901,26.2539],[-98.6975,26.2539],[-98.6907,26.2425],[-98.6954,26.2409],[-98.6935,26.2365],[-98.6991,26.2376],[-98.6985,26.231],[-98.7142,26.2287],[-98.716,26.216],[-98.7055,26.216],[-98.6918,26.2036],[-98.718,26.1999],[-98.7332,26.1824],[-98.7321,26.1756],[-98.7423,26.1711],[-98.742,26.1606],[-98.7326,26.1501],[-98.7345,26.1353],[-98.7254,26.134],[-98.7254,26.109],[-98.7406,26.109],[-98.7409,26.1029],[-98.7516,26.1031],[-98.7528,26.0946],[-98.7633,26.0944],[-98.7635,26.0766],[-98.7534,26.0745],[-98.7534,26.0677],[-98.7411,26.0675],[-98.7383,26.0543],[-98.7265,26.0469],[-98.7324,26.0488],[-98.7405,26.0345],[-98.8232,26.0476],[-98.9008,25.9683],[-99.0267,26.1107],[-99.0144,26.1178],[-99.0169,26.1235],[-98.9919,26.1821],[-98.9943,26.1879],[-98.9897,26.1872],[-98.9418,26.2982],[-98.9492,26.3435],[-98.9445,26.3666],[-98.9479,26.3707]],
+    "mcallen_reynosa_us": [[-98.2164,26.1261],[-98.2332,26.1285],[-98.2276,26.1614],[-98.2452,26.1692],[-98.2478,26.1548],[-98.2382,26.1534],[-98.2401,26.1441],[-98.2436,26.1502],[-98.2542,26.1468],[-98.2575,26.1282],[-98.2698,26.1304],[-98.2718,26.1172],[-98.2701,26.1307],[-98.258,26.1287],[-98.2551,26.1464],[-98.2756,26.1462],[-98.2794,26.1172],[-98.3159,26.1217],[-98.2984,26.1027],[-98.3182,26.1168],[-98.3077,26.1335],[-98.2964,26.1321],[-98.2955,26.139],[-98.313,26.1467],[-98.2872,26.1551],[-98.283,26.1788],[-98.2754,26.1758],[-98.2816,26.1889],[-98.267,26.2746],[-98.2748,26.2761],[-98.262,26.2799],[-98.26,26.2907],[-98.2446,26.281],[-98.243,26.2951],[-98.2346,26.2923],[-98.2363,26.283],[-98.2296,26.2906],[-98.248,26.3111],[-98.2644,26.3129],[-98.2708,26.2996],[-98.2788,26.3007],[-98.273,26.3109],[-98.3096,26.3122],[-98.2474,26.3146],[-98.2462,26.3356],[-98.2619,26.3379],[-98.2728,26.3251],[-98.3057,26.3338],[-98.3018,26.3413],[-98.2779,26.3402],[-98.2753,26.3545],[-98.2581,26.3519],[-98.2376,26.4667],[-98.2492,26.3507],[-98.2278,26.3475],[-98.2337,26.3375],[-98.2265,26.3305],[-98.238,26.3303],[-98.2409,26.3206],[-98.2334,26.3195],[-98.2347,26.3118],[-98.2121,26.3085],[-98.2159,26.2863],[-98.2041,26.2769],[-98.2082,26.2523],[-98.1954,26.2505],[-98.2164,26.1261]],
+    "mcallen_reynosa_mx": [[-98.2073,26.0678],[-98.1925,26.053],[-98.1873,26.0643],[-98.177,26.0607],[-98.1802,26.072],[-98.1758,26.075],[-98.1681,26.0632],[-98.1578,26.0629],[-98.1625,26.0555],[-98.1554,26.0557],[-98.1583,26.0342],[-98.1416,26.0293],[-98.1502,25.9879],[-98.1559,25.986],[-98.1547,25.9769],[-98.1587,25.9768],[-98.1585,25.7086],[-98.1655,25.7018],[-98.151,25.6888],[-98.1502,25.6113],[-98.1541,25.6113],[-98.154,25.591],[-98.1732,25.5911],[-98.1381,25.5428],[-98.1492,25.543],[-98.1517,25.4461],[-98.2395,25.446],[-98.2384,25.4754],[-98.2626,25.5044],[-98.2958,25.4793],[-98.2978,25.4665],[-98.3278,25.4696],[-98.328,25.4603],[-98.3746,25.4585],[-98.3776,25.4898],[-98.4322,25.4968],[-98.4333,25.4894],[-98.5818,25.4894],[-98.5855,26.0389],[-98.562,26.0389],[-98.5638,26.1004],[-98.5698,26.101],[-98.5704,26.1097],[-98.5524,26.1171],[-98.5379,26.2092],[-98.5121,26.2272],[-98.5007,26.2222],[-98.507,26.2092],[-98.485,26.2126],[-98.4802,26.2009],[-98.4813,26.2199],[-98.4599,26.2263],[-98.4545,26.2168],[-98.4446,26.2244],[-98.4387,26.213],[-98.4438,26.2004],[-98.4171,26.1841],[-98.4024,26.1812],[-98.4019,26.1711],[-98.3865,26.1577],[-98.3651,26.1584],[-98.3674,26.1684],[-98.3597,26.1726],[-98.3581,26.1583],[-98.3515,26.1513],[-98.3462,26.166],[-98.3354,26.1658],[-98.338,26.1495],[-98.3268,26.1429],[-98.3354,26.138],[-98.3213,26.1184],[-98.3098,26.114],[-98.3052,26.1028],[-98.2977,26.1033],[-98.3036,26.11],[-98.2967,26.1203],[-98.2745,26.1158],[-98.2664,26.1209],[-98.272,26.1135],[-98.2704,26.1066],[-98.2871,26.1067],[-98.2853,26.1017],[-98.2673,26.0923],[-98.2489,26.0719],[-98.2246,26.0772],[-98.2073,26.0678]],
+    "progreso_nuevoprogreso_us": [[-97.9544,26.0871],[-97.9696,26.0868],[-97.97,26.084],[-97.9919,26.084],[-97.9919,26.0883],[-97.969,26.0888],[-97.9635,26.1034],[-97.9587,26.1034],[-97.9593,26.1138],[-97.9531,26.1159],[-97.9511,26.1159],[-97.9509,26.109],[-97.9467,26.1091],[-97.9467,26.1109],[-97.9429,26.111],[-97.9425,26.0946],[-97.9348,26.0948],[-97.9346,26.0875],[-97.9544,26.0871]],
+    "progreso_nuevoprogreso_mx": [[-97.869,25.5042],[-97.8691,25.4982],[-97.85,25.4951],[-97.86,25.4621],[-97.87,25.4621],[-97.87,25.4531],[-97.8898,25.453],[-97.8899,25.435],[-97.9411,25.3813],[-97.9494,25.3813],[-97.9495,25.426],[-97.9793,25.426],[-97.9793,25.4441],[-98.029,25.444],[-98.0289,25.4259],[-98.0587,25.4259],[-98.0587,25.4464],[-98.1517,25.4461],[-98.1492,25.543],[-98.1381,25.5428],[-98.1732,25.5911],[-98.154,25.591],[-98.1502,25.6113],[-98.151,25.6888],[-98.1655,25.7018],[-98.1585,25.7086],[-98.1587,25.9768],[-98.1416,26.0293],[-98.1583,26.0342],[-98.1583,26.0442],[-98.1533,26.0582],[-98.1435,26.0506],[-98.1332,26.0738],[-98.1295,26.0628],[-98.1048,26.0676],[-98.0929,26.0586],[-98.0784,26.0702],[-98.0701,26.0505],[-98.0802,26.0418],[-98.0765,26.0363],[-98.0619,26.0463],[-98.0388,26.0413],[-98.0277,26.067],[-98.0208,26.0587],[-98.0118,26.0659],[-98.012,26.0561],[-98.0035,26.0648],[-97.9919,26.0583],[-97.98,26.0673],[-97.9668,26.0518],[-97.9513,26.0622],[-97.9339,26.0528],[-97.9335,26.0657],[-97.9273,26.055],[-97.9083,26.0576],[-97.9126,25.9911],[-97.9168,25.9676],[-97.9226,25.9677],[-97.9224,25.9336],[-97.9295,25.9315],[-97.9294,25.8958],[-97.9196,25.8957],[-97.9195,25.8847],[-97.9359,25.8796],[-97.9375,25.868],[-97.9375,25.8611],[-97.9191,25.8611],[-97.9195,25.8055],[-97.9336,25.8054],[-97.934,25.7574],[-97.9494,25.7575],[-97.949,25.7214],[-97.962,25.7186],[-97.9619,25.6868],[-97.9793,25.6844],[-97.9621,25.6844],[-97.9593,25.6157],[-97.9395,25.6157],[-97.9395,25.5075],[-97.869,25.5042]],
+    "brownsville_matamoros_us": [[-97.3698,25.9134],[-97.3815,25.9171],[-97.3796,25.933],[-97.4305,25.9384],[-97.423,25.917],[-97.3946,25.9172],[-97.3898,25.9069],[-97.4073,25.91],[-97.3935,25.8772],[-97.4375,25.8904],[-97.4338,25.8609],[-97.4138,25.8578],[-97.4125,25.8414],[-97.426,25.8409],[-97.4554,25.8843],[-97.4967,25.8798],[-97.4981,25.8992],[-97.5219,25.8868],[-97.5353,25.9328],[-97.5691,25.9534],[-97.5789,25.9429],[-97.6105,26.019],[-97.6204,26.0221],[-97.6243,26.0065],[-97.6383,26.0124],[-97.6445,26.0276],[-97.6275,26.0087],[-97.6129,26.0741],[-97.6277,26.0814],[-97.6122,26.077],[-97.5932,26.1097],[-97.5352,26.0407],[-97.5205,26.1739],[-97.5352,26.1838],[-97.5305,26.2175],[-97.5319,26.1862],[-97.517,26.1747],[-97.5355,26.0763],[-97.5282,26.05],[-97.5178,26.0735],[-97.4989,26.0721],[-97.505,26.0455],[-97.4889,26.0441],[-97.4777,26.0568],[-97.4426,26.0545],[-97.4377,26.072],[-97.4251,26.071],[-97.4266,26.0448],[-97.4206,26.0655],[-97.3842,26.0635],[-97.3839,26.105],[-97.3942,26.1087],[-97.3691,26.1039],[-97.3694,26.1277],[-97.3456,26.1274],[-97.3448,26.1473],[-97.3286,26.1563],[-97.3424,26.1718],[-97.317,26.1542],[-97.3413,26.1424],[-97.3419,26.1246],[-97.3653,26.1245],[-97.3653,26.1001],[-97.3811,26.1],[-97.3784,26.0694],[-97.3598,26.0892],[-97.309,26.093],[-97.2744,26.0754],[-97.2886,26.0154],[-97.3097,25.9964],[-97.3359,26.0423],[-97.4025,26.0406],[-97.4147,26.0139],[-97.4375,26.0092],[-97.4395,25.9826],[-97.407,25.9425],[-97.3797,25.9403],[-97.3686,25.9588],[-97.3698,25.9134]],
+    "brownsville_matamoros_mx": [[-97.9022,26.061],[-97.869,26.0569],[-97.8611,26.0701],[-97.8607,26.0529],[-97.8336,26.0458],[-97.8178,26.0565],[-97.8136,26.044],[-97.8016,26.0603],[-97.791,26.0337],[-97.7768,26.0293],[-97.7682,26.0475],[-97.7618,26.0258],[-97.7197,26.0234],[-97.7073,26.0378],[-97.6921,26.019],[-97.6934,26.0324],[-97.6751,26.0261],[-97.6626,26.0382],[-97.668,26.0193],[-97.639,26.0232],[-97.6492,26.0105],[-97.6187,26.0027],[-97.6346,25.9903],[-97.6078,25.9767],[-97.6019,25.9572],[-97.5821,25.9624],[-97.578,25.9421],[-97.5679,25.9524],[-97.583,25.933],[-97.5372,25.9307],[-97.543,25.92],[-97.5301,25.9199],[-97.5211,25.8861],[-97.4981,25.8991],[-97.4967,25.8797],[-97.4554,25.884],[-97.4566,25.8683],[-97.4446,25.8675],[-97.4541,25.8543],[-97.4258,25.8407],[-97.4125,25.8412],[-97.4086,25.8621],[-97.4086,25.846],[-97.3987,25.8505],[-97.4056,25.8376],[-97.364,25.85],[-97.3766,25.8549],[-97.3586,25.8784],[-97.3743,25.8794],[-97.3564,25.888],[-97.3752,25.9078],[-97.3483,25.9312],[-97.326,25.9176],[-97.303,25.9373],[-97.2767,25.9352],[-97.2835,25.9595],[-97.2518,25.9482],[-97.2088,25.964],[-97.1884,25.9539],[-97.1589,25.9621],[-97.158,25.949],[-97.1474,25.9563],[-97.1642,25.7471],[-97.2025,25.6289],[-97.4427,25.2095],[-97.5163,25.0424],[-97.6702,25.2245],[-97.8033,25.3468],[-97.878,25.3963],[-97.8998,25.3758],[-97.9411,25.3809],[-97.8899,25.435],[-97.8898,25.453],[-97.86,25.4621],[-97.85,25.4951],[-97.869,25.5042],[-97.7366,25.504],[-97.7358,25.8127],[-97.8056,25.9024],[-97.8232,25.8932],[-97.9164,25.934],[-97.9022,26.061]]
+  };
+
+  /* Each city renders as its own real polygon — the actual boundary above,
+     falling back to a population-scaled circle only for the rare place OSM
+     has no boundary relation for. That's what makes San Diego/Tijuana visibly
+     overlap while Columbus/Puerto Palomas barely touch. */
+  var CITIES = [];
+  PAIRS.forEach(function(p){
+    CITIES.push({id:p.id+"_us", name:p.usCity, pop:p.usPop, side:"US", coord:p.usPt, pairId:p.id, partner:p.mxCity});
+    CITIES.push({id:p.id+"_mx", name:p.mxCity, pop:p.mxPop, side:"MX", coord:p.mxPt, pairId:p.id, partner:p.usCity});
+  });
+
+  function toRad(d){ return d*Math.PI/180; }
+  function destPoint(center, bearingDeg, distKm){
+    var brng = toRad(bearingDeg);
+    var dLat = (distKm/111.32)*Math.cos(brng);
+    var dLon = (distKm/(111.32*Math.cos(toRad(center[1]))))*Math.sin(brng);
+    return [center[0]+dLon, center[1]+dLat];
+  }
+  function circleRing(center, radiusKm, steps){
+    steps = steps || 48;
+    var ring = [];
+    for(var i=0;i<=steps;i++){ ring.push(destPoint(center, 360*i/steps, radiusKm)); }
+    return ring;
+  }
+  function ringExtentKm(ring){
+    var minLon=Infinity,maxLon=-Infinity,minLat=Infinity,maxLat=-Infinity;
+    ring.forEach(function(pt){
+      if(pt[0]<minLon) minLon=pt[0]; if(pt[0]>maxLon) maxLon=pt[0];
+      if(pt[1]<minLat) minLat=pt[1]; if(pt[1]>maxLat) maxLat=pt[1];
+    });
+    var midLat = (minLat+maxLat)/2;
+    var wKm = (maxLon-minLon)*111.32*Math.cos(toRad(midLat));
+    var hKm = (maxLat-minLat)*111.32;
+    return Math.max(wKm,hKm)/2; // half the larger dimension — a "radius" for real (non-circular) shapes
+  }
+
+  CITIES.forEach(function(c){
+    var real = BOUNDARIES[c.id];
+    c.hasRealBoundary = !!real;
+    c.ring = real || circleRing(c.coord, Math.max(0.6, Math.sqrt(c.pop)/100));
+    c.extentKm = ringExtentKm(c.ring);
+  });
+  var CITIES_BY_ID = {};
+  CITIES.forEach(function(c){ CITIES_BY_ID[c.id] = c; });
+
+  function fmtPop(n){
+    if(n>=1000000) return (n/1000000).toFixed(2)+"M";
+    if(n>=1000) return (n/1000).toFixed(0)+"K";
+    return String(n);
+  }
+
+  function fetchRoute(p, token){
+    var coords = p.mxPt[0]+","+p.mxPt[1]+";"+p.usPt[0]+","+p.usPt[1];
     var url = "https://api.mapbox.com/directions/v5/mapbox/driving/"+coords
       + "?geometries=geojson&overview=full&access_token="+encodeURIComponent(token);
     return fetch(url).then(function(r){
@@ -423,72 +343,31 @@
     }).then(function(data){
       var route = data.routes && data.routes[0];
       if(route && route.geometry && route.geometry.coordinates && route.geometry.coordinates.length>1){
-        c.path = route.geometry.coordinates; // real, highway-following geometry
-        c.routed = true;
+        p.path = route.geometry.coordinates; // real, highway-following geometry, MX -> US
       }
-    }).catch(function(){ /* keep the straight-line fallback for this one port */ });
+    }).catch(function(){ /* keep the straight-line fallback for this one pair */ });
   }
-
-  /* ---------------- simulation (time-of-day flow model, unchanged in spirit) ---------------- */
-  var DOT_UNIT = 400, BASE_UNIT = 500;
-  function gauss(h,mu,sigma){ var d=Math.abs(h-mu); if(d>12) d=24-d; return Math.exp(-(d*d)/(2*sigma*sigma)); }
-  function smoothstep(e0,e1,x){ var t=Math.min(1,Math.max(0,(x-e0)/(e1-e0))); return t*t*(3-2*t); }
-  function openFactor(c,h){ if(!c.closes) return 1; return smoothstep(5.5,6.5,h)*(1-smoothstep(21.5,22.5,h)); }
-  function shape(h,dir,cat){
-    var base = cat==="commuter" ? 0.10 : 0.32;
-    if(cat==="commuter"){
-      return dir==="N" ? base+0.55*gauss(h,7.5,1.7)+0.20*gauss(h,17,2.4)
-                        : base+0.55*gauss(h,17.5,1.8)+0.20*gauss(h,8,2.2);
-    }
-    return dir==="N" ? base+0.30*gauss(h,10,4.5) : base+0.30*gauss(h,15,4.5);
-  }
-  var AVG_SPEED_KMH = 75;
-
-  /* ---------------- clock / transport state ---------------- */
-  var minutes = 450, playing = true, speed = 1;
-  var DAY_SECONDS = 90;
-  var scrubber = document.getElementById("scrubber");
-  var playBtn = document.getElementById("playBtn");
-  scrubber.value = minutes;
-  document.querySelectorAll(".speedbtn").forEach(function(b){
-    b.addEventListener("click", function(){
-      document.querySelectorAll(".speedbtn").forEach(function(x){x.classList.remove("active");});
-      b.classList.add("active"); speed = parseFloat(b.dataset.speed);
-    });
-  });
-  playBtn.addEventListener("click", function(){ playing=!playing; playBtn.textContent = playing?"❚❚":"►"; });
-  scrubber.addEventListener("input", function(){ minutes=parseFloat(scrubber.value); playing=false; playBtn.textContent="►"; });
-
-  function periodFor(h){
-    if(h<5) return ["Late Night","night"];
-    if(h<7) return ["Dawn","night"];
-    if(h<10) return ["Morning Rush","day"];
-    if(h<15) return ["Midday","day"];
-    if(h<19) return ["Evening Rush","day"];
-    if(h<22) return ["Evening","night"];
-    return ["Night","night"];
-  }
-  function fmtClock(h){ var hh=Math.floor(h), mm=Math.floor((h-hh)*60); return (hh<10?"0":"")+hh+":"+(mm<10?"0":"")+mm; }
-  var clockTime=document.getElementById("clockTime"), clockPeriod=document.getElementById("clockPeriod");
-  var nbVal=document.getElementById("nbVal"), sbVal=document.getElementById("sbVal"), activeVal=document.getElementById("activeVal");
-  var nbBar=document.getElementById("nbBar"), sbBar=document.getElementById("sbBar"), activeBar=document.getElementById("activeBar");
 
   /* ---------------- leaderboard ---------------- */
   var rankList=document.getElementById("rankList");
-  var sorted=CROSSINGS.slice().sort(function(a,b){return b.totalM-a.totalM;});
-  var rankBars={};
-  sorted.forEach(function(c){
+  var sorted=PAIRS.slice().sort(function(a,b){return b.combined-a.combined;});
+  var rankBars={}, rankDots={};
+  sorted.forEach(function(p){
     var row=document.createElement("div");
-    row.className="rank-row"; row.dataset.id=c.id;
+    row.className="rank-row"; row.dataset.id=p.id;
+    var splitBg = "conic-gradient(var(--usbound) 0% "+(p.usShare*100).toFixed(1)+"%, var(--mxbound) "+(p.usShare*100).toFixed(1)+"% 100%)";
     row.innerHTML=
-      '<span class="rank-dot" style="background:'+(c.cat==="commuter"?"var(--teal)":"var(--gold)")+'"></span>'+
-      '<span class="rank-name"><div class="n">'+c.us+'</div><div class="s">'+c.mx+'</div></span>'+
-      '<span class="rank-bar"><i style="width:0%;background:'+(c.cat==="commuter"?"var(--teal)":"var(--gold)")+'"></i></span>';
+      '<span class="rank-dot" style="background:'+splitBg+'"></span>'+
+      '<span class="rank-name"><div class="n">'+p.usCity.split(",")[0]+' ↔ '+p.mxCity.split(",")[0]+'</div><div class="s">'+fmtPop(p.combined)+' combined</div></span>'+
+      '<span class="rank-bar"><i style="width:0%"></i></span>';
     rankList.appendChild(row);
-    rankBars[c.id]=row.querySelector(".rank-bar > i");
-    row.addEventListener("mouseenter", function(){ setHighlight(c.id,true); });
-    row.addEventListener("mouseleave", function(){ setHighlight(c.id,false); });
-    row.addEventListener("click", function(){ flyToCrossing(c); });
+    rankBars[p.id]=row.querySelector(".rank-bar > i");
+    row.addEventListener("mouseenter", function(){ setHighlight(p.id,true); });
+    row.addEventListener("mouseleave", function(){ setHighlight(p.id,false); });
+    row.addEventListener("click", function(){ flyToPair(p); });
+  });
+  sorted.forEach(function(p){
+    if(rankBars[p.id]) rankBars[p.id].style.width = (sizeFor(p)*100).toFixed(1)+"%";
   });
 
   function showSetupBanner(msg){
@@ -522,7 +401,7 @@
   });
 
   /* ---------------- map ---------------- */
-  var map, markerEls = {}, travelers = [];
+  var map;
 
   function initMap(token){
     mapboxgl.accessToken = token;
@@ -543,16 +422,12 @@
       didLoad = true;
       document.getElementById("setupBanner").hidden = true; // self-heal if a slow load already tripped the banner below
       boostBorderLine();
-      // Force a dark light-preset if this style is built on Mapbox Standard;
-      // a no-op (caught and ignored) on styles that don't expose that config.
       try{ map.setConfigProperty("basemap", "lightPreset", "night"); }catch(e){}
 
-      Promise.allSettled(CROSSINGS.map(function(c){ return fetchRoute(c, token); })).then(function(){
-        CROSSINGS.forEach(finalizeCrossingGeometry);
+      Promise.allSettled(PAIRS.map(function(p){ return fetchRoute(p, token); })).then(function(){
         buildRoutes();
-        buildMarkers();
-        buildTravelerLayer();
-        requestAnimationFrame(tick);
+        buildCityPolygons();
+        buildCityLabels();
       });
     });
 
@@ -562,8 +437,6 @@
       }
     });
 
-    // Only surface a banner if the map genuinely never comes up — a harmless
-    // warning-level "error" event shouldn't hide a map that's actually working.
     setTimeout(function(){
       if(!didLoad){ showSetupBanner("The basemap didn't finish loading in time — check your internet connection, token, and style access, then reload."); }
     }, 15000);
@@ -572,8 +445,6 @@
   }
 
   function boostBorderLine(){
-    // Exact layer ids for Mapbox's own admin boundaries, falling back to a loose
-    // match in case this custom style renames or restructures them.
     var layers = map.getStyle().layers;
     var boundaries = layers.filter(function(l){
       if(l.type!=="line") return false;
@@ -594,176 +465,118 @@
   }
 
   function buildRoutes(){
-    var features = CROSSINGS.map(function(c){
-      return { type:"Feature", properties:{cat:c.cat}, geometry:{type:"LineString", coordinates:c.path} };
+    var features = PAIRS.map(function(p){
+      return { type:"Feature", properties:{}, geometry:{type:"LineString", coordinates:p.path} };
     });
-    map.addSource("routes", { type:"geojson", data:{type:"FeatureCollection", features:features} });
+    map.addSource("routes", { type:"geojson", lineMetrics:true, data:{type:"FeatureCollection", features:features} });
     map.addLayer({
       id:"routes-line", type:"line", source:"routes",
       layout:{"line-cap":"round","line-join":"round"},
       paint:{
-        "line-color":["match",["get","cat"],"commuter","#2FD9C4","commercial","#FF6A3D","#888"],
         "line-width":["interpolate",["linear"],["zoom"],3,1,8,2.2,12,3.4],
-        "line-opacity":0.42
+        "line-opacity":0.5,
+        // gradient along the line itself: green near the Mexican end, blue near
+        // the US end, since each route's coordinates run MX -> border -> US.
+        "line-gradient":["interpolate",["linear"],["line-progress"], 0,"#22C55E", 1,"#4C8DFF"]
       }
     });
   }
 
-  function buildMarkers(){
-    CROSSINGS.forEach(function(c){
-      if(c.sizeFactor >= maxSizeFactor*0.53){
-        var ringSize = 28 + (c.sizeFactor/maxSizeFactor)*34;
-        var ringEl = document.createElement("div");
-        ringEl.className="m-ring";
-        ringEl.style.width=ringSize+"px"; ringEl.style.height=ringSize+"px";
-        ringEl.style.borderColor = c.cat==="commuter" ? "rgba(47,217,196,0.55)" : "rgba(255,106,61,0.55)";
-        new mapboxgl.Marker({element:ringEl}).setLngLat(c.pt).addTo(map);
-      }
+  function buildCityPolygons(){
+    var features = CITIES.map(function(c){
+      return {
+        type:"Feature",
+        properties:{ id:c.id, name:c.name, side:c.side, pop:c.pop, pairId:c.pairId, partner:c.partner,
+                     color: c.side==="US" ? "#4C8DFF" : "#22C55E" },
+        geometry:{ type:"Polygon", coordinates:[c.ring] }
+      };
+    });
+    map.addSource("cities", { type:"geojson", data:{type:"FeatureCollection", features:features} });
+    map.addLayer({
+      id:"cities-fill", type:"fill", source:"cities",
+      paint:{ "fill-color":["get","color"], "fill-opacity":0.5 }
+    });
+    map.addLayer({
+      id:"cities-outline", type:"line", source:"cities",
+      paint:{ "line-color":["get","color"], "line-width":1.3, "line-opacity":0.9 }
+    });
 
-      var haloEl = document.createElement("div");
-      haloEl.className="m-halo";
-      haloEl.style.background = c.cat==="commuter" ? "var(--teal)" : "var(--gold)";
-      new mapboxgl.Marker({element:haloEl}).setLngLat(c.pt).addTo(map);
-
-      var r = 5 + (c.sizeFactor/maxSizeFactor)*17;
-      var coreEl = document.createElement("div");
-      coreEl.className="m-core "+c.cat+" pulse";
-      coreEl.style.width=(r*2)+"px"; coreEl.style.height=(r*2)+"px";
-      coreEl.style.animationDelay=(Math.random()*2.6).toFixed(2)+"s";
-      var coreMarker = new mapboxgl.Marker({element:coreEl}).setLngLat(c.pt).addTo(map);
-      markerEls[c.id] = {el:coreEl, r:r};
-
-      coreEl.addEventListener("mouseenter", function(){ setHighlight(c.id,true); showTooltip(c); });
-      coreEl.addEventListener("mouseleave", function(){ setHighlight(c.id,false); hideTooltip(); });
-      coreEl.addEventListener("click", function(){ flyToCrossing(c); });
-
-      if(c.sizeFactor >= maxSizeFactor*0.37){
-        var pillEl = document.createElement("div");
-        pillEl.className="m-pill";
-        pillEl.style.border = "1px solid " + (c.cat==="commuter" ? "var(--teal)" : "var(--gold)");
-        pillEl.textContent = c.us.split(",")[0].toUpperCase();
-        new mapboxgl.Marker({element:pillEl, anchor:"bottom", offset:[0,-(r+16)]}).setLngLat(c.pt).addTo(map);
-      }
+    map.on("mousemove", "cities-fill", function(e){
+      map.getCanvas().style.cursor = "pointer";
+      showTooltip(e.features[0].properties, e.point);
+      setHighlight(e.features[0].properties.pairId, true);
+    });
+    map.on("mouseleave", "cities-fill", function(){
+      map.getCanvas().style.cursor = "";
+      hideTooltip();
+      setHighlight(null, false);
+    });
+    map.on("click", "cities-fill", function(e){
+      var pair = PAIRS_BY_ID[e.features[0].properties.pairId];
+      if(pair) flyToPair(pair);
     });
   }
 
-  function flyToCrossing(c){
-    map.flyTo({center:c.pt, zoom:12.2, duration:1400, essential:true});
+  function buildCityLabels(){
+    CITIES.forEach(function(c){
+      if(c.extentKm < 2) return; // keep the smallest towns from cluttering with permanent labels
+      var pillEl = document.createElement("div");
+      pillEl.className="m-pill";
+      pillEl.textContent = c.name.split(",")[0].toUpperCase();
+      pillEl.addEventListener("click", function(){ var pair = PAIRS_BY_ID[c.pairId]; if(pair) flyToPair(pair); });
+      new mapboxgl.Marker({element:pillEl, anchor:"bottom", offset:[0,-(c.extentKm*2+6)]}).setLngLat(c.coord).addTo(map);
+    });
+  }
+
+  // A fixed flyTo zoom looks great for tiny towns and completely wrong for
+  // San Diego/Tijuana, whose real boundary polygons are bigger than the whole
+  // viewport at that zoom (solid color, edge to edge). Solve for the zoom
+  // where the larger city's shape occupies a consistent fraction of the
+  // frame instead, so every pair gets a comparable, sensible view.
+  function zoomForPair(p){
+    var usCity = CITIES_BY_ID[p.id+"_us"], mxCity = CITIES_BY_ID[p.id+"_mx"];
+    var maxRadiusKm = Math.max(usCity.extentKm, mxCity.extentKm);
+    var diameterM = maxRadiusKm*2*1000;
+    var containerWidth = (map.getContainer() && map.getContainer().clientWidth) || 800;
+    var targetFraction = 0.32;
+    var mppAtZoom0 = 156543.03392*Math.cos(p.pt[1]*Math.PI/180);
+    var z = Math.log2(targetFraction*containerWidth*mppAtZoom0/diameterM);
+    return Math.min(13.5, Math.max(6.5, z));
+  }
+  function flyToPair(p){
+    map.flyTo({center:p.pt, zoom:zoomForPair(p), duration:1400, essential:true});
   }
   document.getElementById("mapFrame").addEventListener("dblclick", function(){
     map.flyTo({center:[-106.8,28.8], zoom:4.7, duration:900});
   });
 
-  function setHighlight(id,on){
-    var m = markerEls[id];
-    if(m){ m.el.style.boxShadow = on ? "0 0 16px 4px currentColor" : "none"; m.el.style.transform = on?"scale(1.3)":"scale(1)"; }
-    var row = rankList.querySelector('.rank-row[data-id="'+id+'"]');
-    if(row) row.classList.toggle("hl", on);
+  // Keyed by pair id (not city id) so hovering either city's polygon, or the
+  // leaderboard row for that pair, highlights both circles together.
+  function setHighlight(pairId, on){
+    if(on && pairId){
+      try{ map.setPaintProperty("cities-fill","fill-opacity", ["case", ["==",["get","pairId"],pairId], 0.85, 0.4]); }catch(e){}
+    } else {
+      try{ map.setPaintProperty("cities-fill","fill-opacity", 0.5); }catch(e){}
+    }
+    rankList.querySelectorAll(".rank-row").forEach(function(r){ r.classList.remove("hl"); });
+    if(on && pairId){
+      var row = rankList.querySelector('.rank-row[data-id="'+pairId+'"]');
+      if(row) row.classList.add("hl");
+    }
   }
 
-  var tooltip=document.getElementById("tooltip"), mapFrame=document.getElementById("mapFrame");
-  function showTooltip(c){
-    var p = map.project(c.pt);
-    tooltip.style.left = p.x+"px"; tooltip.style.top = p.y+"px";
-    tooltip.innerHTML = "<b>"+c.us+"</b> ↔ "+c.mx+"<br><span class='tt-tag' style='color:"+(c.cat==="commuter"?"var(--teal)":"var(--gold)")+"'>"+c.cat+"</span> · 2024: "+c.commuterM.toFixed(1)+"M commuter + "+c.truckM.toFixed(2)+"M truck (real, BTS)"+(c.closes?" · modeled reduced hours":" · modeled 24-hour")+"<br><span style='color:var(--ink-faint)'>click to fly in · real road, "+Math.round(c.lengthKm)+" km</span>";
+  var tooltip=document.getElementById("tooltip");
+  function showTooltip(props, point){
+    tooltip.style.left = point.x+"px"; tooltip.style.top = point.y+"px";
+    var commuteLine = props.side==="MX"
+      ? ("Most "+props.name.split(",")[0]+" residents who work in the US work in "+props.partner.split(",")[0])
+      : ("Paired with "+props.partner);
+    tooltip.innerHTML = "<b>"+props.name+"</b><br>"
+      +fmtPop(props.pop)+" people ("+(props.side==="US"?"US":"Mexico")+")<br>"
+      +"<span style='color:var(--ink-faint)'>"+commuteLine+"</span><br>"
+      +"<span style='color:var(--ink-faint)'>click to fly in</span>";
     tooltip.classList.add("show");
   }
   function hideTooltip(){ tooltip.classList.remove("show"); }
-
-  /* ---------------- travelers as plain, direction-colored dots ---------------- */
-  // Color now encodes travel direction, not port category: blue = northbound
-  // (entering the US), green = southbound (entering Mexico) — distinct from
-  // the teal/orange used on the static port markers and route lines above.
-  function buildTravelerLayer(){
-    map.addSource("travelers", { type:"geojson", data:{type:"FeatureCollection", features:[]} });
-
-    // Soft color glow underneath, sized up so a dot reads clearly before you
-    // even resolve its edge — this is what makes travelers pop off the road
-    // network and basemap rather than blending into them.
-    map.addLayer({
-      id:"travelers-glow", type:"circle", source:"travelers",
-      paint:{
-        "circle-radius":["interpolate",["linear"],["zoom"], 4,11, 8,14, 12,18],
-        "circle-color":["match",["get","dir"],"N","#4C8DFF","S","#22C55E","#fff"],
-        "circle-opacity":0.26,
-        "circle-blur":0.6
-      }
-    });
-    // Bright core dot with a dark stroke so it keeps a crisp edge over any
-    // basemap color underneath it.
-    map.addLayer({
-      id:"travelers-dot", type:"circle", source:"travelers",
-      paint:{
-        "circle-radius":["interpolate",["linear"],["zoom"], 4,5.5, 8,7, 12,9],
-        "circle-color":["match",["get","dir"],"N","#4C8DFF","S","#22C55E","#fff"],
-        "circle-stroke-color":"#030503",
-        "circle-stroke-width":1.6,
-        "circle-opacity":1
-      }
-    });
-  }
-
-  function spawnTraveler(c,dir){
-    var durationSec = (c.lengthKm/AVG_SPEED_KMH) * (DAY_SECONDS/24/speed);
-    travelers.push({ c:c, dir:dir, t: dir==="N"?0:1, durationSec:Math.max(0.6,durationSec) });
-  }
-
-  /* ---------------- main loop ---------------- */
-  var last = performance.now();
-  function tick(now){
-    var dt = Math.min(0.12, (now-last)/1000); last = now;
-    if(playing){ minutes += dt*speed*(1440/DAY_SECONDS); if(minutes>=1440) minutes-=1440; scrubber.value=minutes; }
-    var h = minutes/60;
-
-    var per = periodFor(h);
-    clockTime.innerHTML = fmtClock(h)+"<span>hrs</span>";
-    clockPeriod.textContent = per[0]; clockPeriod.className = "period "+per[1];
-
-    var totalN=0, totalS=0;
-    CROSSINGS.forEach(function(c){
-      var open = openFactor(c,h);
-      var rN = BASE_UNIT*c.sizeFactor*shape(h,"N",c.cat)*open;
-      var rS = BASE_UNIT*c.sizeFactor*shape(h,"S",c.cat)*open;
-      totalN+=rN; totalS+=rS;
-
-      var simSecPerHour = DAY_SECONDS/24/speed;
-      c._spawnAccN = (c._spawnAccN||0) + (rN/DOT_UNIT)*(dt/simSecPerHour);
-      c._spawnAccS = (c._spawnAccS||0) + (rS/DOT_UNIT)*(dt/simSecPerHour);
-      while(c._spawnAccN>=1 && travelers.length<260){ spawnTraveler(c,"N"); c._spawnAccN-=1; }
-      while(c._spawnAccS>=1 && travelers.length<260){ spawnTraveler(c,"S"); c._spawnAccS-=1; }
-
-      var m = markerEls[c.id];
-      if(m){
-        var closedNow = open<0.08;
-        m.el.className = "m-core pulse " + (closedNow?"closed":c.cat);
-      }
-      var rb = rankBars[c.id];
-      if(rb) rb.style.width = Math.min(100, ((rN+rS)/(BASE_UNIT*maxSizeFactor*0.85))*100)+"%";
-    });
-
-    var features = [];
-    for(var i=travelers.length-1;i>=0;i--){
-      var tr = travelers[i];
-      var dirSign = tr.dir==="N" ? 1 : -1;
-      tr.t += dirSign*(dt/tr.durationSec);
-      if(tr.t>=1 || tr.t<=0){ travelers.splice(i,1); continue; }
-      var lanePath = tr.dir==="N" ? tr.c.pathN : tr.c.pathS;
-      var here = pointAtT(lanePath, tr.t);
-      features.push({ type:"Feature", properties:{dir:tr.dir}, geometry:{type:"Point", coordinates:here.pos} });
-    }
-    if(map && map.getSource("travelers")){
-      map.getSource("travelers").setData({type:"FeatureCollection", features:features});
-    }
-
-    var maxFlow = BASE_UNIT*maxSizeFactor*0.9;
-    nbVal.textContent = Math.round(totalN)+"/hr (model)";
-    sbVal.textContent = Math.round(totalS)+"/hr (model)";
-    nbBar.style.width = Math.min(100,(totalN/maxFlow)*100)+"%";
-    sbBar.style.width = Math.min(100,(totalS/maxFlow)*100)+"%";
-    activeVal.textContent = travelers.length;
-    activeBar.style.width = Math.min(100,(travelers.length/220)*100)+"%";
-
-    requestAnimationFrame(tick);
-  }
 })();
 </script>

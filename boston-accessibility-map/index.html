@@ -1,0 +1,513 @@
+<meta charset="utf-8">
+<title>Fifteen Minutes On Foot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,500&family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js"></script>
+<style>
+  :root{
+    --bg:#F5F3EC;
+    --panel:#E9E8DF;
+    --panel-2:#E1E1D6;
+    --ink:#14233A;
+    --ink-soft:#4C5C70;
+    --ink-faint:#8592A0;
+    --line:rgba(20,35,58,0.14);
+    --panel-border:rgba(20,35,58,0.13);
+    --shadow:0 18px 40px -20px rgba(20,35,58,0.4);
+    --focus:#2F5D8A;
+    --accent:#8E2F3B;
+    --s0:#8E2F3B;
+    --s1:#AA4A68;
+    --s2:#6F4C86;
+    --s3:#4D6FA3;
+    --s4:#16325C;
+    --none:#A8A79E;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"Source Sans 3", ui-sans-serif, system-ui, -apple-system, sans-serif;
+    font-size:16px;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  @media (prefers-reduced-motion: reduce){ *{animation-duration:0.01ms !important; transition-duration:0.01ms !important;} }
+  a{color:inherit;}
+  .wrap{max-width:1320px;margin:0 auto;padding:0 clamp(18px,4vw,44px) clamp(48px,8vw,80px);}
+
+  header.hero{padding:clamp(28px,5vw,52px) 0 clamp(8px,2vw,16px);}
+  .eyebrow{
+    font-family:"IBM Plex Mono", ui-monospace, monospace;
+    font-size:12px; letter-spacing:0.16em; text-transform:uppercase;
+    color:var(--accent); margin:0 0 10px;
+  }
+  .eyebrow::before{ content:"◆ "; color:var(--s3); }
+  h1{
+    font-family:"Source Serif 4", Georgia, serif;
+    font-weight:600;
+    font-size:clamp(2rem,4vw,3rem);
+    line-height:1.03; letter-spacing:-0.01em; margin:0 0 14px;
+    text-wrap:balance;
+  }
+  h1 em{ font-style:italic; font-weight:500; color:var(--accent); }
+  .dek{ max-width:80ch; font-size:clamp(0.94rem,1.2vw,1.03rem); color:var(--ink-soft); margin:0; }
+  .dek strong{color:var(--ink); font-weight:600;}
+  .dek .swatch{display:inline-block;width:9px;height:9px;border-radius:50%;margin:0 2px -1px 0;}
+
+  .layout{
+    display:grid;
+    grid-template-columns: minmax(0,1fr) 320px;
+    gap:clamp(14px,2.6vw,24px);
+    align-items:start;
+    margin:clamp(22px,4vw,36px) 0 0;
+  }
+  @media (max-width:920px){ .layout{ grid-template-columns: 1fr; } }
+
+  .map-frame{
+    position:relative;
+    border-radius:16px;
+    border:1px solid var(--panel-border);
+    background:var(--panel);
+    box-shadow:var(--shadow);
+    overflow:hidden;
+    aspect-ratio:4/5;
+  }
+  @media (min-width:640px){ .map-frame{ aspect-ratio:11/10; } }
+  #map{ position:absolute; inset:0; width:100%; height:100%; }
+  .mapboxgl-ctrl-logo{ filter:invert(0.15) opacity(0.55); }
+  .mapboxgl-ctrl-attrib{ font-size:10px; }
+  .mapboxgl-popup{ display:none; }
+
+  .setup-banner{
+    position:absolute; inset:0; z-index:30; display:flex; align-items:center; justify-content:center;
+    background:rgba(245,243,236,0.97); padding:32px; text-align:center;
+  }
+  .setup-banner[hidden]{ display:none; }
+
+  .data-loading{
+    position:absolute; left:14px; bottom:14px; z-index:6;
+    background:rgba(233,232,223,0.92); backdrop-filter:blur(6px);
+    border:1px solid var(--panel-border); border-radius:12px;
+    padding:10px 14px; box-shadow:0 14px 30px -18px rgba(20,35,58,0.4);
+    font-family:"IBM Plex Mono", ui-monospace, monospace; font-size:10.5px;
+    color:var(--ink-soft); display:flex; align-items:center; gap:9px;
+    transition:opacity 200ms ease;
+  }
+  .data-loading[hidden]{ display:none; }
+  .data-loading .spin{
+    width:11px; height:11px; border-radius:50%; flex:none;
+    border:2px solid rgba(20,35,58,0.18); border-top-color:var(--accent);
+    animation:spin 0.8s linear infinite;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce){ .data-loading .spin{ animation:none; } }
+  .setup-banner .box{ max-width:480px; }
+  .setup-banner h3{ font-family:"Source Serif 4"; font-size:18px; margin:0 0 10px; }
+  .setup-banner p{ font-size:13px; color:var(--ink-soft); margin:0 0 8px; }
+  .setup-banner code{ background:rgba(20,35,58,0.08); padding:2px 6px; border-radius:5px; font-family:"IBM Plex Mono"; font-size:12px; color:var(--accent); }
+
+  .chip{
+    position:absolute;
+    background:rgba(233,232,223,0.92);
+    backdrop-filter:blur(6px);
+    border:1px solid var(--panel-border);
+    border-radius:12px;
+    padding:12px 14px;
+    box-shadow:0 14px 30px -18px rgba(20,35,58,0.4);
+    z-index:5;
+  }
+  .chip-title{ top:14px; left:14px; max-width:230px; }
+  .chip-title .name{ font-family:"Source Serif 4"; font-weight:600; font-size:14.5px; letter-spacing:0.01em; }
+  .chip-title .sub{ font-family:"IBM Plex Mono"; font-size:10px; color:var(--ink-faint); letter-spacing:0.06em; text-transform:uppercase; margin-top:3px; }
+
+  .chip-modes{ top:14px; right:14px; padding:8px; display:flex; flex-direction:column; gap:4px; }
+  .mode-btn{
+    font-family:"IBM Plex Mono", ui-monospace, monospace;
+    font-size:10.5px; letter-spacing:0.03em;
+    background:transparent; border:1px solid transparent; border-radius:7px;
+    padding:6px 10px; color:var(--ink-soft); cursor:pointer; text-align:left;
+    white-space:nowrap;
+  }
+  .mode-btn:hover{ background:rgba(20,35,58,0.06); color:var(--ink); }
+  .mode-btn.active{ background:var(--ink); color:var(--bg); }
+
+  .chip-legend{ left:14px; bottom:14px; min-width:190px; }
+  .chip-legend h4{ margin:0 0 9px; font-family:"IBM Plex Mono"; font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink-faint); }
+  .leg-scale{ display:flex; gap:3px; margin-bottom:6px; }
+  .leg-scale i{ display:block; flex:1; height:10px; border-radius:2px; }
+  .leg-labels{ display:flex; justify-content:space-between; font-family:"IBM Plex Mono"; font-size:9.5px; color:var(--ink-faint); }
+  .leg-caption{ margin-top:8px; font-size:11px; color:var(--ink-soft); line-height:1.4; }
+
+  .tooltip{
+    position:absolute; pointer-events:none; z-index:20;
+    background:var(--panel); border:1px solid var(--panel-border); border-radius:10px;
+    padding:10px 12px; font-size:12px; color:var(--ink-soft);
+    box-shadow:0 14px 30px -16px rgba(20,35,58,0.4);
+    opacity:0; transform:translate(-50%,calc(-100% - 12px)); transition:opacity 100ms ease;
+    white-space:nowrap;
+  }
+  .tooltip.show{ opacity:1; }
+  .tooltip b{ color:var(--ink); font-family:"Source Serif 4"; font-size:13.5px; }
+  .tooltip .tt-row{ display:flex; justify-content:space-between; gap:14px; margin-top:5px; font-family:"IBM Plex Mono"; font-size:10.5px; }
+  .tooltip .tt-row span:last-child{ color:var(--ink); font-weight:600; }
+  .tooltip .tt-row.ok span:last-child{ color:var(--accent); }
+  .tooltip .tt-row.no span:last-child{ color:var(--ink-faint); }
+
+  /* ---- side panel ---- */
+  aside.panel{ display:flex; flex-direction:column; gap:14px; }
+  .block{ background:var(--panel); border:1px solid var(--panel-border); border-radius:14px; padding:16px 16px 14px; }
+  .block h3{ margin:0 0 12px; font-family:"IBM Plex Mono"; font-size:10.5px; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-faint); }
+
+  .cat-row{ display:flex; align-items:center; gap:9px; font-size:12.5px; color:var(--ink-soft); margin:9px 0; }
+  .cat-row .cn{ flex:0 0 84px; }
+  .cat-row .cbar{ flex:1; height:7px; border-radius:4px; background:rgba(20,35,58,0.08); overflow:hidden; }
+  .cat-row .cbar > i{ display:block; height:100%; border-radius:4px; background:var(--s4); }
+  .cat-row .cpct{ flex:0 0 38px; text-align:right; font-family:"IBM Plex Mono"; font-size:11px; color:var(--ink); }
+
+  .hist{ display:flex; align-items:flex-end; gap:6px; height:90px; margin:4px 0 6px; }
+  .hist .hbar{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:5px; }
+  .hist .hbar i{ display:block; width:100%; border-radius:3px 3px 0 0; }
+  .hist .hbar span{ font-family:"IBM Plex Mono"; font-size:9px; color:var(--ink-faint); }
+  .hist-caption{ font-size:11px; color:var(--ink-soft); margin-top:2px; }
+
+  .stat-line{ display:flex; justify-content:space-between; align-items:baseline; padding:7px 0; border-top:1px solid var(--line); font-size:12.5px; }
+  .stat-line:first-child{ border-top:none; }
+  .stat-line b{ font-family:"IBM Plex Mono"; font-size:15px; color:var(--accent); }
+
+  .note{
+    margin:22px 0 0; padding:16px 20px; border-left:3px solid var(--accent);
+    background:var(--panel); border-radius:0 10px 10px 0;
+  }
+  .note-label{ font-family:"IBM Plex Mono"; font-size:0.7rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--ink-faint); margin:0 0 8px; }
+  .note p{ margin:0 0 10px; font-size:0.9rem; color:var(--ink-soft); max-width:86ch; line-height:1.62; }
+  .note p:last-child{ margin-bottom:0; }
+  .note a{ color:var(--accent); text-decoration:underline; text-decoration-color:var(--panel-border); text-underline-offset:3px; }
+  .note a:hover{ text-decoration-color:currentColor; }
+</style>
+
+<div class="wrap">
+  <header class="hero">
+    <p class="eyebrow">Boston · Walk-Network Accessibility</p>
+    <h1>How much of Boston is a <em>fifteen-minute walk</em> away?</h1>
+    <p class="dek">For every corner of Boston's real walking network, this map asks a simple question: within a fifteen-minute walk along actual streets and sidewalks — not a straight-line radius — how many of four daily needs can you reach? <span class="swatch" style="background:var(--accent)"></span><strong>Groceries, healthcare, education, and recreation</strong>, pulled fresh from OpenStreetMap and routed across a 222,000-node street graph built for this piece. <span class="swatch" style="background:var(--s0)"></span>Cranberry hexagons reach fewer than half; <span class="swatch" style="background:var(--s4)"></span>harbor navy reaches all four. Hover any hexagon for its average walk times.</p>
+  </header>
+
+  <div class="layout">
+    <div class="map-frame" id="mapFrame">
+      <div id="map"></div>
+      <div class="setup-banner" id="setupBanner" hidden>
+        <div class="box">
+          <h3>Add a Mapbox token to see the map</h3>
+          <p>This page reads a token from <code>.env</code> next to it (never hardcoded in the HTML). Open <code>.env</code> in this project folder, replace the placeholder with your public token from <code>account.mapbox.com/access-tokens</code> (starts with <code>pk.</code>), save, and reload.</p>
+          <p id="setupDetail" style="color:var(--accent)"></p>
+        </div>
+      </div>
+      <div class="chip chip-title">
+        <div class="name">FIFTEEN MINUTES ON FOOT</div>
+        <div class="sub">3,559 hexagons · ~200 m across</div>
+      </div>
+      <div class="chip chip-modes" id="modeChip"></div>
+      <div class="chip chip-legend" id="legendChip"></div>
+      <div class="data-loading" id="dataLoading" hidden><span class="spin"></span>Loading accessibility hexagons…</div>
+      <div class="tooltip" id="tooltip"></div>
+    </div>
+
+    <aside class="panel">
+      <div class="block">
+        <h3>Share of Boston reaching each need in 15 min</h3>
+        <div id="catRows"></div>
+      </div>
+      <div class="block">
+        <h3>Composite score, city-wide</h3>
+        <div class="hist" id="histRows"></div>
+        <p class="hist-caption">Score (0–4 needs reached) across the 21,499 underlying street-network sample points; each hexagon shows the local average.</p>
+      </div>
+      <div class="block">
+        <div class="stat-line"><span>Points scoring 4 of 4</span><b id="statFull">—</b></div>
+        <div class="stat-line"><span>Points scoring 0 of 4</span><b id="statZero">—</b></div>
+        <div class="stat-line"><span>Median category reach</span><b id="statMedian">—</b></div>
+      </div>
+    </aside>
+  </div>
+
+  <footer class="note">
+    <p class="note-label">Method &amp; sources</p>
+    <p>Inspired by Milan Janosov's <a href="https://www.youtube.com/watch?v=_RU8GlUbsk8" target="_blank" rel="noopener">"How Walkable Is Your City? Analyzing Urban Access with Python &amp; OSM"</a> (#30DayMapChallenge, Day 14/30 — OpenStreetMap), which measured 15-minute-city access in Zurich, Vienna, Budapest, and London by routing across real OSM street graphs with the <code>city2graph</code> package. This piece applies the same idea to Boston, rebuilt independently: Boston's administrative boundary (OSM relation 2315704) was used to pull every walkable way inside city limits via the Overpass API — 56,842 ways, 243,581 nodes — filtered to exclude motorways and no-foot-access links. The largest connected component (222,292 nodes) became a weighted graph in NetworkX, with edge weights as real haversine distances along each street segment.</p>
+    <p>Four daily-need categories were pulled the same way: <b>groceries</b> (shop=supermarket/convenience/grocery/greengrocer, 254 locations), <b>healthcare</b> (amenity=hospital/clinic/doctors/pharmacy, 127), <b>education</b> (amenity=school/kindergarten/college, 312), and <b>recreation</b> (leisure=fitness_centre/sports_centre/park/playground plus amenity=gym, 837 — Boston's park system dominates this count). Each POI was snapped to its nearest graph node, then a multi-source Dijkstra search from every category's node set found the true network-distance to the nearest example of that need for every one of the 222,292 nodes at once. A point is "reached" within a walking cutoff of 1,200 network-meters, roughly 15 minutes at a 80 m/min (4.8 km/h) walking pace — the same rule-of-thumb pace used in most 15-minute-city research.</p>
+    <p>Rendering all 222,292 nodes would overwhelm both the browser and the file size, so the analysis keeps 21,499 sample points: street intersections and dead-ends (degree ≠ 2, dropping the mid-block vertices that just trace a curve), thinned to at most one point per 45-meter cell, keeping the highest-scoring node where several competed for a cell. Those points are then binned into a 3,559-cell hexagon grid (~200 m across, only cells containing at least one point are drawn), and each hexagon shows the rounded average score and mean walk times of the points inside it — so parks, water and rail yards with no street nodes stay blank rather than being filled with guesses. This changes the map's density, not its geography — a five-way intersection downtown and a cul-de-sac in West Roxbury each still get exactly the accessibility score their real position on the network earned. The lowest-scoring pockets on the map are real too: the Franklin Park and Arnold Arboretum interiors (green, but far from groceries or clinics), the industrial waterfront edges of East Boston and South Boston near Logan Airport and the Reserved Channel, and the lower-density blocks of West Roxbury and Hyde Park toward the city line.</p>
+    <p>Sources: <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors, ODbL 1.0</a> (street network and points of interest, via the Overpass API) · <a href="https://nominatim.openstreetmap.org" target="_blank" rel="noopener">Nominatim</a> (Boston administrative boundary) · basemap and rendering by <a href="https://www.mapbox.com" target="_blank" rel="noopener">Mapbox GL JS</a>. Data pulled 2026-09-16; OpenStreetMap changes continuously, so a re-run on a different day will differ slightly.</p>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var CATS = [
+    {key:"groc", label:"Groceries", full:"grocery"},
+    {key:"heal", label:"Healthcare", full:"healthcare"},
+    {key:"educ", label:"Education", full:"education"},
+    {key:"recr", label:"Recreation", full:"recreation"}
+  ];
+  var SCORE_COLORS = ["#8E2F3B","#AA4A68","#6F4C86","#4D6FA3","#16325C"];
+  var NONE_COLOR = "#A8A79E";
+
+  var manifest = null;
+  var mode = "composite"; // composite | groc | heal | educ | recr
+
+  function showSetupBanner(msg){
+    document.getElementById("setupDetail").textContent = msg||"";
+    document.getElementById("setupBanner").hidden = false;
+  }
+  function parseEnv(text){
+    var out={};
+    text.split(/\r?\n/).forEach(function(line){
+      line=line.trim();
+      if(!line||line[0]==="#") return;
+      var idx=line.indexOf("=");
+      if(idx===-1) return;
+      out[line.slice(0,idx).trim()] = line.slice(idx+1).trim().replace(/^["']|["']$/g,"");
+    });
+    return out;
+  }
+
+  fetch("./.env", {cache:"no-store"}).then(function(r){
+    if(!r.ok) throw new Error("could not read .env ("+r.status+")");
+    return r.text();
+  }).then(function(text){
+    var token = parseEnv(text).MAPBOX_TOKEN;
+    if(!token || token.indexOf("YOUR_TOKEN_HERE")!==-1){
+      showSetupBanner("Found .env but MAPBOX_TOKEN is still the placeholder.");
+      return;
+    }
+    initMap(token);
+  }).catch(function(err){
+    showSetupBanner("Serve this file over http:// (not double-clicked as a local file) so it can read .env — e.g. `python serve.py` in this project folder. (" + err.message + ")");
+  });
+
+  fetch("./data/manifest.json", {cache:"no-store"}).then(function(r){ return r.json(); }).then(function(m){
+    manifest = m;
+    buildStatsPanel(m);
+  }).catch(function(){ /* stats panel stays empty; map still works */ });
+
+  var map;
+
+  function initMap(token){
+    mapboxgl.accessToken = token;
+    map = new mapboxgl.Map({
+      container: "map",
+      style: "mapbox://styles/mapbox/light-v11",
+      center: [-71.075, 42.318],
+      zoom: 11.6,
+      pitch: 0,
+      attributionControl: true
+    });
+    map.addControl(new mapboxgl.NavigationControl({showCompass:false}), "top-right");
+    map.dragRotate.disable();
+    map.touchZoomRotate.disableRotation();
+
+    var didLoad = false;
+    map.on("load", function(){
+      didLoad = true;
+      document.getElementById("setupBanner").hidden = true;
+      muteBasemap();
+      addAccessibilityLayer();
+      buildModeChip();
+      buildLegendChip();
+    });
+
+    map.on("error", function(e){
+      if(e && e.error && /access token|unauthorized|401|403|forbidden/i.test(e.error.message||"")){
+        showSetupBanner("Mapbox rejected this token or style: " + e.error.message);
+      }
+    });
+
+    setTimeout(function(){
+      if(!didLoad){ showSetupBanner("The basemap didn't finish loading in time — check your internet connection, token, and style access, then reload."); }
+    }, 15000);
+
+    window.addEventListener("resize", function(){ map.resize(); });
+  }
+
+  /* Rule: basemap stays strictly background — low-saturation muted tones,
+     non-essential layers under 0.4 opacity, our data layer is the only
+     thing allowed full contrast. */
+  function muteBasemap(){
+    var layers = map.getStyle().layers;
+    layers.forEach(function(l){
+      try{
+        var id = l.id.toLowerCase();
+        if(l.type === "background"){
+          map.setPaintProperty(l.id, "background-color", "#EAEDEA");
+        } else if(l.type === "fill" && id.indexOf("water") !== -1){
+          map.setPaintProperty(l.id, "fill-color", "#D8E2E8");
+          map.setPaintProperty(l.id, "fill-opacity", 0.7);
+        } else if(l.type === "fill" && (id.indexOf("landuse") !== -1 || id.indexOf("landcover") !== -1 || id.indexOf("park") !== -1)){
+          map.setPaintProperty(l.id, "fill-color", "#DCE3D6");
+          map.setPaintProperty(l.id, "fill-opacity", 0.35);
+        } else if(l.type === "fill" && id.indexOf("building") !== -1){
+          map.setPaintProperty(l.id, "fill-color", "#D8D6CC");
+          map.setPaintProperty(l.id, "fill-opacity", 0.32);
+        } else if(l.type === "fill-extrusion"){
+          map.setPaintProperty(l.id, "fill-extrusion-opacity", 0.15);
+        } else if(l.type === "line" && id.indexOf("road") !== -1){
+          map.setPaintProperty(l.id, "line-color", "#A7A9A2");
+          var isMajor = /motorway|trunk|primary/.test(id) && id.indexOf("case")===-1;
+          map.setPaintProperty(l.id, "line-opacity", isMajor ? 0.4 : 0.24);
+        } else if(l.type === "line" && (id.indexOf("admin") !== -1 || id.indexOf("boundary") !== -1)){
+          map.setPaintProperty(l.id, "line-color", "#8592A0");
+          map.setPaintProperty(l.id, "line-opacity", 0.35);
+        } else if(l.type === "symbol" && (id.indexOf("poi") !== -1 || id.indexOf("transit") !== -1)){
+          map.setLayoutProperty(l.id, "visibility", "none");
+        } else if(l.type === "symbol"){
+          map.setPaintProperty(l.id, "text-color", "#33465D");
+          map.setPaintProperty(l.id, "text-halo-color", "#F5F3EC");
+          map.setPaintProperty(l.id, "text-halo-width", 1.4);
+        }
+      }catch(e){ /* paint props vary by layer; skip quietly */ }
+    });
+  }
+
+  function addAccessibilityLayer(){
+    var loadingChip = document.getElementById("dataLoading");
+    loadingChip.hidden = false;
+    var sourceReady = false;
+    map.on("sourcedata", function onSourceData(e){
+      if(e.sourceId === "access" && e.isSourceLoaded && !sourceReady){
+        sourceReady = true;
+        loadingChip.hidden = true;
+        map.off("sourcedata", onSourceData);
+      }
+    });
+
+    map.addSource("access", { type:"geojson", data:"./data/accessibility_hex.geojson" });
+
+    map.addLayer({
+      id:"access-points", type:"fill", source:"access",
+      paint:{
+        "fill-color": composeColorExpr("composite"),
+        "fill-opacity": ["interpolate",["linear"],["zoom"], 11,0.62, 14,0.52, 16,0.38],
+        "fill-outline-color": "rgba(245,243,236,0.55)"
+      }
+    });
+
+    var tooltip = document.getElementById("tooltip");
+    var frame = document.getElementById("mapFrame");
+
+    map.on("mousemove", "access-points", function(e){
+      var f = e.features[0];
+      if(!f) return;
+      map.getCanvas().style.cursor = "pointer";
+      var p = f.properties;
+      var rows = CATS.map(function(c){
+        var min = p[c.key+"_min"];
+        var ok = min <= 15;
+        var txt = min >= 20 ? "> 20 min" : min.toFixed(1)+" min";
+        return '<div class="tt-row '+(ok?"ok":"no")+'"><span>'+c.label+'</span><span>'+txt+'</span></div>';
+      }).join("");
+      tooltip.innerHTML = '<b>'+p.score+' of 4 needs reached</b>' + rows + '<div class="tt-row"><span>Avg of '+p.n+' points</span><span></span></div>';
+      var rect = frame.getBoundingClientRect();
+      var x = e.point.x, y = e.point.y;
+      tooltip.style.left = x+"px";
+      tooltip.style.top = y+"px";
+      tooltip.classList.add("show");
+    });
+    map.on("mouseleave", "access-points", function(){
+      map.getCanvas().style.cursor = "";
+      tooltip.classList.remove("show");
+    });
+  }
+
+  function composeColorExpr(m){
+    if(m === "composite"){
+      return ["step", ["get","score"],
+        SCORE_COLORS[0], 1, SCORE_COLORS[1], 2, SCORE_COLORS[2], 3, SCORE_COLORS[3], 4, SCORE_COLORS[4]
+      ];
+    }
+    var minField = m+"_min";
+    return ["case",
+      ["==", ["get", minField], null], NONE_COLOR,
+      ["interpolate", ["linear"], ["get", minField],
+        0, SCORE_COLORS[4],
+        7.5, SCORE_COLORS[2],
+        15, SCORE_COLORS[0],
+        20, NONE_COLOR
+      ]
+    ];
+  }
+
+  function setMode(m){
+    mode = m;
+    if(map && map.getLayer("access-points")){
+      map.setPaintProperty("access-points", "fill-color", composeColorExpr(m));
+    }
+    document.querySelectorAll(".mode-btn").forEach(function(b){
+      b.classList.toggle("active", b.getAttribute("data-mode") === m);
+    });
+    buildLegendChip();
+  }
+
+  function buildModeChip(){
+    var chip = document.getElementById("modeChip");
+    var items = [{key:"composite", label:"All 4 needs"}].concat(
+      CATS.map(function(c){ return {key:c.key, label:c.label}; })
+    );
+    chip.innerHTML = items.map(function(it){
+      return '<button class="mode-btn'+(it.key===mode?" active":"")+'" data-mode="'+it.key+'">'+it.label+'</button>';
+    }).join("");
+    chip.querySelectorAll(".mode-btn").forEach(function(b){
+      b.addEventListener("click", function(){ setMode(b.getAttribute("data-mode")); });
+    });
+  }
+
+  function buildLegendChip(){
+    var chip = document.getElementById("legendChip");
+    if(mode === "composite"){
+      chip.innerHTML =
+        '<h4>Needs reached in 15 min</h4>' +
+        '<div class="leg-scale">' + SCORE_COLORS.map(function(c){ return '<i style="background:'+c+'"></i>'; }).join("") + '</div>' +
+        '<div class="leg-labels"><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span></div>' +
+        '<div class="leg-caption">Composite score across groceries, healthcare, education &amp; recreation.</div>';
+    } else {
+      var c = CATS.filter(function(x){ return x.key === mode; })[0];
+      chip.innerHTML =
+        '<h4>Walk time to nearest '+c.label.toLowerCase()+'</h4>' +
+        '<div class="leg-scale"><i style="background:'+SCORE_COLORS[4]+'"></i><i style="background:'+SCORE_COLORS[2]+'"></i><i style="background:'+SCORE_COLORS[0]+'"></i><i style="background:'+NONE_COLOR+'"></i></div>' +
+        '<div class="leg-labels"><span>0 min</span><span>7.5</span><span>15</span><span>&gt;20</span></div>' +
+        '<div class="leg-caption">Grey = no '+c.label.toLowerCase()+' reachable within 20 network-minutes.</div>';
+    }
+  }
+
+  function pct(x){ return (x*100).toFixed(0)+"%"; }
+
+  function buildStatsPanel(m){
+    var catRows = document.getElementById("catRows");
+    catRows.innerHTML = CATS.map(function(c){
+      var share = m.category_reach_share[c.full] || 0;
+      return '<div class="cat-row"><span class="cn">'+c.label+'</span><span class="cbar"><i style="width:'+pct(share)+'"></i></span><span class="cpct">'+pct(share)+'</span></div>';
+    }).join("");
+
+    var dist = m.score_distribution;
+    var total = Object.keys(dist).reduce(function(s,k){ return s + dist[k]; }, 0);
+    var maxV = Math.max.apply(null, Object.keys(dist).map(function(k){ return dist[k]; }));
+    var histRows = document.getElementById("histRows");
+    histRows.innerHTML = ["0","1","2","3","4"].map(function(k){
+      var v = dist[k] || 0;
+      var h = maxV ? Math.max(4, Math.round((v/maxV)*80)) : 4;
+      return '<div class="hbar"><i style="height:'+h+'px;background:'+SCORE_COLORS[+k]+'"></i><span>'+k+'</span></div>';
+    }).join("");
+
+    document.getElementById("statFull").textContent = pct((dist["4"]||0)/total);
+    document.getElementById("statZero").textContent = pct((dist["0"]||0)/total);
+    var weighted = 0;
+    ["0","1","2","3","4"].forEach(function(k){ weighted += (dist[k]||0) * (+k); });
+    document.getElementById("statMedian").textContent = (weighted/total).toFixed(2) + " / 4";
+  }
+
+  setMode("composite");
+})();
+</script>

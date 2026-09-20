@@ -1,0 +1,384 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>How Far Can You Get From Here</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,500&family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js"></script>
+<style>
+  :root{
+    --bg:#FFF4EA; --panel:#FCE8DA; --ink:#0B3C49; --ink-soft:#3F6A73; --ink-faint:#7E9AA0;
+    --line:rgba(11,60,73,0.14); --panel-border:rgba(11,60,73,0.13);
+    --shadow:0 18px 40px -20px rgba(11,60,73,0.4);
+    --accent:#0A8F8C;
+    /* one sequential ramp, nearest -> farthest (purple -> flamingo -> coral -> mango sunset) */
+    --b0:#4B1D6B; --b1:#9A1F7E; --b2:#D9367A; --b3:#FF6A5C; --b4:#FF9F45; --b5:#FFC53D;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--bg);color:var(--ink);font-family:"Source Sans 3",ui-sans-serif,system-ui,sans-serif;font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;}
+  a{color:inherit;}
+  .wrap{max-width:1320px;margin:0 auto;padding:0 clamp(18px,4vw,44px) clamp(48px,8vw,80px);}
+  header.hero{padding:clamp(28px,5vw,52px) 0 clamp(8px,2vw,16px);}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:0.16em;text-transform:uppercase;color:var(--accent);margin:0 0 10px;}
+  .eyebrow::before{content:"◆ ";color:var(--b1);}
+  h1{font-family:"Source Serif 4",Georgia,serif;font-weight:600;font-size:clamp(2rem,4vw,3rem);line-height:1.03;letter-spacing:-0.01em;margin:0 0 14px;text-wrap:balance;}
+  h1 em{font-style:italic;font-weight:500;color:var(--accent);}
+  .dek{max-width:80ch;font-size:clamp(0.94rem,1.2vw,1.03rem);color:var(--ink-soft);margin:0;}
+  .dek strong{color:var(--ink);font-weight:600;}
+
+  .layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:clamp(14px,2.6vw,24px);align-items:start;margin:clamp(22px,4vw,36px) 0 0;}
+  @media (max-width:920px){.layout{grid-template-columns:1fr;}}
+  .map-frame{position:relative;border-radius:16px;border:1px solid var(--panel-border);background:var(--panel);box-shadow:var(--shadow);overflow:hidden;aspect-ratio:4/5;}
+  @media (min-width:640px){.map-frame{aspect-ratio:11/10;}}
+  #map{position:absolute;inset:0;width:100%;height:100%;}
+  .mapboxgl-ctrl-logo{filter:invert(0.15) opacity(0.55);}
+  .mapboxgl-ctrl-attrib{font-size:10px;}
+
+  .setup-banner{position:absolute;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;background:rgba(255,244,234,0.97);padding:32px;text-align:center;}
+  .setup-banner[hidden]{display:none;}
+  .setup-banner .box{max-width:480px;}
+  .setup-banner h3{font-family:"Source Serif 4";font-size:18px;margin:0 0 10px;}
+  .setup-banner p{font-size:13px;color:var(--ink-soft);margin:0 0 8px;}
+  .setup-banner code{background:rgba(11,60,73,0.08);padding:2px 6px;border-radius:5px;font-family:"IBM Plex Mono";font-size:12px;color:var(--accent);}
+
+  .chip{position:absolute;background:rgba(252,232,218,0.92);backdrop-filter:blur(6px);border:1px solid var(--panel-border);border-radius:12px;padding:12px 14px;box-shadow:0 14px 30px -18px rgba(11,60,73,0.4);z-index:5;}
+  .chip-title{top:14px;left:14px;max-width:230px;}
+  .chip-title .name{font-family:"Source Serif 4";font-weight:600;font-size:14.5px;letter-spacing:0.01em;}
+  .chip-title .sub{font-family:"IBM Plex Mono";font-size:10px;color:var(--ink-faint);letter-spacing:0.06em;text-transform:uppercase;margin-top:3px;}
+  .chip-modes{top:14px;right:54px;padding:8px;display:flex;flex-direction:column;gap:4px;}
+  .btn{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:0.03em;background:transparent;border:1px solid transparent;border-radius:7px;padding:6px 10px;color:var(--ink-soft);cursor:pointer;text-align:left;white-space:nowrap;}
+  .btn:hover{background:rgba(11,60,73,0.06);color:var(--ink);}
+  .btn.active{background:var(--ink);color:var(--bg);}
+  .chip-legend{left:14px;bottom:26px;min-width:190px;}
+  .chip-legend h4{margin:0 0 9px;font-family:"IBM Plex Mono";font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-faint);}
+  .leg-scale{display:flex;gap:3px;margin-bottom:6px;}
+  .leg-scale i{display:block;flex:1;height:10px;border-radius:2px;}
+  .leg-labels{display:flex;justify-content:space-between;font-family:"IBM Plex Mono";font-size:10px;color:var(--ink-soft);}
+  .hint{margin-top:9px;font-size:11px;color:var(--ink-soft);max-width:190px;line-height:1.4;}
+  .tooltip{position:absolute;z-index:8;pointer-events:none;background:var(--ink);color:var(--bg);font-family:"IBM Plex Mono";font-size:11px;padding:4px 8px;border-radius:6px;transform:translate(12px,-28px);display:none;white-space:nowrap;}
+  .origin{width:16px;height:16px;border-radius:50%;background:var(--accent);border:3px solid var(--bg);box-shadow:0 0 0 1.5px var(--accent),0 4px 10px rgba(11,60,73,0.4);}
+  .origin-glow{width:34px;height:34px;border-radius:50%;border:1.5px dashed var(--accent);opacity:0.55;position:absolute;left:-9px;top:-9px;}
+
+  .panel{background:var(--panel);border:1px solid var(--panel-border);border-radius:16px;padding:16px 18px;box-shadow:var(--shadow);}
+  .block{padding:4px 0 14px;}
+  .block h3{font-family:"IBM Plex Mono";font-size:10.5px;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-faint);margin:0 0 10px;font-weight:500;}
+  .presets{display:flex;flex-wrap:wrap;gap:6px;}
+  .presets .btn{border-color:var(--panel-border);background:rgba(255,244,234,0.6);}
+  .presets .btn.active{background:var(--ink);color:var(--bg);border-color:var(--ink);}
+  .band{display:grid;grid-template-columns:72px 1fr 58px;white-space:nowrap;align-items:center;gap:8px;font-family:"IBM Plex Mono";font-size:11px;padding:3px 0;}
+  .band .bar{height:10px;border-radius:2px;min-width:2px;}
+  .band .val{text-align:right;color:var(--ink-soft);}
+  .stat-line{display:flex;justify-content:space-between;align-items:baseline;padding:7px 0;border-top:1px solid var(--line);font-size:12.5px;}
+  .stat-line b{font-family:"IBM Plex Mono";font-size:15px;color:var(--accent);}
+
+  .note{margin:22px 0 0;padding:16px 20px;border-left:3px solid var(--accent);background:var(--panel);border-radius:0 10px 10px 0;}
+  .note-label{font-family:"IBM Plex Mono";font-size:0.7rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-faint);margin:0 0 8px;}
+  .note p{margin:0 0 10px;font-size:0.9rem;color:var(--ink-soft);max-width:86ch;line-height:1.62;}
+  .note p:last-child{margin-bottom:0;}
+  .note a{color:var(--accent);text-decoration:underline;text-decoration-color:var(--panel-border);text-underline-offset:3px;}
+</style>
+
+<div class="wrap">
+  <header class="hero">
+    <p class="eyebrow">Miami · Isochrone Map</p>
+    <h1>How far can you get from <em>right here</em>?</h1>
+    <p class="dek">Every street segment you can reach from a chosen starting point, colored by <strong>how many minutes it takes</strong> — routed along the real Miami street network, not a straight-line circle. <strong>Click anywhere on the map</strong> to move the origin, or pick a neighborhood. Switch between walking and cycling to see how the same city shrinks or stretches.</p>
+  </header>
+
+  <div class="layout">
+    <div class="map-frame" id="mapFrame">
+      <div id="map"></div>
+      <div class="setup-banner" id="setupBanner" hidden>
+        <div class="box">
+          <h3>Add a Mapbox token to see the map</h3>
+          <p>This page reads a token from <code>.env</code> next to it. Put <code>MAPBOX_TOKEN=pk.…</code> in that file and reload over <code>http://</code> (<code>python serve.py</code>).</p>
+          <p id="setupDetail" style="color:var(--accent)"></p>
+        </div>
+      </div>
+      <div class="chip chip-title">
+        <div class="name">TRAVEL TIME FROM HERE</div>
+        <div class="sub" id="originName">Downtown Miami</div>
+      </div>
+      <div class="chip chip-modes" id="modeChip">
+        <button class="btn active" data-mode="walk">Walk · 4.8 km/h</button>
+        <button class="btn" data-mode="bike">Bike · 15 km/h</button>
+      </div>
+      <div class="chip chip-legend">
+        <h4>Minutes from origin</h4>
+        <div class="leg-scale"><i style="background:var(--b0)"></i><i style="background:var(--b1)"></i><i style="background:var(--b2)"></i><i style="background:var(--b3)"></i><i style="background:var(--b4)"></i><i style="background:var(--b5)"></i></div>
+        <div class="leg-labels"><span>0</span><span>5</span><span>10</span><span>15</span><span>20</span><span>25</span><span>30</span></div>
+        <div class="hint">Hover a street for its travel time.</div>
+      </div>
+      <div class="tooltip" id="tooltip"></div>
+    </div>
+
+    <aside class="panel">
+      <div class="block">
+        <h3>Start from</h3>
+        <div class="presets" id="presets"></div>
+      </div>
+      <div class="block">
+        <h3>Street reached, km per band</h3>
+        <div id="bandRows"></div>
+      </div>
+      <div class="block" style="padding-bottom:0">
+        <div class="stat-line"><span>Street within 15 min</span><b id="stat15">—</b></div>
+        <div class="stat-line"><span>Street within 30 min</span><b id="stat30">—</b></div>
+        <div class="stat-line"><span>Farthest street reached</span><b id="statFar">—</b></div>
+      </div>
+    </aside>
+  </div>
+
+  <footer class="note">
+    <p class="note-label">Method &amp; sources</p>
+    <p>Built from Milan Janosov's <a href="https://www.youtube.com/watch?v=_RU8GlUbsk8" target="_blank" rel="noopener">"How Walkable Is Your City? Analyzing Urban Access with Python &amp; OSM"</a> (#30DayMapChallenge), which routes across real OpenStreetMap street graphs instead of drawing radius circles. Here every walkable way in the urban core of Miami, Miami Beach and Coral Gables (25.70–25.86°N, 80.305–80.12°W) was pulled from the Overpass API and, minus motorways, trunk roads, steps and no-foot-access links, built into a weighted NetworkX graph (largest connected component; 101,166 intersections, 154,821 street segments, edge weights = haversine meters). Mid-block shape vertices were merged away, so curved streets draw as straight chords between intersections.</p>
+    <p>The graph ships with the page and Dijkstra runs in your browser on every click: shortest network distance from the snapped origin to every intersection, divided by pace (walk 80 m/min, bike 250 m/min). A segment takes the color of the slower of its two ends, in 5-minute bands out to 30. Not modeled: traffic lights, drawbridge openings, elevation (Miami is flat), and the bike mode ignores one-way rules, bike-lane quality and safety — it is the same graph at a faster pace, so treat it as an upper bound. Streets beyond the study box are cut off at its edge.</p>
+    <p>Sources: <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors, ODbL 1.0</a> (street network, via Overpass API) · basemap and rendering by <a href="https://www.mapbox.com" target="_blank" rel="noopener">Mapbox GL JS</a>. Data pulled 2026-09-19.</p>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var COLORS = ["#4B1D6B","#9A1F7E","#D9367A","#FF6A5C","#FF9F45","#FFC53D"];
+  var SPEED = {walk:80, bike:250};              // meters per minute
+  var MAX_MIN = 30, BAND_MIN = 5, NB = MAX_MIN / BAND_MIN;
+  var PRESETS = [
+    ["Downtown",[-80.1957,25.7752]], ["Brickell",[-80.1918,25.7617]], ["Wynwood",[-80.1990,25.8010]],
+    ["Design District",[-80.1930,25.8130]], ["Little Havana",[-80.2170,25.7655]],
+    ["Coconut Grove",[-80.2420,25.7280]], ["Lincoln Road",[-80.1400,25.7905]]
+  ];
+
+  var mode = "walk", originName = "Downtown Miami", originLL = PRESETS[0][1];
+  var map, marker, dist = null, mounted = false;
+  var g = null;   // graph, filled once graph.json arrives
+
+  function showSetupBanner(msg){
+    document.getElementById("setupBanner").hidden = false;
+    document.getElementById("setupDetail").textContent = msg || "";
+  }
+
+  /* ---------- graph + Dijkstra ---------- */
+  function buildGraph(raw){
+    var N = raw.n.length / 2, E = raw.e.length / 3;
+    var lon = new Float64Array(N), lat = new Float64Array(N), deg = new Int32Array(N + 1);
+    for(var i = 0; i < N; i++){ lon[i] = raw.b[0] + raw.n[2*i] / 1e5; lat[i] = raw.b[1] + raw.n[2*i+1] / 1e5; }
+    for(var k = 0; k < E; k++){ deg[raw.e[3*k] + 1]++; deg[raw.e[3*k+1] + 1]++; }
+    for(i = 0; i < N; i++) deg[i+1] += deg[i];
+    var fill = deg.slice(0, N), to = new Int32Array(2*E), w = new Float32Array(2*E);
+    for(k = 0; k < E; k++){
+      var a = raw.e[3*k], b = raw.e[3*k+1], m = raw.e[3*k+2];
+      to[fill[a]] = b; w[fill[a]++] = m; to[fill[b]] = a; w[fill[b]++] = m;
+    }
+    // uniform grid for snapping clicks/hovers to the nearest intersection
+    var CELL = 0.002, grid = new Map();
+    for(i = 0; i < N; i++){
+      var key = Math.floor(lon[i]/CELL) * 100000 + Math.floor(lat[i]/CELL);
+      (grid.get(key) || grid.set(key, []).get(key)).push(i);
+    }
+    return {N:N, E:E, e:raw.e, lon:lon, lat:lat, start:deg, to:to, w:w, grid:grid, CELL:CELL};
+  }
+
+  function snap(ll){
+    var cx = Math.floor(ll[0]/g.CELL), cy = Math.floor(ll[1]/g.CELL), best = -1, bd = Infinity, kx = 0.9;
+    for(var r = 0; r <= 3 && best < 0; r++){
+      for(var dx = -r; dx <= r; dx++) for(var dy = -r; dy <= r; dy++){
+        var list = g.grid.get((cx+dx)*100000 + cy+dy);
+        if(!list) continue;
+        for(var j = 0; j < list.length; j++){
+          var n = list[j], ex = (g.lon[n]-ll[0])*kx, ey = g.lat[n]-ll[1], d = ex*ex + ey*ey;
+          if(d < bd){ bd = d; best = n; }
+        }
+      }
+    }
+    return best;
+  }
+
+  // binary min-heap over parallel arrays, lazy deletion
+  function dijkstra(src, cutoff){
+    var d = new Float32Array(g.N).fill(Infinity), hd = new Float32Array(2*g.E + 2), hn = new Int32Array(2*g.E + 2), size = 0;
+    function push(x, n){
+      var i = size++;
+      while(i > 0){ var p = (i-1) >> 1; if(hd[p] <= x) break; hd[i] = hd[p]; hn[i] = hn[p]; i = p; }
+      hd[i] = x; hn[i] = n;
+    }
+    d[src] = 0; push(0, src);
+    while(size){
+      var x = hd[0], u = hn[0];
+      size--;
+      if(size){                                  // sift the last element down from the root
+        var lx = hd[size], ln = hn[size], i = 0;
+        for(;;){
+          var c = 2*i + 1; if(c >= size) break;
+          if(c+1 < size && hd[c+1] < hd[c]) c++;
+          if(hd[c] >= lx) break;
+          hd[i] = hd[c]; hn[i] = hn[c]; i = c;
+        }
+        hd[i] = lx; hn[i] = ln;
+      }
+      if(x > d[u]) continue;
+      for(var k = g.start[u]; k < g.start[u+1]; k++){
+        var nd = x + g.w[k], v = g.to[k];
+        if(nd < d[v] && nd <= cutoff){ d[v] = nd; push(nd, v); }
+      }
+    }
+    return d;
+  }
+
+  /* ---------- render ---------- */
+  function update(){
+    if(!g || !mounted) return;
+    var src = snap(originLL); if(src < 0) return;
+    var spd = SPEED[mode], cutoff = spd * MAX_MIN;
+    dist = dijkstra(src, cutoff);
+
+    var bands = [], km = new Float64Array(NB), far = 0, i;
+    for(i = 0; i < NB; i++) bands.push([]);
+    for(var k = 0; k < g.E; k++){
+      var a = g.e[3*k], b = g.e[3*k+1], da = dist[a], db = dist[b], lo = Math.min(da, db);
+      if(lo === Infinity) continue;
+      var t = Math.max(Math.min(da, cutoff), Math.min(db, cutoff)) / spd;   // reached end can't exceed cutoff
+      var band = Math.min(NB - 1, Math.floor(t / BAND_MIN));
+      bands[band].push([[g.lon[a], g.lat[a]], [g.lon[b], g.lat[b]]]);
+      km[band] += g.e[3*k+2] / 1000;
+      if(lo > far) far = lo;
+    }
+    map.getSource("iso").setData({type:"FeatureCollection", features: bands.map(function(c, j){
+      return {type:"Feature", properties:{band:j}, geometry:{type:"MultiLineString", coordinates:c}};
+    })});
+    marker.setLngLat([g.lon[src], g.lat[src]]);
+
+    var max = Math.max.apply(null, km), rows = "";
+    for(i = 0; i < NB; i++){
+      rows += '<div class="band"><span>' + (i*BAND_MIN) + '–' + ((i+1)*BAND_MIN) + ' min</span><span><div class="bar" style="width:' +
+              (km[i]/max*100).toFixed(1) + '%;background:' + COLORS[i] + '"></div></span><span class="val">' + km[i].toFixed(0) + ' km</span></div>';
+    }
+    document.getElementById("bandRows").innerHTML = rows;
+    var cum = 0, c15 = 0;
+    for(i = 0; i < NB; i++){ cum += km[i]; if(i === 2) c15 = cum; }
+    document.getElementById("stat15").textContent = c15.toFixed(0) + " km";
+    document.getElementById("stat30").textContent = cum.toFixed(0) + " km";
+    document.getElementById("statFar").textContent = (far / 1000).toFixed(1) + " km";
+    document.getElementById("originName").textContent = originName;
+  }
+
+  function setOrigin(ll, name, fly){
+    originLL = ll; originName = name;
+    if(fly) map.flyTo({center: ll, zoom: mode === "walk" ? 13.6 : 12.4, duration: 900});
+    update();
+    document.querySelectorAll("#presets .btn").forEach(function(b){ b.classList.toggle("active", b.textContent === name); });
+  }
+
+  /* ---------- UI ---------- */
+  var pre = document.getElementById("presets");
+  PRESETS.forEach(function(p){
+    var b = document.createElement("button");
+    b.className = "btn"; b.textContent = p[0];
+    b.onclick = function(){ setOrigin(p[1], p[0], true); };
+    pre.appendChild(b);
+  });
+  pre.firstChild.classList.add("active");
+
+  document.querySelectorAll("#modeChip .btn").forEach(function(b){
+    b.onclick = function(){
+      mode = b.dataset.mode;
+      document.querySelectorAll("#modeChip .btn").forEach(function(x){ x.classList.toggle("active", x === b); });
+      if(map) map.flyTo({center: originLL, zoom: mode === "walk" ? 13.6 : 12.4, duration: 700});
+      update();
+    };
+  });
+
+  /* ---------- basemap (same muting as boston-accessibility-map) ---------- */
+  function muteBasemap(){
+    map.getStyle().layers.forEach(function(l){
+      try{
+        var id = l.id.toLowerCase();
+        if(l.type === "background") map.setPaintProperty(l.id, "background-color", "#FBEEDF");
+        else if(l.type === "fill" && id.indexOf("water") !== -1){ map.setPaintProperty(l.id, "fill-color", "#A9E0DC"); map.setPaintProperty(l.id, "fill-opacity", 0.7); }
+        else if(l.type === "fill" && /landuse|landcover|park/.test(id)){ map.setPaintProperty(l.id, "fill-color", "#CFE6D2"); map.setPaintProperty(l.id, "fill-opacity", 0.35); }
+        else if(l.type === "fill" && id.indexOf("building") !== -1){ map.setPaintProperty(l.id, "fill-color", "#F0D9C8"); map.setPaintProperty(l.id, "fill-opacity", 0.32); }
+        else if(l.type === "fill-extrusion") map.setPaintProperty(l.id, "fill-extrusion-opacity", 0.15);
+        else if(l.type === "line" && id.indexOf("road") !== -1){
+          map.setPaintProperty(l.id, "line-color", "#C9AFA0");
+          map.setPaintProperty(l.id, "line-opacity", /motorway|trunk|primary/.test(id) && id.indexOf("case") === -1 ? 0.4 : 0.24);
+        }
+        else if(l.type === "line" && /admin|boundary/.test(id)){ map.setPaintProperty(l.id, "line-color", "#7E9AA0"); map.setPaintProperty(l.id, "line-opacity", 0.35); }
+        else if(l.type === "symbol" && /poi|transit/.test(id)) map.setLayoutProperty(l.id, "visibility", "none");
+        else if(l.type === "symbol"){
+          map.setPaintProperty(l.id, "text-color", "#0B3C49");
+          map.setPaintProperty(l.id, "text-halo-color", "#FFF4EA");
+          map.setPaintProperty(l.id, "text-halo-width", 1.4);
+        }
+      }catch(e){ /* paint props vary by layer */ }
+    });
+  }
+
+  function initMap(token){
+    mapboxgl.accessToken = token;
+    map = new mapboxgl.Map({container:"map", style:"mapbox://styles/mapbox/light-v11", center:[-80.19, 25.775], zoom:13.6, attributionControl:true});
+    map.addControl(new mapboxgl.NavigationControl({showCompass:false}), "top-right");
+    map.dragRotate.disable(); map.touchZoomRotate.disableRotation();
+
+    var didLoad = false;
+    map.on("load", function(){
+      didLoad = true;
+      document.getElementById("setupBanner").hidden = true;
+      muteBasemap();
+      var firstLabel = map.getStyle().layers.filter(function(l){ return l.type === "symbol"; })[0];
+      map.addSource("iso", {type:"geojson", data:{type:"FeatureCollection", features:[]}});
+      map.addLayer({
+        id:"iso-lines", type:"line", source:"iso",
+        layout:{"line-cap":"round"},
+        paint:{
+          "line-color":["match",["get","band"],0,COLORS[0],1,COLORS[1],2,COLORS[2],3,COLORS[3],4,COLORS[4],COLORS[5]],
+          "line-width":["interpolate",["linear"],["zoom"], 11,0.6, 13,1.3, 15,2.6, 17,4.5],
+          "line-opacity":0.92
+        }
+      }, firstLabel && firstLabel.id);
+
+      var el = document.createElement("div"); el.className = "origin"; el.style.position = "relative";
+      var glow = document.createElement("div"); glow.className = "origin-glow"; el.appendChild(glow);
+      marker = new mapboxgl.Marker({element: el}).setLngLat(originLL).addTo(map);
+
+      var tip = document.getElementById("tooltip");
+      map.on("mousemove", function(e){
+        if(!g || !dist){ return; }
+        var n = snap([e.lngLat.lng, e.lngLat.lat]);
+        if(n < 0 || dist[n] === Infinity){ tip.style.display = "none"; return; }
+        tip.textContent = "≈ " + Math.max(1, Math.round(dist[n] / SPEED[mode])) + " min";
+        tip.style.left = e.point.x + "px"; tip.style.top = e.point.y + "px"; tip.style.display = "block";
+      });
+      map.on("mouseout", function(){ tip.style.display = "none"; });
+      map.on("click", function(e){
+        var ll = [e.lngLat.lng, e.lngLat.lat];
+        if(snap(ll) < 0) return;
+        setOrigin(ll, "Custom origin", false);
+      });
+      map.getCanvas().style.cursor = "crosshair";
+      mounted = true;
+      update();
+    });
+    map.on("error", function(e){
+      if(e && e.error && /access token|unauthorized|401|403|forbidden/i.test(e.error.message || "")) showSetupBanner("Mapbox rejected this token or style: " + e.error.message);
+    });
+    setTimeout(function(){ if(!didLoad) showSetupBanner("The basemap didn't finish loading in time — check your connection and token, then reload."); }, 15000);
+    window.addEventListener("resize", function(){ map.resize(); });
+  }
+
+  fetch("./data/graph.json").then(function(r){ return r.json(); }).then(function(raw){ g = buildGraph(raw); update(); });
+
+  fetch("./.env", {cache:"no-store"}).then(function(r){
+    if(!r.ok) throw new Error("could not read .env (" + r.status + ")");
+    return r.text();
+  }).then(function(text){
+    var m = /^\s*MAPBOX_TOKEN\s*=\s*["']?([^"'\r\n]+)/m.exec(text);
+    if(!m || m[1].indexOf("YOUR_TOKEN_HERE") !== -1){ showSetupBanner("Found .env but MAPBOX_TOKEN is missing or still the placeholder."); return; }
+    initMap(m[1].trim());
+  }).catch(function(err){
+    showSetupBanner("Serve this folder over http:// so the page can read .env — e.g. `python serve.py`. (" + err.message + ")");
+  });
+})();
+</script>

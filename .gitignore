@@ -2,3 +2,16 @@
 mapbox.txt
 ContentDrafts/
 exports/
+*.log
+Rplots.pdf
+.Rhistory
+*_pid.txt
+*.tif
+*.gpkg
+*.gpkg.gz
+*.zip
+*.hdr
+*.shp
+*.shx
+*.dbf
+*.sbn

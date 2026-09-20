@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Internet Lives Under the Sea</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+<style>
+  :root{
+    --bg:#05080C;
+    --panel:rgba(8,12,16,0.84);
+    --panel-border:rgba(230,240,242,0.14);
+    --ink:#E6F0F2;
+    --ink-soft:#93A9AF;
+    --ink-faint:#587177;
+    --line:rgba(230,240,242,0.09);
+    --cable:#3DD9EB;   /* in service */
+    --plan:#A98BFF;    /* planned */
+    --amber:#FFB347;   /* Big Tech owner */
+    --land:#0F171E;
+    --land-line:#1C2A33;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;overflow:hidden;}
+  body{
+    background:
+      radial-gradient(ellipse 900px 520px at 50% 40%, rgba(61,217,235,0.06), transparent 65%),
+      var(--bg);
+    color:var(--ink);
+    font-family:"Inter", ui-sans-serif, system-ui, sans-serif;
+    font-size:16px; line-height:1.5; -webkit-font-smoothing:antialiased;
+  }
+  @media (prefers-reduced-motion: reduce){ *{transition-duration:0.01ms !important;} }
+
+  #mapFrame{ position:fixed; inset:0; z-index:0; }
+  #map{ position:absolute; inset:0; width:100%; height:100%; cursor:grab; --ik:1; }
+  #map:active{ cursor:grabbing; }
+  .graticule{ fill:none; stroke:rgba(230,240,242,0.045); stroke-width:0.5; vector-effect:non-scaling-stroke; }
+  .land{ fill:var(--land); stroke:none; }
+  .borders{ fill:none; stroke:var(--land-line); stroke-width:0.5; vector-effect:non-scaling-stroke; }
+
+  /* cables: soft glow underlay, thin core, invisible fat hit-target */
+  .c-glow,.c-core,.c-hit{ fill:none; stroke-linecap:round; stroke-linejoin:round; vector-effect:non-scaling-stroke; }
+  .c-glow{ stroke:var(--cable); stroke-width:calc(var(--w) * 3px + 1px); opacity:0; transition:opacity .5s; pointer-events:none; }
+  .c-core{ stroke:var(--cable); stroke-width:calc(var(--w) * 1px); opacity:0; transition:opacity .5s, stroke .3s; pointer-events:none; }
+  .c-hit{ stroke:transparent; stroke-width:10; pointer-events:none; }
+  .c-glow.vis{ opacity:.13; }
+  .c-core.vis{ opacity:.88; }
+  .c-hit.vis{ pointer-events:stroke; cursor:pointer; }
+  .c-glow.pl,.c-core.pl{ stroke:var(--plan); }
+  .c-core.pl{ stroke-dasharray:5 4; }
+  .c-glow.new:not(.pl){ opacity:.4; }
+  .c-core.new:not(.pl){ stroke:#fff; stroke-width:calc(var(--w) * 1px + .4px); opacity:1; }
+  body.bt .c-glow.vis:not(.big){ opacity:.02; }
+  body.bt .c-core.vis:not(.big){ opacity:.16; }
+  body.bt .c-glow.big,body.bt .c-core.big{ stroke:var(--amber); }
+  body.bt .c-glow.big.vis{ opacity:.22; }
+  .c-glow.hot{ opacity:.5 !important; }
+  .c-core.hot{ stroke:#fff !important; stroke-width:calc(var(--w) * 1px + 1.2px); opacity:1 !important; }
+
+  .pt{ r:calc(var(--r) * 1px * var(--ik)); fill:#F2FBFD; fill-opacity:.9; stroke:var(--bg); stroke-width:calc(1px * var(--ik)); cursor:pointer; }
+  .ring{ r:calc(4.5px * var(--ik)); fill:none; stroke:#fff; stroke-width:calc(1.2px * var(--ik)); pointer-events:none; }
+  .lbl{
+    font-family:"IBM Plex Mono",ui-monospace,monospace; font-weight:500; text-transform:uppercase;
+    font-size:calc(9.5px * var(--ik)); letter-spacing:.14em; fill:var(--ink-soft);
+    stroke:var(--bg); stroke-width:calc(3px * var(--ik)); stroke-linejoin:round; paint-order:stroke fill; pointer-events:none;
+  }
+  .lbl.ocean{ font-size:calc(13px * var(--ik)); letter-spacing:.42em; fill:var(--ink-faint); opacity:.55; }
+  #oceans{ transition:opacity .3s; }
+
+  .panel{
+    position:fixed; z-index:10; background:var(--panel); backdrop-filter:blur(10px);
+    border:1px solid var(--panel-border); border-radius:14px; box-shadow:0 20px 50px -20px rgba(0,0,0,.75);
+  }
+  .eyebrow{
+    font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.18em; text-transform:uppercase;
+    color:var(--cable); margin:0 0 8px;
+  }
+  .eyebrow::before{ content:"◆ "; }
+  h1{
+    font-family:"Space Grotesk",sans-serif; font-weight:700; font-size:1.55rem; line-height:1.05;
+    letter-spacing:-.02em; margin:0 0 8px; text-wrap:balance;
+  }
+  .dek{ font-size:.82rem; line-height:1.5; color:var(--ink-soft); margin:0; }
+  .dek strong{ color:var(--ink); font-weight:600; }
+
+  /* hero: top-left */
+  .hero{ top:20px; left:20px; width:340px; max-height:calc(100vh - 210px); overflow:auto; padding:16px 18px; }
+  .facts{ display:grid; gap:10px; margin:12px 0 0; padding-top:12px; border-top:1px solid var(--line); }
+  .fact .big{ font-family:"Space Grotesk"; font-weight:700; font-size:1.35rem; letter-spacing:-.01em; line-height:1.1; }
+  .fact .big small{ font-family:"IBM Plex Mono"; font-weight:500; font-size:.68rem; letter-spacing:.06em; color:var(--ink-faint); text-transform:uppercase; margin-left:4px; }
+  .fact p{ margin:3px 0 0; font-size:.76rem; line-height:1.45; color:var(--ink-soft); }
+  .fact.bt .big{ color:var(--amber); }
+  .legend{ display:flex; flex-wrap:wrap; gap:6px 14px; margin-top:12px; padding-top:12px; border-top:1px solid var(--line); font-size:11px; color:var(--ink-soft); }
+  .leg{ display:flex; align-items:center; gap:6px; }
+  .leg i{ width:18px; height:0; border-top:2px solid var(--cable); border-radius:2px; }
+  .leg i.p{ border-top:2px dashed var(--plan); }
+  .leg i.n{ border-top-color:#fff; }
+  .leg i.b{ border-top-color:var(--amber); }
+  .leg i.d{ width:7px; height:7px; border:0; border-radius:50%; background:#F2FBFD; }
+  .bt-only{ display:none; } body.bt .bt-only{ display:flex; }
+  details.notes{ margin-top:10px; padding-top:10px; border-top:1px solid var(--line); }
+  details.notes summary{ cursor:pointer; list-style:none; font-family:"IBM Plex Mono"; font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-faint); }
+  details.notes summary::-webkit-details-marker{ display:none; }
+  details.notes summary::before{ content:"▸ "; } details.notes[open] summary::before{ content:"▾ "; }
+  details.notes p{ margin:8px 0 0; font-size:11.5px; line-height:1.5; color:var(--ink-faint); }
+  details.notes a{ color:var(--ink-soft); }
+
+  /* hubs: top-right */
+  .hubs{ top:20px; right:20px; width:270px; padding:14px 16px; }
+  .hubs h2{ margin:0; font-family:"Space Grotesk"; font-weight:700; font-size:14px; letter-spacing:.02em; }
+  .hubs .sub{ font-family:"IBM Plex Mono"; font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-faint); margin:3px 0 8px; }
+  .hub{ display:block; width:100%; text-align:left; background:none; border:0; color:inherit; font:inherit; cursor:pointer; padding:5px 0 6px; border-radius:6px; }
+  .hub:hover{ background:rgba(255,255,255,.05); }
+  .hub .row{ display:flex; justify-content:space-between; gap:8px; font-size:12px; }
+  .hub .row span:first-child{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .hub .row span:last-child{ font-family:"IBM Plex Mono"; color:var(--cable); flex:none; }
+  .hub .bar{ height:3px; margin-top:4px; border-radius:2px; background:var(--cable); opacity:.55; transition:width .4s; }
+
+  /* dock: timeline */
+  .dock{ left:50%; transform:translateX(-50%); bottom:20px; width:min(940px, calc(100vw - 40px)); padding:12px 16px 10px; }
+  .dock-top{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+  .play{ flex:none; width:36px; height:36px; border-radius:50%; border:1px solid var(--panel-border); background:rgba(61,217,235,.12); color:var(--cable); cursor:pointer; font-size:13px; }
+  .play:hover{ background:rgba(61,217,235,.22); }
+  .yr{ font-family:"Space Grotesk"; font-weight:700; font-size:2rem; line-height:1; letter-spacing:-.02em; min-width:4.3ch; }
+  .yr small{ display:block; font-family:"IBM Plex Mono"; font-weight:500; font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--plan); height:11px; margin-top:2px; }
+  .stats{ display:flex; gap:18px; flex:1; flex-wrap:wrap; }
+  .stat b{ display:block; font-family:"Space Grotesk"; font-size:1.05rem; line-height:1.1; }
+  .stat span{ font-family:"IBM Plex Mono"; font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-faint); }
+  .toggle{ flex:none; font-family:"IBM Plex Mono"; font-size:11px; letter-spacing:.04em; padding:7px 12px; border-radius:999px; cursor:pointer; color:var(--ink-soft); background:transparent; border:1px solid var(--panel-border); }
+  .toggle:hover{ color:var(--ink); }
+  .toggle[aria-pressed="true"]{ color:var(--bg); background:var(--amber); border-color:var(--amber); }
+  .bars{ display:flex; align-items:flex-end; gap:2px; height:40px; margin:10px 8px 0; }
+  .bar{ flex:1; display:flex; flex-direction:column-reverse; height:100%; justify-content:flex-start; cursor:pointer; opacity:.28; transition:opacity .25s; }
+  .bar.on{ opacity:1; }
+  .bar i{ display:block; width:100%; background:var(--cable); }
+  .bar i.p{ background:var(--plan); }
+  .bar.cur{ outline:1px solid rgba(255,255,255,.55); outline-offset:1px; }
+  #slider{ width:100%; margin:4px 0 0; accent-color:var(--cable); cursor:pointer; }
+  .axis{ display:flex; justify-content:space-between; margin:0 8px; font-family:"IBM Plex Mono"; font-size:9.5px; letter-spacing:.06em; color:var(--ink-faint); }
+
+  #tip{
+    position:fixed; z-index:20; pointer-events:none; opacity:0; transition:opacity .12s; max-width:300px;
+    background:rgba(8,12,16,.95); border:1px solid var(--panel-border); border-radius:10px; padding:9px 12px; font-size:12px; line-height:1.4;
+  }
+  #tip b{ font-family:"Space Grotesk"; font-size:13.5px; display:block; }
+  #tip .m{ font-family:"IBM Plex Mono"; font-size:10.5px; color:var(--cable); margin-top:2px; }
+  #tip .o{ color:var(--ink-soft); margin-top:4px; font-size:11.5px; }
+
+  @media (max-width:980px){
+    .hubs{ display:none; }
+    .hero{ width:min(320px, calc(100vw - 40px)); max-height:none; }
+    .hero .dek,.hero .facts,.hero .legend,.hero details{ display:none; }
+    .stats{ gap:12px; } .yr{ font-size:1.6rem; }
+  }
+  @media (max-width:600px){ #choke,#oceans,.stat:nth-child(n+3){ display:none; } }
+</style>
+</head>
+<body>
+<div id="mapFrame"><svg id="map" role="img" aria-label="World map of submarine internet cables"></svg></div>
+
+<aside class="panel hero">
+  <p class="eyebrow">Invisible infrastructure</p>
+  <h1>The Internet Lives Under the Sea</h1>
+  <p class="dek">Almost all intercontinental data travels through <strong>fiber cables on the seabed</strong>, not through satellites. Every line here is a real cable, from TeleGeography's public map. Drag to pan, scroll to zoom.</p>
+  <div class="facts">
+    <div class="fact"><div class="big" id="f-km">–</div><p id="f-km-t"></p></div>
+    <div class="fact bt"><div class="big" id="f-bt">–</div><p id="f-bt-t"></p></div>
+  </div>
+  <div class="legend">
+    <span class="leg"><i></i>In service</span>
+    <span class="leg"><i class="p"></i>Planned</span>
+    <span class="leg"><i class="n"></i>Ready this year</span>
+    <span class="leg bt-only"><i class="b"></i>Big Tech owner</span>
+    <span class="leg"><i class="d"></i>Landing point</span>
+    <span class="leg" style="flex-basis:100%">Thicker line = newer, higher-capacity generation</span>
+  </div>
+  <details class="notes">
+    <summary>Sources &amp; caveats</summary>
+    <p>Cable routes, lengths, ready-for-service years and owners: <a href="https://www.submarinecablemap.com" target="_blank" rel="noopener">TeleGeography Submarine Cable Map</a> (CC BY-SA 4.0). Land: <a href="https://github.com/topojson/world-atlas" target="_blank" rel="noopener">world-atlas</a> (Natural Earth). Routes are schematic, not survey-grade.</p>
+    <p>Line weight is a proxy: cables from later years carry far more data by design, but no source publishes per-cable capacity or live traffic, so weight follows ready-for-service year, not measured volume.</p>
+    <p>The dataset lists cables in service or planned. Retired cables are missing, so earlier years show only the survivors, not everything that existed then.</p>
+    <p>"Big Tech owner" means Google, Meta/Facebook, Microsoft or Amazon appears in a cable's owner list; most are consortium cables, so ownership is shared. The "almost all" figure is an industry estimate, commonly put at 95–99%.</p>
+  </details>
+</aside>
+
+<aside class="panel hubs" aria-live="polite">
+  <h2>Busiest landing hubs</h2>
+  <div class="sub" id="hubs-sub"></div>
+  <div id="hubs"></div>
+</aside>
+
+<section class="panel dock" aria-label="Timeline">
+  <div class="dock-top">
+    <button class="play" id="play" aria-label="Play timeline">▶</button>
+    <div class="yr"><span id="yr">2026</span><small id="yr-note"></small></div>
+    <div class="stats">
+      <div class="stat"><b id="s-c">–</b><span>Cables</span></div>
+      <div class="stat"><b id="s-km">–</b><span>Length</span></div>
+      <div class="stat"><b id="s-lap">–</b><span>Times around Earth</span></div>
+      <div class="stat"><b id="s-lp">–</b><span>Landing points</span></div>
+    </div>
+    <button class="toggle" id="bt" aria-pressed="false">Highlight Big Tech owners</button>
+  </div>
+  <div class="bars" id="bars"></div>
+  <input type="range" id="slider" min="1989" max="2030" step="1" value="2026" aria-label="Ready-for-service year">
+  <div class="axis"><span>1989</span><span>2000</span><span>2010</span><span>2020</span><span>2030</span></div>
+</section>
+
+<div id="tip"></div>
+
+<script>
+const MIN = 1989, MAX = 2030, NOW = 2026, EARTH_KM = 40075, MOON_KM = 384400;
+const fmt = d3.format(","), $ = id => document.getElementById(id);
+const frame = $("mapFrame"), svg = d3.select("#map"), tip = $("tip");
+let cables, pts, projection, path, counts, year = NOW, hilite = null, timer = null, zk = 1, ptKey = "";
+
+const root = svg.append("g");
+const g = n => root.append("g").attr("id", n);
+const gGrat = g("grat"), gLand = g("land"), gOceans = g("oceans"), gGlow = g("glow"), gCore = g("core"),
+      gHit = g("hit"), gPts = g("pts"), gHot = g("hot"), gChoke = g("choke");
+
+// Ocean names give orientation; chokepoints are where many separate routes funnel through one strait or coast.
+const OCEANS = [["Atlantic Ocean", -38, 22], ["Pacific Ocean", -150, 8], ["Indian Ocean", 78, -24]];
+const CHOKES = [["Red Sea & Suez", 41, 22], ["Malacca Strait", 102, 2.5], ["Luzon Strait", 122, 20.5]];
+gOceans.selectAll("text").data(OCEANS).join("text").attr("class", "lbl ocean").attr("text-anchor", "middle").text(d => d[0]);
+gChoke.selectAll("text").data(CHOKES).join("text").attr("class", "lbl").text(d => d[0]);
+
+const zoom = d3.zoom().scaleExtent([1, 14]).on("zoom", e => {
+  zk = e.transform.k;
+  root.attr("transform", e.transform);
+  svg.node().style.setProperty("--ik", 1 / zk);
+  gOceans.style("opacity", zk > 2.5 ? 0 : 1);
+  showPoints();
+});
+svg.call(zoom).on("dblclick.zoom", null);
+
+Promise.all([
+  fetch("data.json").then(r => r.json()),
+  fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json").then(r => r.json())
+]).then(([data, topo]) => init(data, topo));
+
+function init(data, topo) {
+  cables = data.cables; pts = data.points;
+  cables.forEach(c => { c.known = !!c.y; c.y = c.y || MAX; }); // 6 cables have no ready-for-service year: show only at the end
+  const land = topojson.feature(topo, topo.objects.countries).features.filter(f => f.id !== "010"); // drop Antarctica
+  gLand.append("path").attr("class", "land").datum({ type: "FeatureCollection", features: land });
+  gLand.append("path").attr("class", "borders").datum(topojson.mesh(topo, topo.objects.countries, (a, b) => a !== b));
+  gGrat.append("path").attr("class", "graticule").datum(d3.geoGraticule().extent([[-180, -60], [180, 80]]).step([30, 30])());
+
+  cables.forEach(c => {
+    const geo = { type: "MultiLineString", coordinates: c.g };
+    c.el = [gGlow.append("path").attr("class", "c-glow").datum(geo).node(), gCore.append("path").attr("class", "c-core").datum(geo).node()];
+    c.el.forEach(n => n.style.setProperty("--w", weight(c)));
+    c.hit = gHit.append("path").attr("class", "c-hit").datum(geo)
+      .on("mouseenter", () => hover(c)).on("mousemove", e => moveTip(e)).on("mouseleave", () => hover(null)).node();
+  });
+  gPts.selectAll("circle").data(pts).join("circle").attr("class", "pt")
+    .on("mouseenter", (e, p) => { const k = counts[pts.indexOf(p)]; showTip(e, `<b>${p.n}</b><div class="m">${k} cable${k === 1 ? "" : "s"} landing here</div>`); })
+    .on("mousemove", moveTip).on("mouseleave", () => tip.style.opacity = 0);
+
+  // Big Tech vs everyone else: share of cable km by ready-for-service era
+  const km = f => d3.sum(cables.filter(c => c.known && f(c)), c => c.km), share = f => km(c => f(c) && c.big) / km(f);
+  const inSvc = km(c => !c.pl);
+  $("f-km").innerHTML = `${(inSvc / 1e6).toFixed(2)}M<small>km in service</small>`;
+  $("f-km-t").textContent = `About ${(inSvc / MOON_KM).toFixed(0)}× the distance from Earth to the Moon, laid across the ocean floor.`;
+  $("f-bt").innerHTML = `${Math.round(share(c => c.y < 2016) * 100)}% → ${Math.round(share(c => c.y >= 2016) * 100)}%<small>Big Tech-owned</small>`;
+  $("f-bt-t").textContent = "Share of cable length with a Google, Meta, Microsoft or Amazon owner, before 2016 vs. from 2016 on. Toggle it below.";
+
+  // year histogram, stacked in service / planned
+  const years = d3.range(MIN, MAX + 1), by = y => cables.filter(c => c.y === y);
+  const peak = d3.max(years, y => by(y).length);
+  $("bars").innerHTML = years.map(y => {
+    const n = by(y).filter(c => !c.pl).length, p = by(y).filter(c => c.pl).length, h = v => `${v / peak * 100}%`;
+    return `<div class="bar" data-y="${y}" title="${y}: ${n + p} cables"><i style="height:${h(n)}"></i><i class="p" style="height:${h(p)}"></i></div>`;
+  }).join("");
+  $("bars").onclick = e => { const b = e.target.closest(".bar"); if (b) setYear(+b.dataset.y); };
+
+  new ResizeObserver(fit).observe(frame);
+  fit();
+}
+
+// Line weight = cable generation, a proxy for design capacity (no per-cable capacity is published):
+// 1990s systems carried gigabits, 2020s space-division cables carry hundreds of terabits.
+function weight(c) {
+  const t = (Math.min(Math.max(c.y, 1990), 2028) - 1990) / 38;
+  return (0.4 + 0.7 * Math.pow(t, 1.3)).toFixed(2);
+}
+
+function fit() {
+  if (!cables) return;
+  const W = frame.clientWidth, H = frame.clientHeight;
+  if (W < 50 || H < 50) return; // hidden/background tab reports 0x0
+  const dockH = document.querySelector(".dock").offsetHeight + 34;
+  const bounds = { type: "MultiPoint", coordinates: [[-180, -58], [180, -58], [-180, 78], [180, 78], [-180, 0], [180, 0], [0, 78], [0, -58]] };
+  projection = d3.geoNaturalEarth1().fitExtent([[8, 8], [W - 8, H - dockH]], bounds);
+  path = d3.geoPath(projection);
+  zoom.extent([[0, 0], [W, H]]).translateExtent([[0, 0], [W, H]]);
+  root.selectAll("path").attr("d", path);
+  gPts.selectAll("circle").attr("cx", p => projection(p.c)[0]).attr("cy", p => projection(p.c)[1]);
+  const at = d => projection([d[1], d[2]]);
+  gOceans.selectAll("text").attr("x", d => at(d)[0]).attr("y", d => at(d)[1]);
+  gChoke.selectAll("text").attr("x", d => at(d)[0] + 7).attr("y", d => at(d)[1] + 3);
+  update();
+}
+
+function update() {
+  if (!path) return;
+  const vis = cables.filter(c => c.y <= year);
+  counts = new Uint16Array(pts.length);
+  vis.forEach(c => c.l.forEach(i => counts[i]++));
+  cables.forEach(c => {
+    const on = c.y <= year;
+    const cls = (on ? " vis" : "") + (c.pl ? " pl" : "") + (c.big ? " big" : "") + (c.y === year ? " new" : "");
+    c.el[0].setAttribute("class", "c-glow" + cls);
+    c.el[1].setAttribute("class", "c-core" + cls);
+    c.hit.setAttribute("class", "c-hit" + (on ? " vis" : ""));
+  });
+  const km = d3.sum(vis, c => c.km);
+  $("yr").textContent = year;
+  $("yr-note").textContent = year > NOW ? "planned" : year === NOW ? "today" : "";
+  $("s-c").textContent = fmt(vis.length);
+  $("s-km").textContent = (km / 1e6).toFixed(2) + "M km";
+  $("s-lap").textContent = (km / EARTH_KM).toFixed(1) + "×";
+  $("s-lp").textContent = fmt(counts.filter(n => n).length);
+  $("slider").value = year;
+  document.querySelectorAll(".bar").forEach(b => { b.classList.toggle("on", +b.dataset.y <= year); b.classList.toggle("cur", +b.dataset.y === year); });
+  ptKey = ""; pts.forEach((p, i) => p.r = counts[i] ? 1.3 + Math.sqrt(counts[i]) * 0.55 : 0);
+  gPts.selectAll("circle").style("--r", p => p.r);
+  showPoints();
+  renderHubs();
+}
+
+// Density rule: at low zoom only hubs with many cables get a dot; more appear as you zoom in.
+function showPoints() {
+  if (!counts) return;
+  const min = zk < 1.8 ? 4 : zk < 3.5 ? 2 : 1, key = min + ":" + year;
+  if (key === ptKey) return; ptKey = key;
+  gPts.selectAll("circle").attr("display", (p, i) => counts[i] >= min ? null : "none");
+}
+
+function renderHubs() {
+  const top = d3.range(pts.length).sort((a, b) => counts[b] - counts[a]).slice(0, 8);
+  const mx = counts[top[0]] || 1;
+  $("hubs-sub").textContent = `Cables ashore · ${year}`;
+  $("hubs").innerHTML = top.map(i => `<button class="hub" data-i="${i}"><div class="row"><span>${pts[i].n}</span><span>${counts[i]}</span></div><div class="bar" style="width:${counts[i] / mx * 100}%"></div></button>`).join("");
+}
+$("hubs").onclick = e => {
+  const b = e.target.closest(".hub"); if (!b) return;
+  const [x, y] = projection(pts[+b.dataset.i].c), W = frame.clientWidth, H = frame.clientHeight;
+  svg.transition().duration(900).call(zoom.transform, d3.zoomIdentity.translate(W / 2, H / 2).scale(6).translate(-x, -y));
+};
+
+function hover(c) {
+  hilite = c;
+  cables.forEach(x => x.el.forEach(n => n.classList.toggle("hot", x === c)));
+  gHot.selectAll("circle").remove();
+  if (!c) { tip.style.opacity = 0; return; }
+  gHot.selectAll("circle").data(c.l).join("circle").attr("class", "ring")
+    .attr("cx", i => projection(pts[i].c)[0]).attr("cy", i => projection(pts[i].c)[1]);
+  const owners = c.o.length > 150 ? c.o.slice(0, 150) + "…" : c.o;
+  tip.innerHTML = `<b>${c.n}</b><div class="m">${fmt(c.km)} km · ${c.l.length} landing points · ${c.pl ? "planned " : "ready "}${c.y === MAX && !c.pl ? "n/a" : c.y}</div>${owners ? `<div class="o">${owners}</div>` : ""}`;
+  tip.style.opacity = 1;
+}
+function showTip(e, html) { tip.innerHTML = html; tip.style.opacity = 1; moveTip(e); }
+function moveTip(e) {
+  const w = tip.offsetWidth, h = tip.offsetHeight;
+  tip.style.left = Math.min(e.clientX + 16, innerWidth - w - 8) + "px";
+  tip.style.top = Math.min(e.clientY + 16, innerHeight - h - 8) + "px";
+}
+
+function setYear(y) { year = Math.max(MIN, Math.min(MAX, y)); update(); }
+$("slider").oninput = e => { stop(); setYear(+e.target.value); };
+function stop() { clearInterval(timer); timer = null; $("play").textContent = "▶"; }
+$("play").onclick = () => {
+  if (timer) return stop();
+  if (year >= MAX) setYear(MIN);
+  $("play").textContent = "❚❚";
+  timer = setInterval(() => { year >= MAX ? stop() : setYear(year + 1); }, 550);
+};
+$("bt").onclick = e => {
+  const on = document.body.classList.toggle("bt");
+  e.currentTarget.setAttribute("aria-pressed", on);
+};
+</script>
+</body>
+</html>

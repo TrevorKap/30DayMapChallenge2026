@@ -63,7 +63,7 @@
     text-wrap:balance;
     color:var(--ink);
   }
-  .dek{ max-width:78ch; font-size:clamp(0.94rem,1.25vw,1.05rem); color:var(--ink-soft); margin:0; }
+  .dek{ max-width:80ch; font-size:clamp(0.94rem,1.25vw,1.05rem); color:var(--ink-soft); margin:0; }
   .dek strong{color:var(--ink); font-weight:600;}
   .dek .swatch{display:inline-block;width:8px;height:8px;border-radius:50%;margin:0 2px -1px 0;}
 
@@ -125,11 +125,12 @@
   .chip-clock .time{ font-family:"IBM Plex Mono"; font-size:24px; font-weight:600; letter-spacing:0.02em; color:var(--ink); margin-top:2px; }
   .chip-clock .time span{ font-size:12px; color:var(--ink-faint); margin-left:3px;}
 
-  .chip-legend{ bottom:14px; left:14px; min-width:196px; }
+  .chip-legend{ bottom:14px; left:14px; min-width:206px; }
   .chip-legend h4{ margin:0 0 8px; font-family:"IBM Plex Mono"; font-size:10.5px; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-faint); }
   .leg-row{ display:flex; align-items:center; gap:8px; font-size:11.5px; color:var(--ink-soft); margin:4px 0; }
   .leg-swatch{ width:9px; height:9px; border-radius:50%; flex:none; }
-  .leg-plane{ font-size:12px; flex:none; width:9px; text-align:center; }
+  .leg-ring{ width:9px; height:9px; border-radius:50%; border:1.5px dashed var(--ink-soft); flex:none; }
+  .leg-boat{ font-size:12px; flex:none; width:9px; text-align:center; }
 
   .chip-storms{ bottom:14px; right:14px; min-width:196px; }
   .chip-storms h4{ margin:0 0 8px; font-family:"IBM Plex Mono"; font-size:10.5px; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-faint); }
@@ -148,9 +149,10 @@
     padding:16px 16px 14px;
   }
   .block h3{
-    margin:0 0 12px; font-family:"IBM Plex Mono"; font-size:10.5px;
+    margin:0 0 4px; font-family:"IBM Plex Mono"; font-size:10.5px;
     letter-spacing:0.14em; text-transform:uppercase; color:var(--ink-faint);
   }
+  .block .cap{ font-size:11px; color:var(--ink-faint); margin:0 0 12px; }
 
   .transport{ display:flex; align-items:center; gap:10px; }
   .playbtn{
@@ -207,7 +209,7 @@
 
   footer.note{
     margin-top:clamp(22px,4vw,34px); padding-top:16px; border-top:1px solid var(--line);
-    font-size:12px; color:var(--ink-faint); max-width:94ch;
+    font-size:12px; color:var(--ink-faint); max-width:96ch;
   }
   footer.note a{ color:var(--ink-soft); }
   footer.note p{ margin:0 0 8px; }
@@ -215,9 +217,9 @@
 
 <div class="wrap">
   <header class="hero">
-    <p class="eyebrow">Eastern Pacific · 6-day illustrative timelapse</p>
+    <p class="eyebrow">Eastern Pacific storms, modeled · shipping lanes, modeled</p>
     <h1>The Storm Lane</h1>
-    <p class="dek">Three hurricanes move through the eastern Pacific over six modeled days while six real trans-Pacific and coastal flight corridors run underneath them. Track color follows the real NHC Saffir–Simpson scale, from <span class="swatch" style="background:var(--cat-ts)"></span><strong>tropical storm</strong> green through <span class="swatch" style="background:var(--cat-5)"></span><strong>Category&nbsp;5</strong> magenta; the soft shaded ring around each eye is a modeled hazard buffer, not an official NHC forecast cone. Airports, great-circle routing, and real-world distances for all six flight corridors are real; when a corridor's flight track crosses a storm's buffer it bends and turns <span class="swatch" style="background:var(--coral)"></span><strong>coral</strong>, a modeled reroute rather than actual airline dispatch data. Storm tracks are an illustrative composite built on typical Eastern Pacific hurricane behavior — not a specific NOAA/NHC advisory.</p>
+    <p class="dek">Three illustrative hurricanes move through the eastern Pacific over a modeled six-day window, built to show what they actually do to shipping underneath them. The <span class="swatch" style="background:var(--teal)"></span><strong>teal</strong> vessels sail six real trade lanes — real ports, real great-circle geometry, real distances — picked because they genuinely cross this stretch of ocean at a modeled ~20-knot cruise speed<sup>2</sup>. A ship doesn't just skirt a storm: once it's within a hurricane's reach it turns away, slows to a crawl, and rides it out — turning <span class="swatch" style="background:var(--coral)"></span><strong>coral</strong> — before resuming its course once the storm has moved on. Storm track color follows the real NHC Saffir–Simpson scale, from <span class="swatch" style="background:var(--cat-ts)"></span><strong>tropical storm</strong> green through <span class="swatch" style="background:var(--cat-5)"></span><strong>Category&nbsp;5</strong> magenta. Each storm's translucent ring is a modeled hazard buffer that grows and shrinks continuously with wind speed<sup>1</sup>; the small dashed core inside it is a genuine physical estimate — radius of maximum wind, from the Willoughby et al. (2006) formula — not an NHC forecast cone.</p>
   </header>
 
   <div class="layout">
@@ -226,17 +228,17 @@
       <div class="map-scrim"></div>
       <div class="setup-banner" id="setupBanner" hidden>
         <div class="box">
-          <h3>Add a Mapbox token to see the map</h3>
-          <p>This page reads a token from <code>.env</code> next to it (never hardcoded in the HTML). Open <code>.env</code> in this project folder, replace the placeholder with your public token from <code>account.mapbox.com/access-tokens</code> (starts with <code>pk.</code>), save, and reload.</p>
+          <h3 id="setupTitle">Add a Mapbox token to see the map</h3>
+          <p id="setupBody">This page reads a token from <code>.env</code> next to it (never hardcoded in the HTML). Open <code>.env</code> in this project folder, replace the placeholder with your public token from <code>account.mapbox.com/access-tokens</code> (starts with <code>pk.</code>), save, and reload.</p>
           <p id="setupDetail" style="color:var(--coral)"></p>
         </div>
       </div>
       <div class="chip chip-title">
         <div class="name">THE STORM LANE</div>
-        <div class="sub">Storms + flight traffic · modeled</div>
+        <div class="sub">Storms + shipping · modeled</div>
       </div>
       <div class="chip chip-clock">
-        <div class="date" id="clockDate">05 SEP 2026</div>
+        <div class="date" id="clockDate">—</div>
         <div class="time" id="clockTime">00:00<span>UTC</span></div>
       </div>
       <div class="chip chip-legend">
@@ -245,8 +247,9 @@
         <div class="leg-row"><span class="leg-swatch" style="background:var(--cat-1)"></span>Category 1–2</div>
         <div class="leg-row"><span class="leg-swatch" style="background:var(--cat-4)"></span>Category 3–4</div>
         <div class="leg-row"><span class="leg-swatch" style="background:var(--cat-5)"></span>Category 5</div>
-        <div class="leg-row"><span class="leg-plane">✈</span>Flight, on corridor</div>
-        <div class="leg-row"><span class="leg-plane" style="color:var(--coral)">✈</span>Flight, modeled reroute</div>
+        <div class="leg-row"><span class="leg-ring"></span>Estimated eye (Willoughby 2006)</div>
+        <div class="leg-row"><span class="leg-boat" style="color:var(--teal)">⛴</span>Ship, under way</div>
+        <div class="leg-row"><span class="leg-boat" style="color:var(--coral)">⛴</span>Ship, fleeing a storm</div>
       </div>
       <div class="chip chip-storms" id="stormChip">
         <h4>Active storms</h4>
@@ -266,32 +269,29 @@
             <button class="speedbtn" data-speed="4">4×</button>
           </div>
         </div>
-        <input type="range" id="scrubber" min="0" max="144" step="0.1" value="0">
+        <input type="range" id="scrubber" min="0" max="144" step="0.1" value="60">
         <div class="ticks"><span>Day 1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>Day 6</span></div>
       </div>
 
       <div class="block">
-        <h3>Pacific air traffic, live</h3>
+        <h3>Ships at sea</h3>
+        <p class="cap">Real ports &amp; trade lanes, chosen to cross the storm belt</p>
         <div class="stat">
-          <div class="stat-top"><span class="lbl">Flights airborne</span><span class="val" id="airborneVal">—</span></div>
-          <div class="bar teal"><i id="airborneBar" style="width:0%"></i></div>
+          <div class="stat-top"><span class="lbl">Ships under way</span><span class="val" id="shipsUnderwayVal">—</span></div>
+          <div class="bar teal"><i id="shipsUnderwayBar" style="width:0%"></i></div>
         </div>
         <div class="stat">
-          <div class="stat-top"><span class="lbl">Rerouting around a storm</span><span class="val" id="rerouteVal">—</span></div>
-          <div class="bar coral"><i id="rerouteBar" style="width:0%"></i></div>
+          <div class="stat-top"><span class="lbl">Fleeing a storm</span><span class="val" id="shipsFleeingVal">—</span></div>
+          <div class="bar coral"><i id="shipsFleeingBar" style="width:0%"></i></div>
         </div>
-      </div>
-
-      <div class="block">
-        <h3>Corridors, real distance</h3>
-        <div class="rank" id="rankList"></div>
+        <div class="rank" id="shipLaneList"></div>
       </div>
     </aside>
   </div>
 
   <footer class="note">
-    <p><sup>1</sup> Storm tracks: three named systems ("Talon", "Reya", "Odessa") moving through the eastern Pacific over a modeled 6-day window (05–11 Sep 2026), built to follow typical Eastern Pacific hurricane behavior — westward-then-recurving tracks, realistic intensification/weakening curves, and the real NHC Saffir–Simpson wind-speed thresholds and color convention. This is an illustrative composite, not a transcription of any specific NOAA/National Hurricane Center advisory, best-track, or forecast-cone product. The shaded ring around each storm's eye is a modeled hazard buffer sized off its category, not an official forecast cone.</p>
-    <p><sup>2</sup> Flight corridors: all six routes connect real airports (LAX, SFO, TIJ, MEX, SJD, PVR, SAL, HNL) at their real coordinates, flown along the real great-circle path between them with distances computed from the haversine formula. Flights animate at a modeled 880&nbsp;km/h cruise speed compressed into the 6-day playback window. When a flight's position would fall inside a storm's modeled hazard buffer, its rendered track bends around the buffer's edge and is marked as rerouting — a modeled visualization of storm-avoidance, not real airline flight-planning or ADS-B data.</p>
+    <p><sup>1</sup> Storm tracks: three named systems ("Talon", "Reya", "Odessa") moving through the eastern Pacific over a modeled 6-day window built to follow typical Eastern Pacific hurricane behavior — westward-then-recurving tracks, realistic intensification/weakening curves, and the real NHC Saffir–Simpson wind-speed thresholds and color convention. This is an illustrative composite, not a transcription of any specific NOAA/National Hurricane Center advisory, best-track, or forecast-cone product. The translucent outer ring is a modeled hazard buffer whose radius is smoothly interpolated from wind speed (not stepped by category), so it grows and shrinks continuously across the timelapse. The small dashed inner ring is a genuinely real, cited estimate of the radius of maximum wind — R<sub>mw</sub> = 51.6 · e<sup>(−0.0223·V<sub>max</sub> + 0.0281·|lat|)</sup> km, from Willoughby, H.E., Darling, R.W.R. &amp; Rahn, M.E. (2006), "Parametric Representation of the Primary Hurricane Vortex, Part II," <i>Monthly Weather Review</i> — evaluated at each storm's own modeled wind speed and latitude at every instant.</p>
+    <p><sup>2</sup> Shipping lanes: six real trade routes between real ports at their real coordinates — Los Angeles/Long Beach↔Cabo San Lucas, Ensenada↔Puerto Vallarta, Los Angeles↔Manzanillo, Los Angeles↔Acajutla (El Salvador), Los Angeles↔Honolulu, and Oakland↔Honolulu. The mainland–Hawaii pair is a real, long-running trade lane (Matson Navigation has sailed it for decades); LA↔Manzanillo and LA↔Central America are real containerized trade routes too. Each lane is flown along the real great-circle path between its two ports — an approximation of the charted shipping lane, not a transcription of one — at a modeled 20-knot (≈37&nbsp;km/h) cruise speed typical of container and cargo vessels, scheduled on the same compressed 6-day clock as the storms. This is the layer the piece is built around: when a ship's position comes within a hurricane's much wider "give it a wide berth" radius (about 2.2× the storm's own hazard buffer — real vessels divert well before a storm's core reaches them), it turns away from the storm's center, slows sharply, and rides out the weather before resuming its course. That reroute behavior is a modeled visualization of real maritime storm-avoidance practice, not an individual ship's actual logged track or a real captain's actual decision.</p>
   </footer>
 </div>
 
@@ -314,7 +314,7 @@
     var x=Math.cos(lat1)*Math.sin(lat2)-Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLon);
     return (toDeg(Math.atan2(y,x))+360)%360;
   }
-  // Real spherical destination point (used for storm buffer polygons, geographically exact)
+  // Real spherical destination point (used for storm buffer/eye polygons, geographically exact)
   function destPointSpherical(a,brngDeg,distKm){
     var R=6371;
     var lat1=toRad(a[1]), lon1=toRad(a[0]), brng=toRad(brngDeg);
@@ -322,8 +322,8 @@
     var lon2=lon1+Math.atan2(Math.sin(brng)*Math.sin(distKm/R)*Math.cos(lat1), Math.cos(distKm/R)-Math.sin(lat1)*Math.sin(lat2));
     return [toDeg(lon2), toDeg(lat2)];
   }
-  // Small perpendicular offset (equirectangular approx, fine at this scale) used to
-  // push a flight point away from a storm center when it intrudes into the buffer.
+  // Small perpendicular offset (equirectangular approx, fine at this scale) — used to
+  // push a ship's rendered point away from a storm it's fleeing.
   function destPointFlat(a,brngDeg,distKm){
     var brng=toRad(brngDeg);
     var dLat=(distKm/111.32)*Math.cos(brng);
@@ -335,8 +335,9 @@
     for(var i=0;i<=steps;i++){ coords.push(destPointSpherical(center, i*360/steps, radiusKm)); }
     return [coords];
   }
-  // Real great-circle interpolation (slerp) — needed at trans-Pacific distances
-  // where a straight lon/lat lerp would visibly cut the wrong way across the globe.
+  // Real great-circle interpolation (slerp) — used for the shipping-lane paths below,
+  // so a long route curves correctly over the globe (an approximation of the charted
+  // lane, not a transcription of one — see footnote 2).
   function gcInterpolate(a,b,f){
     var lat1=toRad(a[1]), lon1=toRad(a[0]), lat2=toRad(b[1]), lon2=toRad(b[0]);
     var d = 2*Math.asin(Math.sqrt(Math.pow(Math.sin((lat2-lat1)/2),2) + Math.cos(lat1)*Math.cos(lat2)*Math.pow(Math.sin((lon2-lon1)/2),2)));
@@ -350,7 +351,7 @@
   function buildGreatCirclePath(a,b,n){
     var pts=[]; for(var i=0;i<=n;i++) pts.push(gcInterpolate(a,b,i/n)); return pts;
   }
-  function lerp(a,b,f){ return [a[0]+(b[0]-a[0])*f, a[1]+(b[1]-a[1])*f]; }
+  function lerp2(a,b,f){ return [a[0]+(b[0]-a[0])*f, a[1]+(b[1]-a[1])*f]; }
   function buildPathIndex(pts){
     var cum=[0];
     for(var i=0;i<pts.length-1;i++){ cum.push(cum[i]+haversineKm(pts[i],pts[i+1])); }
@@ -365,10 +366,10 @@
     var segStart=cum[i], segEnd=cum[i+1]===undefined?total:cum[i+1];
     var L=segEnd-segStart;
     var f=L===0?0:(target-segStart)/L;
-    return {pos:lerp(pts[i],pts[i+1],f), bearing:bearingDeg(pts[i],pts[i+1])};
+    return {pos:lerp2(pts[i],pts[i+1],f), bearing:bearingDeg(pts[i],pts[i+1])};
   }
 
-  /* ---------------- Saffir-Simpson categories (real NHC thresholds, kt) ---------------- */
+  /* ---------------- Saffir-Simpson categories (real NHC thresholds, kt) — color only ---------------- */
   var CATS = [
     {label:"TD",    min:0,   color:"#7C8A9A"},
     {label:"TS",    min:34,  color:"#4ADE80"},
@@ -378,25 +379,42 @@
     {label:"CAT 4", min:113, color:"#EF4444"},
     {label:"CAT 5", min:137, color:"#D946EF"}
   ];
-  var CAT_RADIUS_KM = [70,100,140,180,230,290,360];
   function catFromWind(kt){ var idx=0; for(var i=0;i<CATS.length;i++){ if(kt>=CATS[i].min) idx=i; } return idx; }
+
+  // Continuous (not stepped) modeled outer hazard-buffer radius, piecewise-linear in wind speed.
+  var SIZE_ANCHORS = [[0,70],[34,100],[64,140],[83,180],[96,230],[113,290],[137,360],[190,430]];
+  function outerRadiusKm(windKt){
+    var kt=Math.max(0,Math.min(190,windKt));
+    for(var i=0;i<SIZE_ANCHORS.length-1;i++){
+      var a=SIZE_ANCHORS[i], b=SIZE_ANCHORS[i+1];
+      if(kt<=b[0] || i===SIZE_ANCHORS.length-2){
+        var f=(b[0]===a[0])?0:(kt-a[0])/(b[0]-a[0]);
+        return a[1]+(b[1]-a[1])*f;
+      }
+    }
+  }
+  // Real, cited empirical formula for radius of maximum wind (see footnote 1).
+  function rmwKm(windKt, latDeg){
+    var r = 51.6*Math.exp(-0.0223*windKt + 0.0281*Math.abs(latDeg));
+    return Math.max(4, Math.min(150, r));
+  }
 
   /* ---------------- illustrative storm tracks (see footnote 1) ---------------- */
   var STORMS = [
     { id:"talon", name:"Talon", pts:[
-      {h:0,  lon:-140,   lat:11,   wind:45},
-      {h:12, lon:-137,   lat:12.5, wind:70},
-      {h:24, lon:-134,   lat:13.5, wind:85},
-      {h:36, lon:-131,   lat:14.5, wind:100},
-      {h:48, lon:-128,   lat:15.3, wind:120},
-      {h:60, lon:-125,   lat:16,   wind:145},
-      {h:72, lon:-122.5, lat:16.8, wind:150},
-      {h:84, lon:-120,   lat:17.8, wind:130},
-      {h:96, lon:-118,   lat:19,   wind:110},
-      {h:108,lon:-117,   lat:20.5, wind:90},
-      {h:120,lon:-117.5, lat:22,   wind:70},
-      {h:132,lon:-119,   lat:23.5, wind:55},
-      {h:144,lon:-121,   lat:25,   wind:40}
+      {h:0,  lon:-140, lat:11,   wind:45},
+      {h:12, lon:-138, lat:14,   wind:70},
+      {h:24, lon:-136, lat:18,   wind:90},
+      {h:36, lon:-134, lat:22,   wind:110},
+      {h:48, lon:-132, lat:26,   wind:130},
+      {h:60, lon:-130, lat:29,   wind:148},
+      {h:72, lon:-128, lat:31,   wind:150},
+      {h:84, lon:-126, lat:32.5, wind:135},
+      {h:96, lon:-124, lat:33.5, wind:110},
+      {h:108,lon:-122, lat:34,   wind:90},
+      {h:120,lon:-121, lat:34.5, wind:65},
+      {h:132,lon:-120, lat:35,   wind:45},
+      {h:144,lon:-119, lat:35.5, wind:30}
     ]},
     { id:"reya", name:"Reya", pts:[
       {h:20, lon:-122,   lat:13,   wind:45},
@@ -412,16 +430,16 @@
       {h:140,lon:-112,   lat:25.5, wind:35}
     ]},
     { id:"odessa", name:"Odessa", pts:[
-      {h:40, lon:-112,   lat:14.5, wind:30},
-      {h:52, lon:-110.5, lat:15.8, wind:45},
-      {h:64, lon:-109,   lat:17,   wind:60},
-      {h:76, lon:-108,   lat:18.5, wind:58},
-      {h:88, lon:-107.5, lat:20,   wind:50},
-      {h:100,lon:-107.8, lat:21.5, wind:45},
-      {h:112,lon:-108.5, lat:23,   wind:35},
-      {h:124,lon:-109.5, lat:24.3, wind:30},
-      {h:136,lon:-110.5, lat:25.3, wind:25},
-      {h:144,lon:-111.5, lat:26,   wind:20}
+      {h:30, lon:-113,   lat:15,   wind:30},
+      {h:42, lon:-111.5, lat:16.5, wind:55},
+      {h:54, lon:-110,   lat:18.5, wind:85},
+      {h:66, lon:-109,   lat:20.7, wind:100},
+      {h:78, lon:-108.5, lat:23.1, wind:90},
+      {h:90, lon:-108,   lat:25.5, wind:65},
+      {h:102,lon:-108.5, lat:27.5, wind:45},
+      {h:114,lon:-109.5, lat:29,   wind:30},
+      {h:126,lon:-111,   lat:30,   wind:22},
+      {h:144,lon:-113,   lat:31,   wind:18}
     ]}
   ];
   function stormStateAt(storm,h){
@@ -432,62 +450,82 @@
     var f=(p1.h===p0.h)?0:(h-p0.h)/(p1.h-p0.h);
     var lon=p0.lon+(p1.lon-p0.lon)*f, lat=p0.lat+(p1.lat-p0.lat)*f, wind=p0.wind+(p1.wind-p0.wind)*f;
     var cat=catFromWind(wind);
-    return {lon:lon,lat:lat,wind:wind,cat:cat,radiusKm:CAT_RADIUS_KM[cat],color:CATS[cat].color,label:CATS[cat].label};
+    return {lon:lon,lat:lat,wind:wind,cat:cat,color:CATS[cat].color,label:CATS[cat].label,
+      radiusKm:outerRadiusKm(wind), rmwKm:rmwKm(wind,lat)};
   }
 
-  /* ---------------- real airports + flight corridors ---------------- */
-  var AIRPORTS = {
-    LAX:{name:"Los Angeles", lon:-118.4085, lat:33.9416},
-    SFO:{name:"San Francisco", lon:-122.3790, lat:37.6213},
-    TIJ:{name:"Tijuana", lon:-116.9702, lat:32.5411},
-    SJD:{name:"Los Cabos", lon:-109.7211, lat:23.1518},
-    PVR:{name:"Puerto Vallarta", lon:-105.2542, lat:20.6801},
-    MEX:{name:"Mexico City", lon:-99.0721, lat:19.4363},
-    SAL:{name:"San Salvador", lon:-89.0558, lat:13.4409},
-    HNL:{name:"Honolulu", lon:-157.9251, lat:21.3187}
+  /* ---------------- illustrative shipping lanes (see footnote 2) ---------------- */
+  // Real ports, real great-circle geometry, a modeled schedule compressed into the
+  // same 6-day storm clock as the hurricanes — chosen specifically because their real
+  // lanes cross the eastern Pacific storm belt, so the piece can actually show the
+  // thing it's about: ships fleeing a hurricane as it moves.
+  var PORTS = {
+    LAX:{name:"Los Angeles / Long Beach", lon:-118.2610, lat:33.7395},
+    OAK:{name:"Oakland", lon:-122.3009, lat:37.7955},
+    ENS:{name:"Ensenada", lon:-116.6167, lat:31.8667},
+    SJD:{name:"Cabo San Lucas", lon:-109.9,    lat:22.89},
+    PVR:{name:"Puerto Vallarta", lon:-105.2253, lat:20.6534},
+    MZN:{name:"Manzanillo", lon:-104.3164, lat:19.0514},
+    ACJ:{name:"Acajutla", lon:-89.8317,  lat:13.5772},
+    HNL:{name:"Honolulu", lon:-157.8656, lat:21.3078}
   };
-  var ROUTES = [
-    {id:"lax-sjd", a:"LAX", b:"SJD", interval:4.2},
-    {id:"tij-pvr", a:"TIJ", b:"PVR", interval:5.6},
-    {id:"lax-mex", a:"LAX", b:"MEX", interval:3.8},
-    {id:"lax-sal", a:"LAX", b:"SAL", interval:5.2},
-    {id:"lax-hnl", a:"LAX", b:"HNL", interval:4.6},
-    {id:"sfo-hnl", a:"SFO", b:"HNL", interval:5.0}
+  var SHIP_ROUTES = [
+    {id:"lax-sjd", a:"LAX", b:"SJD", interval:6.0},
+    {id:"ens-pvr", a:"ENS", b:"PVR", interval:5.0},
+    {id:"lax-mzn", a:"LAX", b:"MZN", interval:8.5},
+    {id:"lax-acj", a:"LAX", b:"ACJ", interval:13.0},
+    {id:"lax-hnl", a:"LAX", b:"HNL", interval:14.0},
+    {id:"oak-hnl", a:"OAK", b:"HNL", interval:13.0}
   ];
-  ROUTES.forEach(function(r){
-    var A=AIRPORTS[r.a], B=AIRPORTS[r.b];
+  SHIP_ROUTES.forEach(function(r){
+    var A=PORTS[r.a], B=PORTS[r.b];
     r.from=[A.lon,A.lat]; r.to=[B.lon,B.lat];
     r.fromName=A.name; r.toName=B.name;
     r.distanceKm = haversineKm(r.from,r.to);
-    r.path = buildGreatCirclePath(r.from,r.to,48);
+    r.path = buildGreatCirclePath(r.from,r.to,64);
     r.pathIndex = buildPathIndex(r.path);
     r._acc = Math.random()*r.interval;
   });
+  var SHIP_KMH = 37, SEC_PER_HOUR = 1.25; // ~20kn cruise speed; 144h compresses to 180s at 1x, matches the storm clock
+  var MAX_SHIPS = 70;
+  var ships = [];
+  function spawnShip(route, startT){
+    if(ships.length>=MAX_SHIPS) return;
+    var realHours = route.distanceKm/SHIP_KMH;
+    var durationSec = Math.max(2, realHours*SEC_PER_HOUR/speed);
+    ships.push({route:route, t:(startT||0), durationSec:durationSec});
+  }
+  // Seed each lane with a few ships already mid-voyage so the map isn't empty for the
+  // first several seconds while the normal spawn schedule catches up.
+  function seedShips(){
+    SHIP_ROUTES.forEach(function(r){
+      for(var i=0;i<3;i++){ spawnShip(r, Math.random()*0.85); }
+    });
+  }
 
-  var CRUISE_KMH = 880;
-  var SEC_PER_HOUR = 1.25; // 144h compresses to 180s at 1x
-  var TOTAL_HOURS = 144;
-
-  /* ---------------- deflection: bend a flight point away from a storm buffer ---------------- */
-  function deflectPoint(p, liveStorms){
-    var push=[0,0], intrusion=0;
-    liveStorms.forEach(function(s){
+  /* ---------------- flee: a ship gives a storm a wide berth, turning away and slowing ---------------- */
+  // Real vessels divert well before a hurricane's hazard zone actually reaches them —
+  // the trigger radius here is 2.2x the storm's own modeled buffer, not the buffer itself.
+  function fleePoint(p, liveStorms){
+    var push=[0,0], maxIntrusion=0, dominant=null;
+    for(var i=0;i<liveStorms.length;i++){
+      var s=liveStorms[i];
       var d = haversineKm(p, [s.lon,s.lat]);
-      var r = s.radiusKm*1.15;
+      var r = s.radiusKm*2.2;
       if(d<r){
         var f = (r-d)/r;
         var brng = bearingDeg([s.lon,s.lat], p);
-        var pushKm = f*r*0.55;
+        var pushKm = f*r*0.9;
         var dest = destPointFlat(p, brng, pushKm);
         push[0]+=dest[0]-p[0]; push[1]+=dest[1]-p[1];
-        intrusion = Math.max(intrusion,f);
+        if(f>maxIntrusion){ maxIntrusion=f; dominant=s; }
       }
-    });
-    return {pt:[p[0]+push[0], p[1]+push[1]], intrusion:intrusion};
+    }
+    return {lon:p[0]+push[0], lat:p[1]+push[1], intrusion:maxIntrusion, dominant:dominant};
   }
 
   /* ---------------- clock / transport state ---------------- */
-  var simHours = 0, playing = true, speed = 1;
+  var simHours = 60, playing = true, speed = 1; // opens mid-storm so the effect is visible right away
   var scrubber = document.getElementById("scrubber");
   var playBtn = document.getElementById("playBtn");
   document.querySelectorAll(".speedbtn").forEach(function(b){
@@ -500,7 +538,8 @@
   scrubber.addEventListener("input", function(){ simHours=parseFloat(scrubber.value); playing=false; playBtn.textContent="►"; });
 
   var MONTHS=["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
-  var BASE_EPOCH = Date.UTC(2026,8,5,0,0,0); // 05 Sep 2026 00:00 UTC — see footnote 1
+  var _now = new Date();
+  var BASE_EPOCH = Date.UTC(_now.getUTCFullYear(), _now.getUTCMonth(), _now.getUTCDate(), 0,0,0); // today, 00:00 UTC
   var clockDate=document.getElementById("clockDate"), clockTime=document.getElementById("clockTime");
   function updateClock(h){
     var d = new Date(BASE_EPOCH + h*3600000);
@@ -510,7 +549,9 @@
     clockTime.innerHTML = hh+":"+mm+"<span>UTC</span>";
   }
 
-  function showSetupBanner(msg){
+  function showSetupBanner(msg, title, body){
+    if(title) document.getElementById("setupTitle").textContent = title;
+    if(body) document.getElementById("setupBody").innerHTML = body;
     document.getElementById("setupDetail").textContent = msg||"";
     document.getElementById("setupBanner").hidden = false;
   }
@@ -539,7 +580,7 @@
     showSetupBanner("Serve this file over http:// (not double-clicked as a local file) so it can read .env — e.g. `python serve.py` in this folder. (" + err.message + ")");
   });
 
-  /* ---------------- storm roster + corridor list (static DOM) ---------------- */
+  /* ---------------- storm roster (static DOM, live text) ---------------- */
   var stormRows = document.getElementById("stormRows");
   var stormRowEls = {};
   STORMS.forEach(function(s){
@@ -550,9 +591,9 @@
     stormRowEls[s.id]={row:row, dot:row.querySelector(".dot"), c:row.querySelector(".c")};
   });
 
-  var rankList=document.getElementById("rankList");
-  var sortedRoutes = ROUTES.slice().sort(function(a,b){ return a.distanceKm-b.distanceKm; });
-  var rankRowEls={};
+  var shipLaneList=document.getElementById("shipLaneList");
+  var sortedRoutes = SHIP_ROUTES.slice().sort(function(a,b){ return a.distanceKm-b.distanceKm; });
+  var shipLaneRowEls={};
   sortedRoutes.forEach(function(r){
     var row=document.createElement("div");
     row.className="rank-row"; row.dataset.id=r.id;
@@ -560,20 +601,20 @@
       '<span class="rank-dot"></span>'+
       '<span class="rank-name"><div class="n">'+r.fromName+' → '+r.toName+'</div><div class="s">'+r.a+' / '+r.b+'</div></span>'+
       '<span class="rank-km">'+Math.round(r.distanceKm)+' km</span>';
-    rankList.appendChild(row);
-    rankRowEls[r.id]=row;
+    shipLaneList.appendChild(row);
+    shipLaneRowEls[r.id]=row;
   });
 
   /* ---------------- map ---------------- */
-  var map, playing_map=false;
+  var map;
   function initMap(token){
     mapboxgl.accessToken = token;
     map = new mapboxgl.Map({
       container:"map",
       style:"mapbox://styles/mapbox/dark-v11",
       projection:"mercator",
-      center:[-124,21.5],
-      zoom:3.35,
+      center:[-150,20],
+      zoom:2.0,
       pitch:0,
       attributionControl:true
     });
@@ -585,11 +626,11 @@
     map.on("load", function(){
       didLoad=true;
       document.getElementById("setupBanner").hidden = true;
-      try{ map.setConfigProperty("basemap","lightPreset","dusk"); }catch(e){}
       dimLabels();
-      fitToScene();
+      buildShipIcon();
       buildStormLayers();
-      buildFlightLayers();
+      buildShipLayers();
+      seedShips();
       updateClock(simHours);
       requestAnimationFrame(tick);
     });
@@ -599,8 +640,14 @@
       }
     });
     setTimeout(function(){
-      if(!didLoad){ showSetupBanner("The basemap didn't finish loading in time — check your internet connection, token, and style access, then reload."); }
-    }, 15000);
+      if(!didLoad){
+        showSetupBanner(
+          "Your Mapbox token is fine — this is just a slow network or a slow tile load. Check your connection, or reload.",
+          "Still loading the map…",
+          "The token from <code>.env</code> was found and handed to Mapbox; the map just hasn't finished rendering yet."
+        );
+      }
+    }, 25000);
     window.addEventListener("resize", function(){ map.resize(); });
   }
 
@@ -617,21 +664,24 @@
     });
   }
 
-  function fitToScene(){
-    var lons=[], lats=[];
-    STORMS.forEach(function(s){ s.pts.forEach(function(p){ lons.push(p.lon); lats.push(p.lat); }); });
-    ROUTES.forEach(function(r){ lons.push(r.from[0],r.to[0]); lats.push(r.from[1],r.to[1]); });
-    var b = new mapboxgl.LngLatBounds([Math.min.apply(null,lons),Math.min.apply(null,lats)],[Math.max.apply(null,lons),Math.max.apply(null,lats)]);
-    map.resize();
-    map.fitBounds(b, {padding:{top:60,bottom:80,left:40,right:60}, duration:0});
-    window.__dbg = {pass1Zoom:map.getZoom(), containerW:map.getContainer().clientWidth, containerH:map.getContainer().clientHeight};
-    setTimeout(function(){
-      map.resize();
-      map.fitBounds(b, {padding:{top:60,bottom:80,left:40,right:60}, duration:0});
-      window.__dbg.pass2Zoom = map.getZoom();
-      window.__dbg.pass2ContainerW = map.getContainer().clientWidth;
-      window.__dbg.pass2ContainerH = map.getContainer().clientHeight;
-    }, 300);
+  // A small hull silhouette, bow pointing up (bearing 0 = north), drawn once to a
+  // canvas and registered as an SDF icon so its color can be tinted per feature and
+  // its heading set exactly via icon-rotate.
+  function buildShipIcon(){
+    var size=44;
+    var canvas=document.createElement("canvas"); canvas.width=size; canvas.height=size;
+    var ctx=canvas.getContext("2d");
+    ctx.fillStyle="#fff";
+    ctx.beginPath();
+    ctx.moveTo(size/2, 3);
+    ctx.lineTo(size-6, size*0.5);
+    ctx.lineTo(size-9, size-6);
+    ctx.lineTo(9, size-6);
+    ctx.lineTo(6, size*0.5);
+    ctx.closePath();
+    ctx.fill();
+    var imgData = ctx.getImageData(0,0,size,size);
+    map.addImage("ship-icon", imgData, {sdf:true});
   }
 
   /* ---------------- storm layers ---------------- */
@@ -652,14 +702,14 @@
     map.addSource("storm-lines", {type:"geojson", data:{type:"FeatureCollection", features:segFeatures}});
     map.addLayer({id:"storm-lines-future", type:"line", source:"storm-lines",
       layout:{"line-cap":"round","line-join":"round"},
-      paint:{"line-color":"#8A93A6","line-width":["interpolate",["linear"],["zoom"],3,1,8,2],"line-opacity":0.35,"line-dasharray":[1,2]}});
+      paint:{"line-color":"#8A93A6","line-width":["interpolate",["linear"],["zoom"],2,1,8,2],"line-opacity":0.35,"line-dasharray":[1,2]}});
     map.addLayer({id:"storm-lines-past", type:"line", source:"storm-lines",
       layout:{"line-cap":"round","line-join":"round"},
-      paint:{"line-color":["get","color"],"line-width":["interpolate",["linear"],["zoom"],3,1.6,8,3],"line-opacity":0.85}});
+      paint:{"line-color":["get","color"],"line-width":["interpolate",["linear"],["zoom"],2,1.6,8,3],"line-opacity":0.85}});
 
     map.addSource("storm-points", {type:"geojson", data:{type:"FeatureCollection", features:ptFeatures}});
     map.addLayer({id:"storm-points-past", type:"circle", source:"storm-points",
-      paint:{"circle-radius":["interpolate",["linear"],["zoom"],3,2.6,8,4.2],"circle-color":["get","color"],
+      paint:{"circle-radius":["interpolate",["linear"],["zoom"],2,2.2,8,4.2],"circle-color":["get","color"],
         "circle-stroke-color":"#03050A","circle-stroke-width":1}});
 
     map.addSource("storm-buffers", {type:"geojson", data:{type:"FeatureCollection", features:[]}});
@@ -668,11 +718,15 @@
     map.addLayer({id:"storm-buffers-line", type:"line", source:"storm-buffers",
       paint:{"line-color":["get","color"],"line-opacity":0.5,"line-width":1.2,"line-dasharray":[2,2]}}, "storm-lines-future");
 
+    map.addSource("storm-eyes", {type:"geojson", data:{type:"FeatureCollection", features:[]}});
+    map.addLayer({id:"storm-eyes-line", type:"line", source:"storm-eyes",
+      paint:{"line-color":"#F4F7FB","line-opacity":0.8,"line-width":1.3,"line-dasharray":[1.5,1.5]}});
+
     map.addSource("storm-now", {type:"geojson", data:{type:"FeatureCollection", features:[]}});
     map.addLayer({id:"storm-now-halo", type:"circle", source:"storm-now",
-      paint:{"circle-radius":["interpolate",["linear"],["zoom"],3,16,8,30],"circle-color":["get","color"],"circle-opacity":0.22,"circle-blur":0.7}});
+      paint:{"circle-radius":["interpolate",["linear"],["zoom"],2,14,8,30],"circle-color":["get","color"],"circle-opacity":0.22,"circle-blur":0.7}});
     map.addLayer({id:"storm-now-eye", type:"circle", source:"storm-now",
-      paint:{"circle-radius":["interpolate",["linear"],["zoom"],3,5,8,8],"circle-color":["get","color"],
+      paint:{"circle-radius":["interpolate",["linear"],["zoom"],2,4,8,8],"circle-color":["get","color"],
         "circle-stroke-color":"#03050A","circle-stroke-width":1.6}});
     map.addLayer({id:"storm-now-label", type:"symbol", source:"storm-now",
       layout:{"text-field":["get","label"],"text-font":["Open Sans Bold","Arial Unicode MS Bold"],
@@ -681,8 +735,7 @@
   }
 
   function updateStormLayers(h){
-    var bufferFeatures=[], nowFeatures=[], live=[];
-    var activeCount=0;
+    var bufferFeatures=[], eyeFeatures=[], nowFeatures=[], live=[];
     STORMS.forEach(function(s){
       var st = stormStateAt(s,h);
       var el = stormRowEls[s.id];
@@ -692,93 +745,94 @@
         el.c.textContent = h<s.pts[0].h ? "forming" : "dissipated";
         return;
       }
-      activeCount++;
       live.push({lon:st.lon, lat:st.lat, radiusKm:st.radiusKm});
       el.row.classList.remove("inactive");
       el.dot.style.background = st.color;
       el.c.textContent = st.label+" · "+Math.round(st.wind)+"kt";
       bufferFeatures.push({type:"Feature", properties:{color:st.color}, geometry:{type:"Polygon", coordinates:geoCirclePolygon([st.lon,st.lat], st.radiusKm, 40)}});
+      eyeFeatures.push({type:"Feature", properties:{}, geometry:{type:"Polygon", coordinates:geoCirclePolygon([st.lon,st.lat], st.rmwKm, 28)}});
       nowFeatures.push({type:"Feature", properties:{color:st.color, label:s.name.toUpperCase()+" · "+st.label}, geometry:{type:"Point", coordinates:[st.lon,st.lat]}});
     });
     map.setFilter("storm-lines-past", ["<=",["get","h1"], h]);
     map.setFilter("storm-lines-future", [">",["get","h1"], h]);
     map.setFilter("storm-points-past", ["<=",["get","h"], h]);
     map.getSource("storm-buffers").setData({type:"FeatureCollection", features:bufferFeatures});
+    map.getSource("storm-eyes").setData({type:"FeatureCollection", features:eyeFeatures});
     map.getSource("storm-now").setData({type:"FeatureCollection", features:nowFeatures});
     return live;
   }
 
-  /* ---------------- flight layers ---------------- */
-  var activeFlights = [];
-  function buildFlightLayers(){
-    var corridorFeatures = ROUTES.map(function(r){
+  /* ---------------- ship layers: the storytelling layer ---------------- */
+  function buildShipLayers(){
+    var laneFeatures = SHIP_ROUTES.map(function(r){
       return {type:"Feature", properties:{}, geometry:{type:"LineString", coordinates:r.path}};
     });
-    map.addSource("flight-corridors", {type:"geojson", data:{type:"FeatureCollection", features:corridorFeatures}});
-    map.addLayer({id:"flight-corridors-line", type:"line", source:"flight-corridors",
-      paint:{"line-color":"#3FE0D0","line-width":1,"line-opacity":0.18,"line-dasharray":[0.2,2]}});
+    map.addSource("ship-lanes", {type:"geojson", data:{type:"FeatureCollection", features:laneFeatures}});
+    map.addLayer({id:"ship-lanes-line", type:"line", source:"ship-lanes",
+      paint:{"line-color":"#3FE0D0","line-width":1,"line-opacity":0.2,"line-dasharray":[0.2,2]}});
 
-    map.addSource("flights", {type:"geojson", data:{type:"FeatureCollection", features:[]}});
-    map.addLayer({id:"flights-glow", type:"circle", source:"flights",
-      paint:{"circle-radius":["interpolate",["linear"],["zoom"],3,9,8,13],
-        "circle-color":["case",["==",["get","affected"],1],"#FF6273","#3FE0D0"],
-        "circle-opacity":0.25,"circle-blur":0.6}});
-    map.addLayer({id:"flights-plane", type:"symbol", source:"flights",
-      layout:{"text-field":"✈","text-size":["interpolate",["linear"],["zoom"],3,13,8,18],
-        "text-rotate":["get","bearing"],"text-rotation-alignment":"map","text-allow-overlap":true,"text-ignore-placement":true},
-      paint:{"text-color":["case",["==",["get","affected"],1],"#FF6273","#3FE0D0"],
-        "text-halo-color":"#03050A","text-halo-width":1.2}});
-  }
-
-  function spawnFlight(route){
-    var realHours = route.distanceKm/CRUISE_KMH;
-    var durationSec = Math.max(1.4, realHours*SEC_PER_HOUR/speed);
-    activeFlights.push({route:route, t:0, durationSec:durationSec});
+    map.addSource("ships", {type:"geojson", data:{type:"FeatureCollection", features:[]}});
+    map.addLayer({id:"ships-glow", type:"circle", source:"ships",
+      paint:{"circle-radius":["interpolate",["linear"],["zoom"],1,6,4,9,9,14],
+        "circle-color":["case",["==",["get","fleeing"],1],"#FF6273","#3FE0D0"],
+        "circle-opacity":0.28,"circle-blur":0.6}});
+    map.addLayer({id:"ships-icon", type:"symbol", source:"ships",
+      layout:{"icon-image":"ship-icon",
+        "icon-size":["interpolate",["linear"],["zoom"],1,0.75,4,1.05,9,1.6],
+        "icon-rotate":["get","bearing"],"icon-rotation-alignment":"map",
+        "icon-allow-overlap":true,"icon-ignore-placement":true},
+      paint:{"icon-color":["case",["==",["get","fleeing"],1],"#FF6273","#3FE0D0"], "icon-opacity":1}});
   }
 
   /* ---------------- main loop ---------------- */
   var last = performance.now();
   function tick(now){
     var dt = Math.min(0.12, (now-last)/1000); last = now;
+
     if(playing){
-      simHours += dt*speed/SEC_PER_HOUR;
-      if(simHours>TOTAL_HOURS) simHours-=TOTAL_HOURS;
+      simHours += dt*speed/1.25; // 144h compresses to 180s at 1x
+      if(simHours>144) simHours-=144;
       scrubber.value = simHours;
     }
     updateClock(simHours);
     var liveStorms = updateStormLayers(simHours);
 
+    // Ships: spawn on schedule, advance along their real great-circle lane, and — the
+    // whole point of this piece — turn away and slow to a crawl when a hurricane's
+    // wide "give it a berth" radius reaches them, instead of just skirting the edge.
     if(playing){
-      ROUTES.forEach(function(r){
+      SHIP_ROUTES.forEach(function(r){
         r._acc += dt;
-        if(r._acc>=r.interval){ r._acc-=r.interval; spawnFlight(r); }
+        if(r._acc>=r.interval){ r._acc-=r.interval; spawnShip(r); }
       });
     }
-
-    var reroutedRoutes = {};
-    var features=[];
-    for(var i=activeFlights.length-1;i>=0;i--){
-      var f=activeFlights[i];
-      if(playing) f.t += dt/f.durationSec;
-      if(f.t>=1){ activeFlights.splice(i,1); continue; }
-      var here = pointAtT(f.route.pathIndex, f.t);
-      var defl = deflectPoint(here.pos, liveStorms);
-      var affected = defl.intrusion>0.05 ? 1 : 0;
-      if(affected) reroutedRoutes[f.route.id]=true;
-      features.push({type:"Feature", properties:{bearing:here.bearing, affected:affected}, geometry:{type:"Point", coordinates:defl.pt}});
+    var fleeingRoutes = {}, features=[];
+    for(var si=ships.length-1;si>=0;si--){
+      var sp=ships[si];
+      var base = pointAtT(sp.route.pathIndex, sp.t);
+      var flee = fleePoint(base.pos, liveStorms);
+      var fleeing = flee.intrusion>0.08 ? 1 : 0;
+      if(fleeing) fleeingRoutes[sp.route.id]=true;
+      if(playing){
+        // Slow to as little as ~12% of normal transit speed while deep inside the flee zone.
+        var speedFactor = 1 - Math.min(0.88, flee.intrusion*0.95);
+        sp.t += (dt/sp.durationSec)*speedFactor;
+      }
+      if(sp.t>=1){ ships.splice(si,1); continue; }
+      var bearing = (fleeing && flee.dominant) ? bearingDeg([flee.dominant.lon,flee.dominant.lat],[flee.lon,flee.lat]) : base.bearing;
+      features.push({type:"Feature", properties:{bearing:bearing, fleeing:fleeing}, geometry:{type:"Point", coordinates:[flee.lon,flee.lat]}});
     }
-    if(map.getSource("flights")) map.getSource("flights").setData({type:"FeatureCollection", features:features});
+    if(map.getSource("ships")) map.getSource("ships").setData({type:"FeatureCollection", features:features});
 
-    var reroutedCount=0;
-    features.forEach(function(ft){ if(ft.properties.affected) reroutedCount++; });
-    document.getElementById("airborneVal").textContent = activeFlights.length;
-    document.getElementById("airborneBar").style.width = Math.min(100,(activeFlights.length/24)*100)+"%";
-    document.getElementById("rerouteVal").textContent = reroutedCount;
-    document.getElementById("rerouteBar").style.width = Math.min(100,(reroutedCount/10)*100)+"%";
-
-    ROUTES.forEach(function(r){
-      var row = rankRowEls[r.id];
-      if(row) row.classList.toggle("hot", !!reroutedRoutes[r.id]);
+    var fleeingCount=0;
+    features.forEach(function(ft){ if(ft.properties.fleeing) fleeingCount++; });
+    document.getElementById("shipsUnderwayVal").textContent = ships.length;
+    document.getElementById("shipsUnderwayBar").style.width = Math.min(100,(ships.length/MAX_SHIPS)*100)+"%";
+    document.getElementById("shipsFleeingVal").textContent = fleeingCount;
+    document.getElementById("shipsFleeingBar").style.width = Math.min(100,(fleeingCount/12)*100)+"%";
+    SHIP_ROUTES.forEach(function(r){
+      var row = shipLaneRowEls[r.id];
+      if(row) row.classList.toggle("hot", !!fleeingRoutes[r.id]);
     });
 
     requestAnimationFrame(tick);

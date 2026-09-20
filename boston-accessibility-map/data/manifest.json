@@ -1,0 +1,45 @@
+{
+  "generated": "2026-09-16",
+  "city": "Boston, Massachusetts",
+  "source_boundary": "OpenStreetMap relation 2315704 (Boston, Suffolk County, MA administrative boundary)",
+  "walk_network": {
+    "raw_osm_nodes": 243581,
+    "raw_osm_ways": 56842,
+    "largest_connected_component_nodes": 222292,
+    "sample_points_rendered": 21499,
+    "sampling": "intersection/endpoint nodes (degree != 2), thinned to at most one point per 45m grid cell, keeping the highest-scoring node per cell"
+  },
+  "walk_cutoff_minutes": 15.0,
+  "walk_pace_m_per_min": 80.0,
+  "categories": {
+    "grocery": {
+      "osm_tags": "shop=supermarket/convenience/grocery/greengrocer",
+      "raw_count": 254
+    },
+    "healthcare": {
+      "osm_tags": "amenity=hospital/clinic/doctors/pharmacy",
+      "raw_count": 127
+    },
+    "education": {
+      "osm_tags": "amenity=school/kindergarten/college",
+      "raw_count": 312
+    },
+    "recreation": {
+      "osm_tags": "leisure=fitness_centre/sports_centre/park/playground, amenity=gym",
+      "raw_count": 837
+    }
+  },
+  "score_distribution": {
+    "0": 275,
+    "1": 568,
+    "2": 1475,
+    "3": 5118,
+    "4": 14063
+  },
+  "category_reach_share": {
+    "grocery": 0.8582,
+    "healthcare": 0.7271,
+    "education": 0.9455,
+    "recreation": 0.9635
+  }
+}

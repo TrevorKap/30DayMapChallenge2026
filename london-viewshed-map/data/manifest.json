@@ -1,0 +1,250 @@
+{
+ "viewpoints": [
+  {
+   "id": "primrose",
+   "name": "Primrose Hill",
+   "kind": "hill",
+   "lat": 51.53966,
+   "lon": -0.16078,
+   "ground_m": 65.2,
+   "eye_above_ground_m": 1.7,
+   "built": {
+    "km2": 83.1,
+    "far_km": 31.2
+   },
+   "bare": {
+    "km2": 700.3,
+    "far_km": 31.3
+   }
+  },
+  {
+   "id": "parliament",
+   "name": "Parliament Hill",
+   "kind": "hill",
+   "lat": 51.55992,
+   "lon": -0.15621,
+   "ground_m": 78.1,
+   "eye_above_ground_m": 1.7,
+   "built": {
+    "km2": 137.8,
+    "far_km": 32.7
+   },
+   "bare": {
+    "km2": 560.2,
+    "far_km": 32.7
+   }
+  },
+  {
+   "id": "alexandra",
+   "name": "Alexandra Palace",
+   "kind": "hill",
+   "lat": 51.59352,
+   "lon": -0.13175,
+   "ground_m": 93.4,
+   "eye_above_ground_m": 1.7,
+   "built": {
+    "km2": 67.6,
+    "far_km": 34.6
+   },
+   "bare": {
+    "km2": 534.5,
+    "far_km": 34.6
+   }
+  },
+  {
+   "id": "greenwich",
+   "name": "Greenwich Park",
+   "kind": "hill",
+   "lat": 51.47518,
+   "lon": -0.00123,
+   "ground_m": 48.2,
+   "eye_above_ground_m": 1.7,
+   "built": {
+    "km2": 82.3,
+    "far_km": 32.3
+   },
+   "bare": {
+    "km2": 650.1,
+    "far_km": 32.7
+   }
+  },
+  {
+   "id": "crystal",
+   "name": "Crystal Palace",
+   "kind": "hill",
+   "lat": 51.42337,
+   "lon": -0.0757,
+   "ground_m": 110.0,
+   "eye_above_ground_m": 1.7,
+   "built": {
+    "km2": 282.2,
+    "far_km": 32.7
+   },
+   "bare": {
+    "km2": 665.1,
+    "far_km": 32.7
+   }
+  },
+  {
+   "id": "shooters",
+   "name": "Shooters Hill",
+   "kind": "hill",
+   "lat": 51.47177,
+   "lon": 0.0712,
+   "ground_m": 124.6,
+   "eye_above_ground_m": 1.7,
+   "built": {
+    "km2": 311.9,
+    "far_km": 37.1
+   },
+   "bare": {
+    "km2": 763.0,
+    "far_km": 37.3
+   }
+  },
+  {
+   "id": "shard",
+   "name": "The Shard",
+   "kind": "tower",
+   "lat": 51.50448,
+   "lon": -0.0864,
+   "ground_m": 2.7,
+   "eye_above_ground_m": 244,
+   "built": {
+    "km2": 1073.0,
+    "far_km": 29.2
+   },
+   "bare": {
+    "km2": 1257.4,
+    "far_km": 29.2
+   }
+  },
+  {
+   "id": "skygarden",
+   "name": "Sky Garden",
+   "kind": "tower",
+   "lat": 51.51109,
+   "lon": -0.08353,
+   "ground_m": 16.8,
+   "eye_above_ground_m": 155,
+   "built": {
+    "km2": 832.8,
+    "far_km": 29.8
+   },
+   "bare": {
+    "km2": 1127.2,
+    "far_km": 29.8
+   }
+  },
+  {
+   "id": "eye",
+   "name": "London Eye",
+   "kind": "tower",
+   "lat": 51.50322,
+   "lon": -0.1196,
+   "ground_m": 4.0,
+   "eye_above_ground_m": 135,
+   "built": {
+    "km2": 707.2,
+    "far_km": 27.3
+   },
+   "bare": {
+    "km2": 1054.8,
+    "far_km": 27.3
+   }
+  },
+  {
+   "id": "stpauls",
+   "name": "St Paul's Golden Gallery",
+   "kind": "tower",
+   "lat": 51.51385,
+   "lon": -0.0984,
+   "ground_m": 17.0,
+   "eye_above_ground_m": 85,
+   "built": {
+    "km2": 438.8,
+    "far_km": 28.5
+   },
+   "bare": {
+    "km2": 917.3,
+    "far_km": 28.6
+   }
+  },
+  {
+   "id": "canary",
+   "name": "One Canada Square",
+   "kind": "tower",
+   "lat": 51.50481,
+   "lon": -0.01953,
+   "ground_m": 9.8,
+   "eye_above_ground_m": 235,
+   "built": {
+    "km2": 1034.8,
+    "far_km": 33.1
+   },
+   "bare": {
+    "km2": 1238.7,
+    "far_km": 33.1
+   }
+  }
+ ],
+ "img": {
+  "w": 2151,
+  "h": 1864,
+  "x0": -46976.0,
+  "y1": 6740704.0,
+  "px": 32.0,
+  "corners": [
+   [
+    -0.42199,
+    51.67016
+   ],
+   [
+    0.19634,
+    51.67016
+   ],
+   [
+    0.19634,
+    51.33662
+   ],
+   [
+    -0.42199,
+    51.33662
+   ]
+  ]
+ },
+ "domain_km2": 1512,
+ "target_m": 10,
+ "display_cells": 3806398,
+ "exposure_hist": {
+  "built": [
+   709400,
+   325492,
+   358764,
+   450676,
+   656245,
+   618901,
+   383720,
+   180938,
+   81174,
+   33066,
+   7688,
+   334
+  ],
+  "bare": [
+   459232,
+   139769,
+   157846,
+   184366,
+   210522,
+   285492,
+   310795,
+   323949,
+   372178,
+   485261,
+   567267,
+   309721
+  ]
+ },
+ "built_at": "2026-09-20"
+}

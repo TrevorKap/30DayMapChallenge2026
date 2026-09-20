@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>New Orleans Flood Susceptibility</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,500&family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js"></script>
+<style>
+  :root{
+    --bg:#F5F3EC; --panel:#E9E8DF; --ink:#14233A; --ink-soft:#4C5C70; --ink-faint:#8592A0;
+    --line:rgba(20,35,58,0.14); --panel-border:rgba(20,35,58,0.13);
+    --shadow:0 18px 40px -20px rgba(20,35,58,0.4);
+    --accent:#A8482F;
+    /* one sequential ramp, lower -> higher susceptibility (same stops as build_susceptibility.py) */
+    --r0:#EAE4CC; --r1:#D8BE78; --r2:#C98A45; --r3:#A8482F; --r4:#5A1730;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--bg);color:var(--ink);font-family:"Source Sans 3",ui-sans-serif,system-ui,sans-serif;font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;}
+  a{color:inherit;}
+  .wrap{max-width:1320px;margin:0 auto;padding:0 clamp(18px,4vw,44px) clamp(48px,8vw,80px);}
+  header.hero{padding:clamp(28px,5vw,52px) 0 clamp(8px,2vw,16px);}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:0.16em;text-transform:uppercase;color:var(--accent);margin:0 0 10px;}
+  .eyebrow::before{content:"◆ ";color:var(--r4);}
+  h1{font-family:"Source Serif 4",Georgia,serif;font-weight:600;font-size:clamp(2rem,4vw,3rem);line-height:1.03;letter-spacing:-0.01em;margin:0 0 14px;text-wrap:balance;}
+  h1 em{font-style:italic;font-weight:500;color:var(--accent);}
+  .dek{max-width:80ch;font-size:clamp(0.94rem,1.2vw,1.03rem);color:var(--ink-soft);margin:0;}
+  .dek strong{color:var(--ink);font-weight:600;}
+
+  .layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:clamp(14px,2.6vw,24px);align-items:start;margin:clamp(22px,4vw,36px) 0 0;}
+  @media (max-width:920px){.layout{grid-template-columns:1fr;}}
+  .map-frame{position:relative;border-radius:16px;border:1px solid var(--panel-border);background:var(--panel);box-shadow:var(--shadow);overflow:hidden;aspect-ratio:4/5;}
+  @media (min-width:640px){.map-frame{aspect-ratio:11/9;}}
+  #map{position:absolute;inset:0;width:100%;height:100%;}
+  .mapboxgl-ctrl-logo{filter:invert(0.15) opacity(0.55);}
+  .mapboxgl-ctrl-attrib{font-size:10px;}
+
+  .setup-banner{position:absolute;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;background:rgba(245,243,236,0.97);padding:32px;text-align:center;}
+  .setup-banner[hidden]{display:none;}
+  .setup-banner .box{max-width:480px;}
+  .setup-banner h3{font-family:"Source Serif 4";font-size:18px;margin:0 0 10px;}
+  .setup-banner p{font-size:13px;color:var(--ink-soft);margin:0 0 8px;}
+  .setup-banner code{background:rgba(20,35,58,0.08);padding:2px 6px;border-radius:5px;font-family:"IBM Plex Mono";font-size:12px;color:var(--accent);}
+
+  .chip{position:absolute;background:rgba(233,232,223,0.92);backdrop-filter:blur(6px);border:1px solid var(--panel-border);border-radius:12px;padding:12px 14px;box-shadow:0 14px 30px -18px rgba(20,35,58,0.4);z-index:5;}
+  .chip-title{top:14px;left:14px;max-width:230px;}
+  .chip-title .name{font-family:"Source Serif 4";font-weight:600;font-size:14.5px;letter-spacing:0.01em;}
+  .chip-title .sub{font-family:"IBM Plex Mono";font-size:10px;color:var(--ink-faint);letter-spacing:0.06em;text-transform:uppercase;margin-top:3px;}
+  .chip-legend{right:14px;bottom:34px;width:210px;}
+  .chip-legend h4{margin:0 0 9px;font-family:"IBM Plex Mono";font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-faint);}
+  .leg-scale{height:10px;border-radius:2px;margin-bottom:6px;background:linear-gradient(90deg,var(--r0),var(--r1),var(--r2),var(--r3),var(--r4));}
+  .leg-labels{display:flex;justify-content:space-between;font-family:"IBM Plex Mono";font-size:10px;color:var(--ink-soft);}
+  .hint{margin-top:9px;font-size:11px;color:var(--ink-soft);line-height:1.4;}
+
+  .panel{background:var(--panel);border:1px solid var(--panel-border);border-radius:16px;padding:16px 18px;box-shadow:var(--shadow);}
+  .block{padding:4px 0 14px;}
+  .block:last-child{padding-bottom:0;}
+  .block h3{font-family:"IBM Plex Mono";font-size:10.5px;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-faint);margin:0 0 10px;font-weight:500;}
+  .verdict{font-family:"Source Serif 4",serif;font-size:1.15rem;font-weight:600;line-height:1.2;margin:0 0 2px;}
+  .verdict-sub{font-family:"IBM Plex Mono";font-size:11px;color:var(--ink-soft);margin:0 0 10px;}
+  .row{display:grid;grid-template-columns:92px 1fr 46px;align-items:center;gap:8px;font-family:"IBM Plex Mono";font-size:11px;padding:3px 0;white-space:nowrap;}
+  .row .bar{height:9px;border-radius:2px;background:rgba(20,35,58,0.08);position:relative;overflow:hidden;}
+  .row .bar i{position:absolute;left:0;top:0;bottom:0;border-radius:2px;}
+  .row .val{text-align:right;color:var(--ink-soft);}
+  .hood{grid-template-columns:118px 1fr 52px;cursor:pointer;background:none;border:0;width:100%;text-align:left;color:var(--ink);padding:3px 0;}
+  .hood:hover span:first-child{color:var(--accent);}
+  .weights{display:flex;flex-wrap:wrap;gap:6px;}
+  .weights span{font-family:"IBM Plex Mono";font-size:10.5px;padding:4px 8px;border:1px solid var(--panel-border);border-radius:7px;background:rgba(245,243,236,0.6);color:var(--ink-soft);}
+  .weights b{color:var(--ink);font-weight:600;}
+
+  .note{margin:22px 0 0;padding:16px 20px;border-left:3px solid var(--accent);background:var(--panel);border-radius:0 10px 10px 0;}
+  .note-label{font-family:"IBM Plex Mono";font-size:0.7rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-faint);margin:0 0 8px;}
+  .note p{margin:0 0 10px;font-size:0.9rem;color:var(--ink-soft);max-width:86ch;line-height:1.62;}
+  .note p:last-child{margin-bottom:0;}
+  .note a{color:var(--accent);text-decoration:underline;text-decoration-color:var(--panel-border);text-underline-offset:3px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hero">
+    <p class="eyebrow">New Orleans · Flood Susceptibility</p>
+    <h1>Where New Orleans <em>holds water</em></h1>
+    <p class="dek">Much of New Orleans sits below sea level, so where rain pools and where surge arrives depends on a few feet of ground. This index combines <strong>bare-earth elevation, local low spots, distance to surge water and paved surface</strong> on a 20 m grid. The pale ribbon along the Mississippi is the natural-levee ground that early settlers built on; the dark blocks along the lakefront are the drained polders. <strong>Hover or tap the map</strong> to see what drives any spot.</p>
+  </header>
+
+  <div class="layout">
+    <div class="map-frame">
+      <div id="map"></div>
+      <div class="setup-banner" id="setupBanner" hidden>
+        <div class="box">
+          <h3>Add a Mapbox token to see the map</h3>
+          <p>This page reads a token from <code>.env</code> next to it. Put <code>MAPBOX_TOKEN=pk.…</code> in that file and reload over <code>http://</code> (<code>python serve.py</code>).</p>
+          <p id="setupDetail" style="color:var(--accent)"></p>
+        </div>
+      </div>
+      <div class="chip chip-title">
+        <div class="name">FLOOD SUSCEPTIBILITY</div>
+        <div class="sub">Relative index · 20 m grid</div>
+      </div>
+      <div class="chip chip-legend">
+        <h4>Susceptibility</h4>
+        <div class="leg-scale"></div>
+        <div class="leg-labels"><span>Lower</span><span>Higher</span></div>
+        <div class="hint">Ranked against the rest of the study area, not a flood-depth forecast.</div>
+      </div>
+    </div>
+
+    <aside class="panel">
+      <div class="block">
+        <h3>Under the cursor</h3>
+        <div id="probe"><p class="verdict-sub">Hover or tap the map.</p></div>
+      </div>
+      <div class="block">
+        <h3>Neighborhood check</h3>
+        <div id="hoods"></div>
+      </div>
+      <div class="block">
+        <h3>Index weights</h3>
+        <div class="weights" id="weights"></div>
+      </div>
+    </aside>
+  </div>
+
+  <footer class="note">
+    <p class="note-label">Method &amp; sources</p>
+    <p>Each 20 m cell in 29.85–30.09°N, 90.20–89.85°W gets four factor scores from 0 (safest) to 1 (most susceptible), combined as a weighted sum: <strong>elevation</strong> (USGS 3DEP bare-earth DEM, NAVD88; +3 m scores 0, −2 m and below scores 1); <strong>local depression</strong> (how far the cell sits below the mean ground level within about 1.2 km, capped at 1 m, which captures bowls where rain pools); <strong>distance to surge water</strong> (straight-line distance to Lake Pontchartrain, the Lake Borgne marshes and the navigation canals, falling from 1 at the shoreline to 0 at 4 km); and <strong>imperviousness</strong> (NLCD 2021 percent impervious surface, a runoff proxy). The summed score is stretched between its 2nd and 98th percentiles for color. The panel percentile is the share of land in the study area that scores lower.</p>
+    <p>Choices and limits: the Mississippi is deliberately left out of the distance factor, because it runs above the city on its own natural levee and the surge threat comes from the lake side. Open water is taken from NLCD's 30 m land cover, so narrow drainage canals are mostly missed. The index does <strong>not</strong> model levees, floodwalls, pump capacity, rainfall intensity, storm surge height or land subsidence, and the weights are judgment calls rather than fitted to observed flood extents. The neighborhood table is a sanity check, not a calibration: natural-levee ground (French Quarter, Garden District, Uptown) should rank well below the old backswamp (Lakeview, Gentilly, Lower Ninth Ward), and the build script fails if it does not. Read it as a screening map of where water is most likely to collect or arrive, not a flood-insurance or evacuation product.</p>
+    <p>Sources: <a href="https://www.usgs.gov/3d-elevation-program" target="_blank" rel="noopener">USGS 3D Elevation Program</a> (elevation; collection dates vary by tile) · <a href="https://www.mrlc.gov/data" target="_blank" rel="noopener">NLCD 2021, MRLC</a> (open water, impervious surface) · basemap and rendering by <a href="https://www.mapbox.com" target="_blank" rel="noopener">Mapbox GL JS</a>. Data pulled 2026-09-19; rebuild with <code>python build_susceptibility.py</code>.</p>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var FT = 3.28084, LABELS = {elev:"Elevation", sink:"Low spot", water:"Surge water", imperv:"Paved surface"};
+  var map, meta, grid, cum = null;
+
+  function showSetupBanner(msg){
+    document.getElementById("setupBanner").hidden = false;
+    document.getElementById("setupDetail").textContent = msg || "";
+  }
+
+  function b64(s, Type){
+    var bin = atob(s), u = new Uint8Array(bin.length);
+    for(var i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+    return Type === Int16Array ? new Int16Array(u.buffer) : u;
+  }
+  function hex(h){ return [1,3,5].map(function(i){ return parseInt(h.substr(i,2),16); }); }
+  function rampColor(v){                       // v 0..1 -> css rgb along meta.ramp
+    var R = meta.ramp, p = Math.min(Math.max(v,0),1) * (R.length-1), i = Math.min(Math.floor(p), R.length-2), a = hex(R[i]), c = hex(R[i+1]);
+    return "rgb(" + a.map(function(x,k){ return Math.round(x + (c[k]-x)*(p-i)); }).join(",") + ")";
+  }
+  function fmtFt(cm){ var f = cm/100*FT; return (f < 0 ? "−" : "+") + Math.abs(f).toFixed(1) + " ft"; }
+  function tier(p){ return p < 20 ? "Lowest tier" : p < 40 ? "Lower tier" : p < 60 ? "Middle tier" : p < 80 ? "Higher tier" : "Highest tier"; }
+
+  /* ---------- side panel ---------- */
+  function buildPanel(){
+    var W = meta.weights;
+    document.getElementById("weights").innerHTML = Object.keys(W).map(function(k){
+      return "<span>" + LABELS[k] + " <b>" + Math.round(W[k]*100) + "%</b></span>";
+    }).join("");
+    var hoods = document.getElementById("hoods");
+    Object.keys(meta.check).sort(function(a,b){ return meta.check[b].pct - meta.check[a].pct; }).forEach(function(n){
+      var c = meta.check[n], b = document.createElement("button");
+      b.className = "row hood";
+      b.innerHTML = "<span>" + n + '</span><span class="bar"><i style="width:' + c.pct + "%;background:" + rampColor(c.pct/100) + '"></i></span><span class="val">' + fmtFt(c.elev_m*100) + "</span>";
+      b.title = "Percentile " + c.pct + " · click to zoom";
+      b.onclick = function(){ map.flyTo({center: meta.landmarks[n], zoom: 12.6, duration: 900}); };
+      hoods.appendChild(b);
+    });
+  }
+
+  function probe(ll){
+    var el = document.getElementById("probe"), src = map.getSource("cursor");
+    var c = Math.floor((ll.lng - grid.bbox[0]) / (grid.bbox[2]-grid.bbox[0]) * grid.w);
+    var r = Math.floor((grid.bbox[3] - ll.lat) / (grid.bbox[3]-grid.bbox[1]) * grid.h), i = r * grid.w + c;
+    if(c < 0 || r < 0 || c >= grid.w || r >= grid.h || !grid.land[i]){
+      src.setData({type:"FeatureCollection", features:[]});
+      el.innerHTML = '<p class="verdict-sub">Open water or outside the study area.</p>';
+      return;
+    }
+    src.setData({type:"Feature", geometry:{type:"Point", coordinates:[ll.lng, ll.lat]}});
+    var pct = Math.round(cum[grid.t[i]]);
+    var rows = Object.keys(LABELS).map(function(k){
+      var v = grid[k][i];
+      return '<div class="row"><span>' + LABELS[k] + '</span><span class="bar"><i style="width:' + v + "%;background:" + rampColor(v/100) + '"></i></span><span class="val">' + v + "</span></div>";
+    }).join("");
+    el.innerHTML = '<p class="verdict">' + tier(pct) + '</p><p class="verdict-sub">Higher than ' + pct + '% of the land · ground ' + fmtFt(grid.elev_cm[i]) + " NAVD88</p>" + rows;
+  }
+
+  /* ---------- basemap (same muting as miami-isochrone-map) ---------- */
+  function muteBasemap(){
+    map.getStyle().layers.forEach(function(l){
+      try{
+        var id = l.id.toLowerCase();
+        if(l.type === "background") map.setPaintProperty(l.id, "background-color", "#EAEDEA");
+        else if(l.type === "fill" && id.indexOf("water") !== -1){ map.setPaintProperty(l.id, "fill-color", "#D8E2E8"); map.setPaintProperty(l.id, "fill-opacity", 0.7); }
+        else if(l.type === "fill" && /landuse|landcover|park/.test(id)){ map.setPaintProperty(l.id, "fill-color", "#DCE3D6"); map.setPaintProperty(l.id, "fill-opacity", 0.35); }
+        else if(l.type === "fill" && id.indexOf("building") !== -1){ map.setPaintProperty(l.id, "fill-color", "#D8D6CC"); map.setPaintProperty(l.id, "fill-opacity", 0.32); }
+        else if(l.type === "fill-extrusion") map.setPaintProperty(l.id, "fill-extrusion-opacity", 0.15);
+        else if(l.type === "line" && id.indexOf("road") !== -1){
+          map.setPaintProperty(l.id, "line-color", "#A7A9A2");
+          map.setPaintProperty(l.id, "line-opacity", /motorway|trunk|primary/.test(id) && id.indexOf("case") === -1 ? 0.4 : 0.24);
+        }
+        else if(l.type === "line" && /admin|boundary/.test(id)){ map.setPaintProperty(l.id, "line-color", "#8592A0"); map.setPaintProperty(l.id, "line-opacity", 0.35); }
+        else if(l.type === "symbol" && /poi|transit|subdivision/.test(id)) map.setLayoutProperty(l.id, "visibility", "none");
+        else if(l.type === "symbol"){
+          map.setPaintProperty(l.id, "text-color", "#33465D");
+          map.setPaintProperty(l.id, "text-halo-color", "#F5F3EC");
+          map.setPaintProperty(l.id, "text-halo-width", 1.4);
+        }
+      }catch(e){ /* paint props vary by layer */ }
+    });
+  }
+
+  function initMap(token){
+    mapboxgl.accessToken = token;
+    var b = meta.bbox;
+    map = new mapboxgl.Map({container:"map", style:"mapbox://styles/mapbox/light-v11", bounds:[[b[0], b[1]],[b[2], b[3]]], minZoom:9.5,
+                            maxBounds:[[b[0]-0.04, b[1]-0.03],[b[2]+0.04, b[3]+0.03]], attributionControl:true});
+    map.addControl(new mapboxgl.NavigationControl({showCompass:false}), "top-right");
+    map.dragRotate.disable(); map.touchZoomRotate.disableRotation();
+
+    var didLoad = false;
+    map.on("load", function(){
+      didLoad = true;
+      document.getElementById("setupBanner").hidden = true;
+      muteBasemap();
+      var firstLabel = map.getStyle().layers.filter(function(l){ return l.type === "symbol"; })[0];
+      map.addSource("susc", {type:"image", url:"./data/susceptibility.png", coordinates:[[b[0],b[3]],[b[2],b[3]],[b[2],b[1]],[b[0],b[1]]]});
+      map.addLayer({id:"susc", type:"raster", source:"susc", paint:{"raster-opacity":0.96, "raster-resampling":"linear", "raster-fade-duration":300}}, firstLabel && firstLabel.id);
+
+      map.addSource("cursor", {type:"geojson", data:{type:"FeatureCollection", features:[]}});
+      map.addLayer({id:"cursor", type:"circle", source:"cursor", paint:{
+        "circle-radius":["interpolate",["linear"],["zoom"], 10,5, 14,9], "circle-color":"rgba(0,0,0,0)",
+        "circle-stroke-color":"#14233A", "circle-stroke-width":2}});
+
+      map.addSource("hoods", {type:"geojson", data:{type:"FeatureCollection", features:Object.keys(meta.landmarks).map(function(n){
+        return {type:"Feature", properties:{name:n}, geometry:{type:"Point", coordinates:meta.landmarks[n]}};
+      })}});
+      map.addLayer({id:"hood-dots", type:"circle", source:"hoods", paint:{
+        "circle-radius":["interpolate",["linear"],["zoom"], 10,2.5, 14,4.5], "circle-color":"#F5F3EC",
+        "circle-stroke-color":"#14233A", "circle-stroke-width":1.4}});
+      map.addLayer({id:"hood-labels", type:"symbol", source:"hoods",
+        layout:{"text-field":["get","name"], "text-transform":"uppercase", "text-letter-spacing":0.12,
+                "text-font":["DIN Pro Bold","Arial Unicode MS Bold"], "text-size":["interpolate",["linear"],["zoom"], 10,9, 14,12.5],
+                "text-anchor":"top", "text-offset":[0,0.7], "text-max-width":8},
+        paint:{"text-color":"#14233A", "text-halo-color":"#F5F3EC", "text-halo-width":1.6}});
+
+      map.on("mousemove", function(e){ probe(e.lngLat); });
+      map.on("click", function(e){ probe(e.lngLat); });
+      map.getCanvas().style.cursor = "crosshair";
+    });
+    map.on("error", function(e){
+      if(e && e.error && /access token|unauthorized|401|403|forbidden/i.test(e.error.message || "")) showSetupBanner("Mapbox rejected this token or style: " + e.error.message);
+    });
+    setTimeout(function(){ if(!didLoad) showSetupBanner("The basemap didn't finish loading in time — check your connection and token, then reload."); }, 15000);
+    window.addEventListener("resize", function(){ map.resize(); });
+  }
+
+  Promise.all([
+    fetch("./data/meta.json").then(function(r){ return r.json(); }),
+    fetch("./data/grid.json").then(function(r){ return r.json(); })
+  ]).then(function(res){
+    meta = res[0];
+    var g = res[1];
+    grid = {w:g.w, h:g.h, bbox:g.bbox, land:b64(g.land), t:b64(g.t), elev_cm:b64(g.elev_cm, Int16Array)};
+    Object.keys(LABELS).forEach(function(k){ grid[k] = b64(g[k]); });
+    // percentile-rank lookup for the 0..100 index: share of land cells below each value (+ half of ties)
+    var cnt = new Float64Array(101), n = 0, i;
+    for(i = 0; i < grid.t.length; i++) if(grid.land[i]){ cnt[grid.t[i]]++; n++; }
+    cum = new Float64Array(101);
+    for(var v = 0, below = 0; v <= 100; v++){ cum[v] = (below + cnt[v]/2) / n * 100; below += cnt[v]; }
+    buildPanel();
+
+    return fetch("./.env", {cache:"no-store"});
+  }).then(function(r){
+    if(!r.ok) throw new Error("could not read .env (" + r.status + ")");
+    return r.text();
+  }).then(function(text){
+    var m = /^\s*MAPBOX_TOKEN\s*=\s*["']?([^"'\r\n]+)/m.exec(text);
+    if(!m || m[1].indexOf("YOUR_TOKEN_HERE") !== -1){ showSetupBanner("Found .env but MAPBOX_TOKEN is missing or still the placeholder."); return; }
+    initMap(m[1].trim());
+  }).catch(function(err){
+    showSetupBanner("Serve this folder over http:// so the page can read .env and data — e.g. `python serve.py`. (" + err.message + ")");
+  });
+})();
+</script>
+</body>
+</html>
