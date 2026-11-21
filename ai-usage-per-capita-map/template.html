@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Share of working-age adults who use generative AI, by country, at three dates from mid-2025 to March 2026.">
+<title>Who Uses AI</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23101418'/%3E%3Ccircle cx='8' cy='8' r='4' fill='none' stroke='%23F2D16B' stroke-width='2'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+<style>
+  :root{
+    --bg:#0B0F13; --panel:#10151A; --rule:#2B3238; --ink:#F2F4F5; --ink-2:#A8B2B7; --ink-3:#8793A0;
+    --nodata:#171D23; --line:#0B0F13; --hot:#F2D16B;
+    --b0:#24343F; --b1:#2D5A6B; --b2:#2E8796; --b3:#74C4B0; --b4:#F2D16B;
+    --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;border-radius:0;}
+  html,body{margin:0;height:100%;overflow:hidden;}
+  body{background:var(--bg);color:var(--ink);font:12px/1.45 var(--mono);-webkit-font-smoothing:antialiased;}
+  button{font:inherit;color:inherit;}
+  :focus-visible{outline:1px solid var(--ink);outline-offset:1px;}
+
+  #app{display:grid;grid-template-columns:var(--sw,280px) 1fr;grid-template-rows:1fr 26px;height:100%;transition:grid-template-columns .2s;}
+  #app.closed{--sw:0px;}
+  #side{grid-row:1/3;background:var(--panel);border-right:1px solid var(--rule);overflow:hidden;display:flex;flex-direction:column;min-width:0;}
+  #side>div{width:280px;}
+  #mapwrap{position:relative;overflow:hidden;min-width:0;}
+  #status{grid-column:2;background:var(--panel);border-top:1px solid var(--rule);display:flex;align-items:center;gap:20px;padding:0 12px;color:var(--ink-2);font-size:11px;white-space:nowrap;overflow:hidden;}
+  #status b{color:var(--ink);font-weight:500;}
+  #toggle{position:absolute;top:8px;left:8px;z-index:3;background:var(--panel);border:1px solid var(--rule);padding:5px 9px;cursor:pointer;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);}
+  #toggle:hover{color:var(--ink);border-color:var(--ink-3);}
+
+  .blk{padding:14px 16px;border-bottom:1px solid var(--rule);}
+  h1{margin:0 0 8px;font-size:15px;line-height:1.25;font-weight:600;letter-spacing:.02em;text-transform:uppercase;text-wrap:balance;}
+  h2{margin:0 0 9px;font-size:11px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);}
+  p{margin:0;color:var(--ink-2);}
+  .seg{display:flex;}
+  .seg button{flex:1;padding:6px 4px;background:transparent;border:1px solid var(--rule);color:var(--ink-2);cursor:pointer;font-size:11px;letter-spacing:.04em;text-transform:uppercase;}
+  .seg button+button{margin-left:-1px;}
+  .seg button:hover{color:var(--ink);border-color:var(--ink-3);position:relative;}
+  .seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink);position:relative;}
+  .play{margin-top:6px;width:100%;padding:6px;background:transparent;border:1px solid var(--rule);color:var(--ink-2);cursor:pointer;font-size:11px;letter-spacing:.08em;text-transform:uppercase;}
+  .play:hover{color:var(--ink);border-color:var(--ink-3);}
+  .leg{display:grid;grid-template-columns:22px 1fr auto;gap:5px 10px;align-items:center;font-size:11px;color:var(--ink-2);}
+  .leg i{display:block;height:12px;border:1px solid var(--rule);}
+  .leg .n{color:var(--ink-3);}
+  #list{flex:1;overflow:auto;min-height:0;}
+  #list button{display:grid;grid-template-columns:26px 1fr 44px;gap:8px;align-items:center;width:100%;padding:4px 16px;background:transparent;border:0;border-bottom:1px solid #1a2026;cursor:pointer;text-align:left;font-size:11px;color:var(--ink-2);}
+  #list button:hover,#list button[aria-current="true"]{background:#1a2128;color:var(--ink);}
+  #list .r{color:var(--ink-3);}
+  #list .v{text-align:right;color:var(--ink);}
+  #inspect{position:absolute;top:8px;right:8px;width:260px;z-index:3;background:var(--panel);border:1px solid var(--rule);}
+  #inspect[hidden]{display:none;}
+  #inspect .hd{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;padding:10px 12px;border-bottom:1px solid var(--rule);}
+  #inspect h3{margin:0;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+  #inspect .x{background:transparent;border:1px solid var(--rule);width:22px;height:22px;cursor:pointer;color:var(--ink-2);line-height:1;}
+  #inspect .x:hover{color:var(--ink);border-color:var(--ink-3);}
+  #inspect .big{padding:10px 12px 0;font-size:30px;line-height:1;font-weight:600;color:var(--hot);}
+  #inspect .sub{padding:4px 12px 8px;color:var(--ink-2);}
+  #inspect dl{display:grid;grid-template-columns:1fr auto;gap:3px 12px;margin:0;padding:8px 12px;border-top:1px solid var(--rule);font-size:11px;}
+  #inspect dt{color:var(--ink-3);} #inspect dd{margin:0;text-align:right;}
+  #inspect svg{display:block;margin:0 12px 8px;}
+  #inspect .btn{margin:0 12px 12px;width:calc(100% - 24px);padding:6px;background:transparent;border:1px solid var(--rule);color:var(--ink-2);cursor:pointer;font-size:11px;letter-spacing:.08em;text-transform:uppercase;}
+  #inspect .btn:hover{color:var(--ink);border-color:var(--ink-3);}
+  svg#map{display:block;width:100%;height:100%;cursor:grab;}
+  svg#map:active{cursor:grabbing;}
+  .c{stroke:var(--line);stroke-width:.5;vector-effect:non-scaling-stroke;transition:fill .7s;}
+  .c:hover,.c.sel{stroke:var(--ink);stroke-width:1.5;}
+  #zoomctl{position:absolute;left:8px;bottom:8px;z-index:3;display:flex;flex-direction:column;}
+  #zoomctl button{width:26px;height:26px;background:var(--panel);border:1px solid var(--rule);color:var(--ink-2);cursor:pointer;font-size:14px;line-height:1;}
+  #zoomctl button+button{margin-top:-1px;}
+  #zoomctl button:hover{color:var(--ink);border-color:var(--ink-3);position:relative;}
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);}
+  @media (max-width:760px){
+    #app{--sw:0px;} #app.open{--sw:100%;}
+    #inspect{width:calc(100% - 16px);top:auto;bottom:34px;}
+    #zoomctl{bottom:auto;top:44px;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <aside id="side" aria-label="Controls and country list">
+    <div class="blk">
+      <h1>Who uses AI</h1>
+      <p>Share of working-age adults (15 to 64) who used a generative AI tool in each country. Click a country or a row for detail.</p>
+    </div>
+    <div class="blk">
+      <h2>Period</h2>
+      <div class="seg" role="group" aria-label="Period" id="seg"></div>
+      <button class="play" id="play" aria-label="Replay the animation from June 2025">Play</button>
+    </div>
+    <div class="blk">
+      <h2>Share of adults, countries per class</h2>
+      <div class="leg" id="leg"></div>
+    </div>
+    <div class="blk" style="border-bottom:0;padding-bottom:6px"><h2 style="margin:0">All countries, highest first</h2></div>
+    <div id="list"></div>
+  </aside>
+  <main id="mapwrap">
+    <button id="toggle" aria-expanded="true" aria-controls="side">Panel</button>
+    <svg id="map" role="img" aria-label="World map shaded by the share of working-age adults who use generative AI"></svg>
+    <div id="zoomctl"><button id="zi" aria-label="Zoom in">+</button><button id="zo" aria-label="Zoom out">&minus;</button><button id="zr" aria-label="Reset view">&#8634;</button></div>
+    <section id="inspect" hidden aria-live="polite"></section>
+  </main>
+  <footer id="status"><span id="hover">Hover a country</span><span style="margin-left:auto">Source: Microsoft AI Economy Institute via Our World in Data. Modeled estimates from Microsoft usage data, not a survey. Grey: no estimate.</span></footer>
+</div>
+<script>
+const DATA = __DATA__;          // {name: [jun2025, dec2025, mar2026]}
+const DATES = ["June 2025","Dec 2025","Mar 2026"];
+const BINS = [10,20,30,40];     // class breaks, % of adults
+const COL = ["--b0","--b1","--b2","--b3","--b4"].map(v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim());
+const BLAB = ["Under 10%","10 to 20%","20 to 30%","30 to 40%","40% or more"];
+const cls = v => v==null ? -1 : BINS.filter(b=>v>=b).length;
+const fmt = v => v==null ? "no estimate" : v.toFixed(1)+"%";
+let t = 2, sel = null;
+
+const svg = d3.select("#map"), g = svg.append("g");
+const proj = d3.geoEqualEarth(), path = d3.geoPath(proj);
+let W, H, feats, zoom;
+
+function resize(){
+  const r = svg.node().getBoundingClientRect(); W=r.width; H=r.height;
+  svg.attr("viewBox",`0 0 ${W} ${H}`);
+  proj.fitExtent([[2,2],[W-2,H-2]],{type:"FeatureCollection",features:feats||[]});
+  g.selectAll("path.c").attr("d",path);
+  if(zoom) zoom.extent([[0,0],[W,H]]).translateExtent([[-W,-H],[2*W,2*H]]);
+}
+
+fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json").then(r=>r.json()).then(topo=>{
+  feats = topojson.feature(topo, topo.objects.countries).features.filter(f=>f.properties.name!=="Antarctica");
+  const ALIAS = {"United States of America":"United States","Dem. Rep. Congo":"Democratic Republic of Congo","Dominican Rep.":"Dominican Republic","Central African Rep.":"Central African Republic","S. Sudan":"South Sudan","Bosnia and Herz.":"Bosnia and Herzegovina","Côte d'Ivoire":"Cote d'Ivoire","Macedonia":"North Macedonia"};
+  // fold unrecognised/disputed pieces into the country that administers them; topojson.merge dissolves the shared edge so no seam or gap remains
+  const GE=topo.objects.countries.geometries, byName=n=>GE.find(x=>x.properties.name===n);
+  Object.entries({"W. Sahara":"Morocco","Somaliland":"Somalia"}).forEach(([child,parent])=>{
+    const cg=byName(child), pg=byName(parent), ci=feats.findIndex(f=>f.properties.name===child), pf=feats.find(f=>f.properties.name===parent);
+    if(!cg||!pg||ci<0||!pf) return;
+    pf.geometry=topojson.merge(topo,[pg,cg]); feats.splice(ci,1);
+  });
+  feats.forEach(f=>{const n=f.properties.name; f.key = DATA[ALIAS[n]||n] ? (ALIAS[n]||n) : null;});
+  g.selectAll("path.c").data(feats).join("path").attr("class","c")
+    .on("mousemove",(e,d)=>hover(d)).on("mouseleave",()=>hover(null))
+    .on("click",(e,d)=>{ if(d.key) select(d.key); });
+  zoom = d3.zoom().scaleExtent([1,14]).on("zoom",e=>g.attr("transform",e.transform));
+  svg.call(zoom);
+  resize(); paint();
+  if(!matchMedia('(prefers-reduced-motion: reduce)').matches) setTimeout(play,600);
+  window.addEventListener("resize",resize);
+  new ResizeObserver(resize).observe(svg.node());
+}).catch(()=>{ document.getElementById("hover").textContent="Could not load the world outline. Check your connection and reload."; });
+
+function paint(){
+  g.selectAll("path.c").attr("fill",d=>{const k=cls(d.key?DATA[d.key][t]:null);return k<0?"var(--nodata)":COL[k];}).classed("sel",d=>d.key&&d.key===sel);
+  // legend
+  const counts=[0,0,0,0,0]; Object.values(DATA).forEach(a=>{if(a[t]!=null)counts[cls(a[t])]++;});
+  d3.select("#leg").html(BLAB.map((l,i)=>`<i style="background:${COL[i]}"></i><span>${l}</span><span class="n">${counts[i]}</span>`).join("")+`<i style="background:var(--nodata)"></i><span>No estimate</span><span class="n"></span>`);
+  d3.selectAll("#seg button").attr("aria-pressed",(d,i)=>i===t);
+  // list
+  const rows=Object.entries(DATA).filter(([,a])=>a[t]!=null).sort((a,b)=>b[1][t]-a[1][t]);
+  d3.select("#list").html(rows.map(([n,a],i)=>`<button data-n="${n.replace(/"/g,"&quot;")}" ${n===sel?'aria-current="true"':""}><span class="r">${i+1}</span><span>${n}</span><span class="v">${a[t].toFixed(1)}%</span></button>`).join(""));
+  d3.selectAll("#list button").on("click",function(){select(this.dataset.n,true);});
+  if(sel) inspect();
+}
+d3.select("#seg").selectAll("button").data(DATES).join("button").text(d=>d).on("click",(e,d)=>{t=DATES.indexOf(d);paint();});
+
+let timer=null;
+function play(){
+  clearInterval(timer); t=0; paint();
+  timer=setInterval(()=>{ if(t>=2){clearInterval(timer);timer=null;return;} t++; paint(); },1700);
+}
+document.getElementById("play").onclick=play;
+// stop the animation as soon as the viewer picks a period themselves
+d3.select("#seg").selectAll("button").on("click.stop",()=>{clearInterval(timer);timer=null;});
+function hover(d){
+  const el=document.getElementById("hover");
+  if(!d){ el.innerHTML="Hover a country"; return; }
+  const k=d.key; el.innerHTML = `<b>${d.properties.name}</b> &nbsp; ${k?fmt(DATA[k][t])+" of working-age adults":"no estimate"}`;
+}
+
+function select(n,fly){ sel=n; paint(); if(fly) zoomTo(n); }
+function zoomTo(n){
+  const f=feats.find(f=>f.key===n); if(!f) return;
+  let m=f; if(f.geometry.type==="MultiPolygon"){ // fly to the largest piece (France incl. French Guiana, US incl. Alaska)
+    const big=f.geometry.coordinates.reduce((p,c)=>{const q={type:"Polygon",coordinates:c};return d3.geoArea(q)>d3.geoArea(p)?q:p},{type:"Polygon",coordinates:f.geometry.coordinates[0]}); m=big; }
+  const [[x0,y0],[x1,y1]]=path.bounds(m), k=Math.min(8,0.5/Math.max((x1-x0)/W,(y1-y0)/H));
+  svg.transition().duration(600).call(zoom.transform,d3.zoomIdentity.translate(W/2,H/2).scale(k).translate(-(x0+x1)/2,-(y0+y1)/2));
+}
+function inspect(){
+  const a=DATA[sel], v=a[t], all=Object.values(DATA).map(x=>x[t]).filter(x=>x!=null).sort((p,q)=>q-p);
+  const rank=all.indexOf(v)+1, d=a[2]-a[0];
+  const pts=a.map((y,i)=>[8+i*112,40-(y/75)*36]);
+  const el=document.getElementById("inspect"); el.hidden=false;
+  el.innerHTML=`<div class="hd"><h3>${sel}</h3><button class="x" aria-label="Close">&times;</button></div>
+  <div class="big">${v.toFixed(1)}%</div><div class="sub">of working-age adults, ${DATES[t]}. About 1 in ${Math.round(100/v)}.</div>
+  <svg width="236" height="48" role="img" aria-label="Share at three dates: ${a.map(x=>x.toFixed(1)+'%').join(', ')}"><polyline points="${pts.map(p=>p.join(",")).join(" ")}" fill="none" stroke="var(--hot)" stroke-width="1.5"/>${pts.map((p,i)=>`<circle cx="${p[0]}" cy="${p[1]}" r="3" fill="${i===t?'var(--hot)':'var(--panel)'}" stroke="var(--hot)"/>`).join("")}</svg>
+  <dl><dt>Rank, ${DATES[t]}</dt><dd>${rank} of ${all.length}</dd><dt>June 2025</dt><dd>${a[0].toFixed(1)}%</dd><dt>Dec 2025</dt><dd>${a[1].toFixed(1)}%</dd><dt>Mar 2026</dt><dd>${a[2].toFixed(1)}%</dd><dt>Change, 9 months</dt><dd>${d>=0?"+":""}${d.toFixed(1)} pts</dd></dl>
+  <button class="btn" id="zf">Zoom to feature</button>`;
+  el.querySelector(".x").onclick=()=>{sel=null;el.hidden=true;paint();};
+  el.querySelector("#zf").onclick=()=>zoomTo(sel);
+}
+document.getElementById("zi").onclick=()=>svg.transition().call(zoom.scaleBy,1.6);
+document.getElementById("zo").onclick=()=>svg.transition().call(zoom.scaleBy,1/1.6);
+document.getElementById("zr").onclick=()=>svg.transition().call(zoom.transform,d3.zoomIdentity);
+const app=document.getElementById("app"), tg=document.getElementById("toggle");
+tg.onclick=()=>{ const small=matchMedia("(max-width:760px)").matches;
+  if(small){app.classList.toggle("open");tg.setAttribute("aria-expanded",app.classList.contains("open"));}
+  else{app.classList.toggle("closed");tg.setAttribute("aria-expanded",!app.classList.contains("closed"));}
+  setTimeout(resize,230); };
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&sel){sel=null;document.getElementById("inspect").hidden=true;paint();} });
+</script>
+</body>
+</html>

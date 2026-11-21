@@ -4,6 +4,7 @@ Maps built for the 30 Day Mapping Challenge, using Mapbox GL JS and CARTO.
 
 ## Maps
 
+- [ai-usage-per-capita-map](ai-usage-per-capita-map/index.html)
 - [a-very-balkan-roadtrip](a-very-balkan-roadtrip/index.html)
 - [aurora-probability-map](aurora-probability-map/index.html)
 - [bivariate-map-of-north-america](bivariate-map-of-north-america/index.html)
